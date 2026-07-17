@@ -3,6 +3,7 @@
  */
 
 import { PluginSource, MarketplacePluginEntry } from "./types";
+import i18n from "@/i18n/i18n";
 
 export interface SkillSourcePreview {
   parsed: PluginSource;
@@ -92,7 +93,7 @@ const parseGitHubSource = (url: URL, subPath?: string): SkillSourcePreview | nul
   const repoUrl = `https://github.com/${repoFull}`;
   const repoPreview: SkillSourcePreview = {
     parsed: { source: "github", repo: repoFull },
-    label: `GitHub repo — ${repoFull}`,
+    label: i18n.t("skills.form.sourceTypes.githubRepo", { repository: repoFull }),
     suggestedName: toKebabCase(repoBase),
   };
 
@@ -110,7 +111,7 @@ const parseGitHubSource = (url: URL, subPath?: string): SkillSourcePreview | nul
     }
     return {
       parsed: { source: "git-subdir", url: repoUrl, path },
-      label: `GitHub subdir — ${repoFull} @ ${path}`,
+      label: i18n.t("skills.form.sourceTypes.githubSubdir", { repository: repoFull, path }),
       suggestedName: toKebabCase(lastSegment(path)),
     };
   }
@@ -126,7 +127,7 @@ const parseGitHubSource = (url: URL, subPath?: string): SkillSourcePreview | nul
     }
     return {
       parsed: { source: "git-subdir", url: repoUrl, path: normalized },
-      label: `GitHub subdir — ${repoFull} @ ${normalized}`,
+      label: i18n.t("skills.form.sourceTypes.githubSubdir", { repository: repoFull, path: normalized }),
       suggestedName: toKebabCase(lastSegment(normalized)),
     };
   }
@@ -148,14 +149,14 @@ const parseRawGitSource = (url: URL, subPath?: string): SkillSourcePreview | nul
     }
     return {
       parsed: { source: "git-subdir", url: repoUrl, path: normalized },
-      label: `Git subdir — ${repoUrl} @ ${normalized}`,
+      label: i18n.t("skills.form.sourceTypes.gitSubdir", { repository: repoUrl, path: normalized }),
       suggestedName: toKebabCase(lastSegment(normalized)),
     };
   }
 
   return {
     parsed: { source: "url", url: repoUrl },
-    label: `Git repo — ${repoUrl}`,
+    label: i18n.t("skills.form.sourceTypes.gitRepo", { repository: repoUrl }),
     suggestedName: toKebabCase(lastSegment(url.pathname).replace(/\.git$/, "")),
   };
 };

@@ -12,6 +12,7 @@ import {
 } from "@tanstack/react-table";
 import { PolicyAttachment } from "./types";
 import ImpactPopover from "./impact_popover";
+import { useTranslation } from "react-i18next";
 
 interface AttachmentTableProps {
   attachments: PolicyAttachment[];
@@ -28,18 +29,19 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
   isAdmin,
   accessToken,
 }) => {
+  const { t, i18n } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([{ id: "created_at", desc: true }]);
 
   // Format date helper function
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
-    return date.toLocaleString();
+    return date.toLocaleString(i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en-US");
   };
 
   const columns: ColumnDef<PolicyAttachment>[] = [
     {
-      header: "Attachment ID",
+      header: t("policyManagement.fields.attachmentId"),
       accessorKey: "attachment_id",
       cell: (info: any) => (
         <Tooltip title={String(info.getValue() || "")}>
@@ -50,7 +52,7 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
       ),
     },
     {
-      header: "Policy",
+      header: t("policyManagement.fields.policy"),
       accessorKey: "policy_name",
       cell: ({ row }) => {
         const attachment = row.original;
@@ -62,14 +64,14 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
       },
     },
     {
-      header: "Scope",
+      header: t("policyManagement.fields.scope"),
       accessorKey: "scope",
       cell: ({ row }) => {
         const attachment = row.original;
         if (attachment.scope === "*") {
           return (
             <Badge color="amber" size="xs">
-              Global (*)
+              {t("policyManagement.attachments.global")}
             </Badge>
           );
         }
@@ -81,7 +83,7 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
       },
     },
     {
-      header: "Teams",
+      header: t("policyManagement.fields.teams"),
       accessorKey: "teams",
       cell: ({ row }) => {
         const attachment = row.original;
@@ -106,7 +108,7 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
       },
     },
     {
-      header: "Keys",
+      header: t("policyManagement.fields.keys"),
       accessorKey: "keys",
       cell: ({ row }) => {
         const attachment = row.original;
@@ -131,7 +133,7 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
       },
     },
     {
-      header: "Models",
+      header: t("policyManagement.fields.models"),
       accessorKey: "models",
       cell: ({ row }) => {
         const attachment = row.original;
@@ -156,7 +158,7 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
       },
     },
     {
-      header: "Tags",
+      header: t("policyManagement.fields.tags"),
       accessorKey: "tags",
       cell: ({ row }) => {
         const attachment = row.original;
@@ -181,7 +183,7 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
       },
     },
     {
-      header: "Created At",
+      header: t("policyManagement.fields.createdAt"),
       accessorKey: "created_at",
       cell: ({ row }) => {
         const attachment = row.original;
@@ -194,14 +196,14 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
     },
     {
       id: "actions",
-      header: "Actions",
+      header: t("policyManagement.fields.actions"),
       cell: ({ row }) => {
         const attachment = row.original;
         return (
           <div className="flex space-x-2">
             <ImpactPopover attachment={attachment} accessToken={accessToken} />
             {isAdmin && (
-              <Tooltip title="Delete attachment">
+              <Tooltip title={t("policyManagement.actions.deleteAttachment")}>
                 <Icon
                   icon={TrashIcon}
                   size="sm"
@@ -270,7 +272,7 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-8 text-center">
                   <div className="text-center text-gray-500">
-                    <p>Loading...</p>
+                    <p>{t("policyManagement.loading")}</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -295,7 +297,7 @@ const AttachmentTable: React.FC<AttachmentTableProps> = ({
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-8 text-center">
                   <div className="text-center text-gray-500">
-                    <p>No attachments found</p>
+                    <p>{t("policyManagement.attachments.empty")}</p>
                   </div>
                 </TableCell>
               </TableRow>

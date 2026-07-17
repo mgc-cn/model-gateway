@@ -9,6 +9,7 @@ import { DataTable } from "./view_logs/table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, EyeOff } from "lucide-react";
 import NotificationsManager from "./molecules/notifications_manager";
+import { useTranslation } from "react-i18next";
 
 interface GeneralSettingsPageProps {
   accessToken: string | null;
@@ -47,13 +48,23 @@ export interface passThroughItem {
 
 // Password field component for headers
 const PasswordField: React.FC<{ value: object }> = ({ value }) => {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const headerString = JSON.stringify(value);
 
   return (
     <div className="flex items-center space-x-2">
       <span className="font-mono text-xs">{showPassword ? headerString : "••••••••"}</span>
-      <button onClick={() => setShowPassword(!showPassword)} className="p-1 hover:bg-gray-100 rounded-sm" type="button">
+      <button
+        onClick={() => setShowPassword(!showPassword)}
+        className="p-1 hover:bg-gray-100 rounded-sm"
+        type="button"
+        aria-label={t(
+          showPassword
+            ? "modelsAndEndpoints.passThrough.columns.hideHeaders"
+            : "modelsAndEndpoints.passThrough.columns.showHeaders",
+        )}
+      >
         {showPassword ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-gray-500" />}
       </button>
     </div>
@@ -67,6 +78,7 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
   modelData,
   premiumUser,
 }) => {
+  const { t } = useTranslation();
   const [generalSettings, setGeneralSettings] = useState<passThroughItem[]>([]);
   const [selectedEndpointId, setSelectedEndpointId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -109,10 +121,12 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
       const updatedSettings = generalSettings.filter((setting) => setting.id !== endpointToDelete);
       setGeneralSettings(updatedSettings);
 
-      NotificationsManager.success("Endpoint deleted successfully.");
+      NotificationsManager.success(t("modelsAndEndpoints.passThrough.notifications.deleted"));
     } catch (error) {
       console.error("Error deleting the endpoint:", error);
-      NotificationsManager.fromBackend("Error deleting the endpoint: " + error);
+      NotificationsManager.fromBackend(
+        t("modelsAndEndpoints.passThrough.notifications.deleteFailed", { error: String(error) }),
+      );
     }
 
     // Close the confirmation modal and reset the endpointToDelete
@@ -134,7 +148,7 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
   // Define columns for the DataTable
   const columns: ColumnDef<passThroughItem>[] = [
     {
-      header: "ID",
+      header: t("modelsAndEndpoints.passThrough.columns.id"),
       accessorKey: "id",
       cell: (info: any) => (
         <Tooltip title={info.row.original.id}>
@@ -148,19 +162,19 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
       ),
     },
     {
-      header: "Path",
+      header: t("modelsAndEndpoints.passThrough.columns.path"),
       accessorKey: "path",
     },
     {
-      header: "Target",
+      header: t("modelsAndEndpoints.passThrough.columns.target"),
       accessorKey: "target",
       cell: (info: any) => <Text>{info.getValue()}</Text>,
     },
     {
       header: () => (
         <div className="flex items-center gap-1">
-          <span>Methods</span>
-          <Tooltip title="HTTP methods supported by this endpoint">
+          <span>{t("modelsAndEndpoints.passThrough.columns.methods")}</span>
+          <Tooltip title={t("modelsAndEndpoints.passThrough.columns.methodsTooltip")}>
             <InformationCircleIcon className="w-4 h-4 text-gray-400 cursor-help" />
           </Tooltip>
         </div>
@@ -169,7 +183,7 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
       cell: (info: any) => {
         const methods = info.getValue();
         if (!methods || methods.length === 0) {
-          return <Badge color="blue">ALL</Badge>;
+          return <Badge color="blue">{t("modelsAndEndpoints.passThrough.columns.allMethods")}</Badge>;
         }
         return (
           <div className="flex flex-wrap gap-1">
@@ -185,22 +199,28 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
     {
       header: () => (
         <div className="flex items-center gap-1">
-          <span>Authentication</span>
-          <Tooltip title="LiteLLM Virtual Key required to call endpoint">
+          <span>{t("modelsAndEndpoints.passThrough.columns.authentication")}</span>
+          <Tooltip title={t("modelsAndEndpoints.passThrough.columns.authenticationTooltip")}>
             <InformationCircleIcon className="w-4 h-4 text-gray-400 cursor-help" />
           </Tooltip>
         </div>
       ),
       accessorKey: "auth",
-      cell: (info: any) => <Badge color={info.getValue() ? "green" : "gray"}>{info.getValue() ? "Yes" : "No"}</Badge>,
+      cell: (info: any) => (
+        <Badge color={info.getValue() ? "green" : "gray"}>
+          {info.getValue()
+            ? t("modelsAndEndpoints.passThrough.columns.yes")
+            : t("modelsAndEndpoints.passThrough.columns.no")}
+        </Badge>
+      ),
     },
     {
-      header: "Headers",
+      header: t("modelsAndEndpoints.passThrough.columns.headers"),
       accessorKey: "headers",
       cell: (info: any) => <PasswordField value={info.getValue() || {}} />,
     },
     {
-      header: "Actions",
+      header: t("modelsAndEndpoints.passThrough.columns.actions"),
       id: "actions",
       cell: ({ row }) => (
         <div className="flex space-x-1">
@@ -208,13 +228,13 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
             icon={PencilAltIcon}
             size="sm"
             onClick={() => row.original.id && setSelectedEndpointId(row.original.id)}
-            title="Edit"
+            title={t("modelsAndEndpoints.passThrough.columns.edit")}
           />
           <Icon
             icon={TrashIcon}
             size="sm"
             onClick={() => handleResetField(row.original.id!, row.index)}
-            title="Delete"
+            title={t("modelsAndEndpoints.passThrough.columns.delete")}
           />
         </div>
       ),
@@ -231,7 +251,7 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
     const selectedEndpoint = generalSettings.find((endpoint) => endpoint.id === selectedEndpointId);
 
     if (!selectedEndpoint) {
-      return <div>Endpoint not found</div>;
+      return <div>{t("modelsAndEndpoints.passThrough.notFound")}</div>;
     }
 
     return (
@@ -249,8 +269,8 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
   return (
     <div>
       <div>
-        <Title>Pass Through Endpoints</Title>
-        <Text className="text-tremor-content">Configure and manage your pass-through endpoints</Text>
+        <Title>{t("modelsAndEndpoints.passThrough.title")}</Title>
+        <Text className="text-tremor-content">{t("modelsAndEndpoints.passThrough.description")}</Text>
       </div>
 
       <AddPassThroughEndpoint
@@ -266,7 +286,7 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
         renderSubComponent={() => <div></div>}
         getRowCanExpand={() => false}
         isLoading={false}
-        noDataMessage="No pass-through endpoints configured"
+        noDataMessage={t("modelsAndEndpoints.passThrough.empty")}
       />
 
       {isDeleteModalOpen && (
@@ -286,20 +306,20 @@ const PassThroughSettings: React.FC<GeneralSettingsPageProps> = ({
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">Delete Pass-Through Endpoint</h3>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      {t("modelsAndEndpoints.passThrough.deleteTitle")}
+                    </h3>
                     <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Are you sure you want to delete this pass-through endpoint? This action cannot be undone.
-                      </p>
+                      <p className="text-sm text-gray-500">{t("modelsAndEndpoints.passThrough.deleteMessage")}</p>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <Button onClick={confirmDelete} color="red" className="ml-2">
-                  Delete
+                  {t("common.delete")}
                 </Button>
-                <Button onClick={cancelDelete}>Cancel</Button>
+                <Button onClick={cancelDelete}>{t("common.cancel")}</Button>
               </div>
             </div>
           </div>

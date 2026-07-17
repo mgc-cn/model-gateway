@@ -4,6 +4,7 @@ import { LoadingOutlined } from "@ant-design/icons";
 import { useDebouncedState } from "@tanstack/react-pacer/debouncer";
 import { useInfiniteTeams } from "@/app/(dashboard)/hooks/teams/useTeams";
 import { Team } from "../key_team_helpers/key_list";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -29,6 +30,7 @@ const TeamDropdown: React.FC<TeamDropdownProps> = ({
   organizationId,
   pageSize = 20,
 }) => {
+  const { t } = useTranslation();
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useDebouncedState("", {
     wait: DEBOUNCE_MS,
@@ -78,7 +80,7 @@ const TeamDropdown: React.FC<TeamDropdownProps> = ({
   return (
     <Select
       showSearch
-      placeholder="Search or select a team"
+      placeholder={t("virtualKeys.create.teamDropdown.placeholder")}
       value={value || undefined}
       onChange={handleChange}
       disabled={disabled}
@@ -88,7 +90,7 @@ const TeamDropdown: React.FC<TeamDropdownProps> = ({
       searchValue={searchInput}
       onPopupScroll={handlePopupScroll}
       loading={isLoading}
-      notFoundContent={isLoading ? <LoadingOutlined spin /> : "No teams found"}
+      notFoundContent={isLoading ? <LoadingOutlined spin /> : t("virtualKeys.create.teamDropdown.empty")}
       data-testid="team-dropdown"
       popupRender={(menu) => (
         <>

@@ -5,6 +5,7 @@ import { Button, Card, Form, Input, Modal, Space, Table, Typography } from "antd
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { getConfigFieldSetting, updateConfigFieldSetting } from "@/components/networking";
 import useAuthorized from "@/app/(dashboard)/hooks/useAuthorized";
+import { useTranslation } from "react-i18next";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -16,6 +17,7 @@ interface Plugin {
 }
 
 export default function PluginSettings() {
+  const { t } = useTranslation();
   const { accessToken } = useAuthorized();
   const [plugins, setPlugins] = useState<Plugin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,14 +77,14 @@ export default function PluginSettings() {
 
   const columns = [
     {
-      title: "Name",
+      title: t("adminSettings.plugins.columns.name"),
       dataIndex: "name",
       key: "name",
       render: (v: string) => <Text code>{v}</Text>,
     },
-    { title: "Display Name", dataIndex: "display_name", key: "display_name" },
+    { title: t("adminSettings.plugins.columns.displayName"), dataIndex: "display_name", key: "display_name" },
     {
-      title: "URL",
+      title: t("adminSettings.plugins.columns.url"),
       dataIndex: "url",
       key: "url",
       render: (v: string) => (
@@ -92,13 +94,13 @@ export default function PluginSettings() {
       ),
     },
     {
-      title: "Plugin Key",
+      title: t("adminSettings.plugins.columns.key"),
       dataIndex: "plugin_key",
       key: "plugin_key",
       render: (v?: string) => (v ? <Text code>{"•".repeat(8)}</Text> : <Text type="secondary">—</Text>),
     },
     {
-      title: "Actions",
+      title: t("adminSettings.plugins.columns.actions"),
       key: "actions",
       render: (_: unknown, __: Plugin, idx: number) => (
         <Space>
@@ -111,59 +113,65 @@ export default function PluginSettings() {
 
   return (
     <Card>
-      <Title level={4}>Plugins</Title>
-      <Paragraph>
-        Register external services as plugins. Once added, users can toggle to the plugin from the mode switcher in the
-        top-left of the sidebar.
-      </Paragraph>
+      <Title level={4}>{t("adminSettings.plugins.title")}</Title>
+      <Paragraph>{t("adminSettings.plugins.description")}</Paragraph>
       <Paragraph type="secondary" style={{ fontSize: 12 }}>
-        Each plugin must expose <Text code>GET /api/plugin-manifest</Text> returning nav items and capabilities.
+        {t("adminSettings.plugins.manifestPrefix")} <Text code>GET /api/plugin-manifest</Text>{" "}
+        {t("adminSettings.plugins.manifestSuffix")}
       </Paragraph>
 
       <Button type="primary" icon={<PlusOutlined />} onClick={openAdd} style={{ marginBottom: 16 }}>
-        Add Plugin
+        {t("adminSettings.plugins.add")}
       </Button>
 
       <Table dataSource={plugins} columns={columns} rowKey="name" loading={loading} pagination={false} size="small" />
 
       <Modal
-        title={editingIndex !== null ? "Edit Plugin" : "Add Plugin"}
+        title={editingIndex !== null ? t("adminSettings.plugins.edit") : t("adminSettings.plugins.add")}
         open={modalOpen}
         onOk={handleOk}
         onCancel={() => setModalOpen(false)}
         confirmLoading={saving}
-        okText="Save"
+        okText={t("adminSettings.actions.save")}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
             name="name"
-            label="Name (identifier)"
-            rules={[{ required: true, message: "Required" }]}
-            extra="Used in URLs and config. No spaces. E.g. litellm-platform-plugin"
+            label={t("adminSettings.plugins.fields.name")}
+            rules={[{ required: true, message: t("adminSettings.plugins.required") }]}
+            extra={t("adminSettings.plugins.fields.nameHelp")}
           >
-            <Input placeholder="litellm-platform-plugin" />
+            <Input placeholder={t("adminSettings.plugins.fields.namePlaceholder")} />
           </Form.Item>
-          <Form.Item name="display_name" label="Display Name" rules={[{ required: true, message: "Required" }]}>
-            <Input placeholder="Agent Control Plane" />
+          <Form.Item
+            name="display_name"
+            label={t("adminSettings.plugins.fields.displayName")}
+            rules={[{ required: true, message: t("adminSettings.plugins.required") }]}
+          >
+            <Input placeholder={t("adminSettings.plugins.fields.displayNamePlaceholder")} />
           </Form.Item>
           <Form.Item
             name="url"
-            label="URL"
+            label={t("adminSettings.plugins.fields.url")}
             rules={[
-              { required: true, message: "Required" },
-              { type: "url", message: "Must be a valid URL" },
+              { required: true, message: t("adminSettings.plugins.required") },
+              { type: "url", message: t("adminSettings.plugins.validUrl") },
             ]}
-            extra="Base URL of the plugin service"
+            extra={t("adminSettings.plugins.fields.urlHelp")}
           >
-            <Input placeholder="https://your-plugin.example.com" />
+            <Input placeholder={t("adminSettings.plugins.fields.urlPlaceholder")} />
           </Form.Item>
           <Form.Item
             name="plugin_key"
-            label="Plugin Key"
-            extra="Optional. The plugin's own credential, injected as Authorization: Bearer <key> only when litellm reverse-proxies API calls to the plugin's backend (/plugin-proxy/<name>/*). Leave blank for plugins that use the forwarded litellm user token (e.g. iframe plugins) — that path uses the user's token, not this key."
+            label={t("adminSettings.plugins.fields.key")}
+            extra={t("adminSettings.plugins.fields.keyHelp")}
           >
             <Input.Password
-              placeholder={editingIndex !== null ? "Leave blank to keep current key" : "sk-... (optional)"}
+              placeholder={
+                editingIndex !== null
+                  ? t("adminSettings.plugins.fields.keepKey")
+                  : t("adminSettings.plugins.fields.keyPlaceholder")
+              }
             />
           </Form.Item>
         </Form>

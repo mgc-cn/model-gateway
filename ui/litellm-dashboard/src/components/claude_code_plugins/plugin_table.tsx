@@ -14,6 +14,7 @@ import React, { useState } from "react";
 import NotificationsManager from "../molecules/notifications_manager";
 import { getCategoryBadgeColor } from "./helpers";
 import { Plugin } from "./types";
+import { useTranslation } from "react-i18next";
 
 interface PluginTableProps {
   pluginsList: Plugin[];
@@ -32,22 +33,23 @@ const PluginTable: React.FC<PluginTableProps> = ({
   isAdmin,
   onPluginClick,
 }) => {
+  const { t, i18n } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([{ id: "created_at", desc: true }]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
-    return date.toLocaleString();
+    return date.toLocaleString(i18n.resolvedLanguage === "zh-CN" ? "zh-CN" : "en-US");
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    NotificationsManager.success("Copied to clipboard!");
+    NotificationsManager.success(t("skills.notifications.copied"));
   };
 
   const columns: ColumnDef<Plugin>[] = [
     {
-      header: "Skill Name",
+      header: t("skills.columns.name"),
       accessorKey: "name",
       cell: ({ row }) => {
         const plugin = row.original;
@@ -64,7 +66,7 @@ const PluginTable: React.FC<PluginTableProps> = ({
                 {name}
               </Button>
             </Tooltip>
-            <Tooltip title="Copy Plugin ID">
+            <Tooltip title={t("skills.copyId")}>
               <CopyOutlined
                 onClick={(e) => {
                   e.stopPropagation();
@@ -78,18 +80,18 @@ const PluginTable: React.FC<PluginTableProps> = ({
       },
     },
     {
-      header: "Version",
+      header: t("skills.columns.version"),
       accessorKey: "version",
       cell: ({ row }) => {
-        const version = row.original.version || "N/A";
+        const version = row.original.version || t("skills.notAvailable");
         return <span className="text-xs text-gray-600">{version}</span>;
       },
     },
     {
-      header: "Description",
+      header: t("skills.columns.description"),
       accessorKey: "description",
       cell: ({ row }) => {
-        const description = row.original.description || "No description";
+        const description = row.original.description || t("skills.noDescription");
         return (
           <Tooltip title={description}>
             <span className="text-xs text-gray-600 block max-w-[300px] truncate">{description}</span>
@@ -98,14 +100,14 @@ const PluginTable: React.FC<PluginTableProps> = ({
       },
     },
     {
-      header: "Category",
+      header: t("skills.columns.category"),
       accessorKey: "category",
       cell: ({ row }) => {
         const category = row.original.category;
         if (!category) {
           return (
             <Badge color="gray" className="text-xs font-normal" size="xs">
-              Uncategorized
+              {t("skills.uncategorized")}
             </Badge>
           );
         }
@@ -118,19 +120,19 @@ const PluginTable: React.FC<PluginTableProps> = ({
       },
     },
     {
-      header: "Public",
+      header: t("skills.columns.public"),
       accessorKey: "enabled",
       cell: ({ row }) => {
         const plugin = row.original;
         return (
           <Badge color={plugin.enabled ? "green" : "gray"} className="text-xs font-normal" size="xs">
-            {plugin.enabled ? "Yes" : "No"}
+            {plugin.enabled ? t("skills.yes") : t("skills.no")}
           </Badge>
         );
       },
     },
     {
-      header: "Created At",
+      header: t("skills.columns.createdAt"),
       accessorKey: "created_at",
       cell: ({ row }) => {
         const plugin = row.original;
@@ -144,7 +146,7 @@ const PluginTable: React.FC<PluginTableProps> = ({
     ...(isAdmin
       ? [
           {
-            header: "Actions",
+            header: t("skills.columns.actions"),
             id: "actions",
             enableSorting: false,
             cell: ({ row }: any) => {
@@ -152,7 +154,7 @@ const PluginTable: React.FC<PluginTableProps> = ({
 
               return (
                 <div className="flex items-center gap-1">
-                  <Tooltip title="Delete skill">
+                  <Tooltip title={t("skills.delete.tooltip")}>
                     <Button
                       size="xs"
                       variant="light"
@@ -227,7 +229,7 @@ const PluginTable: React.FC<PluginTableProps> = ({
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-8 text-center">
                   <div className="text-center text-gray-500">
-                    <p>Loading...</p>
+                    <p>{t("skills.loading")}</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -256,7 +258,7 @@ const PluginTable: React.FC<PluginTableProps> = ({
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-8 text-center">
                   <div className="text-center text-gray-500">
-                    <p>No skills found. Add one to get started.</p>
+                    <p>{t("skills.empty")}</p>
                   </div>
                 </TableCell>
               </TableRow>

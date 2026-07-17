@@ -5,6 +5,8 @@ import { Flex, Table, Tabs, Tag, Tooltip, Typography, Button } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { BranchesOutlined, DeleteOutlined, EditOutlined, CodeOutlined } from "@ant-design/icons";
 import type { RoutingGroup } from "./types";
+import { useTranslation } from "react-i18next";
+import { getStrategyLabel } from "../router_settings/i18n";
 
 const { Text, Paragraph } = Typography;
 
@@ -15,21 +17,6 @@ interface RoutingGroupsTableProps {
   onDelete: (group: RoutingGroup) => void;
   proxyBaseUrl?: string;
 }
-
-const formatStrategyLabel = (strategy: string): string => {
-  switch (strategy) {
-    case "simple-shuffle":
-      return "Simple Shuffle";
-    case "least-busy":
-      return "Least Busy";
-    case "usage-based-routing":
-      return "Usage Based";
-    case "latency-based-routing":
-      return "Latency Based";
-    default:
-      return strategy;
-  }
-};
 
 const resolveBaseUrl = (proxyBaseUrl?: string): string => {
   if (proxyBaseUrl && proxyBaseUrl.trim()) return proxyBaseUrl;
@@ -94,6 +81,7 @@ const SNIPPET_BLOCK_STYLE: React.CSSProperties = {
 };
 
 const RoutingGroupSnippet: React.FC<RoutingGroupSnippetProps> = ({ group, baseUrl }) => {
+  const { t } = useTranslation();
   const snippets = {
     curl: buildCurlSnippet(group, baseUrl),
     python: buildPythonSnippet(group, baseUrl),
@@ -123,19 +111,26 @@ const RoutingGroupSnippet: React.FC<RoutingGroupSnippetProps> = ({ group, baseUr
       onChange={(k) => setActiveKey(k as SnippetKey)}
       items={items}
       tabBarExtraContent={
-        <Paragraph copyable={{ text: snippets[activeKey], tooltips: ["Copy", "Copied"] }} className="mb-0!" />
+        <Paragraph
+          copyable={{
+            text: snippets[activeKey],
+            tooltips: [t("routerSettings.actions.copy"), t("routerSettings.actions.copied")],
+          }}
+          className="mb-0!"
+        />
       }
     />
   );
 };
 
 const RoutingGroupsTable: React.FC<RoutingGroupsTableProps> = ({ groups, loading, onEdit, onDelete, proxyBaseUrl }) => {
+  const { t } = useTranslation();
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
   const baseUrl = resolveBaseUrl(proxyBaseUrl);
 
   const columns: ColumnsType<RoutingGroup> = [
     {
-      title: "GROUP NAME",
+      title: t("routerSettings.routingGroups.columns.name"),
       dataIndex: "group_name",
       key: "group_name",
       render: (name: string) => (
@@ -145,7 +140,7 @@ const RoutingGroupsTable: React.FC<RoutingGroupsTableProps> = ({ groups, loading
       ),
     },
     {
-      title: "MODELS",
+      title: t("routerSettings.routingGroups.columns.models"),
       dataIndex: "models",
       key: "models",
       render: (models: string[]) => (
@@ -157,24 +152,24 @@ const RoutingGroupsTable: React.FC<RoutingGroupsTableProps> = ({ groups, loading
       ),
     },
     {
-      title: "STRATEGY",
+      title: t("routerSettings.routingGroups.columns.strategy"),
       dataIndex: "routing_strategy",
       key: "routing_strategy",
       render: (strategy: string) => (
         <span className="inline-flex items-center gap-1.5">
           <BranchesOutlined className="text-gray-400" />
-          <Text>{formatStrategyLabel(strategy)}</Text>
+          <Text>{getStrategyLabel(t, strategy)}</Text>
         </span>
       ),
     },
     {
-      title: "ACTIONS",
+      title: t("routerSettings.routingGroups.columns.actions"),
       key: "actions",
       width: 120,
       align: "right",
       render: (_, group) => (
         <Flex justify="flex-end" align="center" gap={8}>
-          <Tooltip title="Edit">
+          <Tooltip title={t("routerSettings.actions.edit")}>
             <Button
               type="text"
               icon={<EditOutlined />}
@@ -184,7 +179,7 @@ const RoutingGroupsTable: React.FC<RoutingGroupsTableProps> = ({ groups, loading
               }}
             />
           </Tooltip>
-          <Tooltip title="Delete">
+          <Tooltip title={t("routerSettings.actions.delete")}>
             <Button
               type="text"
               danger
@@ -214,11 +209,12 @@ const RoutingGroupsTable: React.FC<RoutingGroupsTableProps> = ({ groups, loading
           <div className="bg-gray-50 border border-gray-200 rounded-md p-4 my-2">
             <Flex align="center" gap={8} className="mb-2">
               <CodeOutlined className="text-blue-500" />
-              <Text strong>How routing works for this group</Text>
+              <Text strong>{t("routerSettings.routingGroups.explanationTitle")}</Text>
             </Flex>
             <Paragraph className="text-sm text-gray-600 mb-3">
-              Callers request any model in the group by name — LiteLLM picks a deployment behind the scenes using the{" "}
-              <Text strong>{formatStrategyLabel(group.routing_strategy)}</Text> strategy.
+              {t("routerSettings.routingGroups.explanation", {
+                strategy: getStrategyLabel(t, group.routing_strategy),
+              })}
             </Paragraph>
             <RoutingGroupSnippet group={group} baseUrl={baseUrl} />
           </div>

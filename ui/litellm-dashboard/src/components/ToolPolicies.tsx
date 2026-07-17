@@ -10,6 +10,7 @@ import FilterComponent, { FilterOption } from "./molecules/filter";
 import { MetricCard } from "./GuardrailsMonitor/MetricCard";
 import { PolicySelect, INPUT_POLICY_OPTIONS, OUTPUT_POLICY_OPTIONS } from "./ToolPolicies/PolicySelect";
 import { fetchToolsList, updateToolPolicy, ToolRow } from "./networking";
+import { useTranslation } from "react-i18next";
 
 function getUTCDateKey(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
@@ -29,13 +30,6 @@ function countToolsInUTCDay(tools: ToolRow[], utcDateKey: string): number {
   return tools.filter((t) => isCreatedInUTCDay(t.created_at, utcDateKey)).length;
 }
 
-function getTrendSubtitle(newToday: number, newYesterday: number): string | undefined {
-  const diff = newToday - newYesterday;
-  if (diff === 0) return undefined;
-  if (diff > 0) return `+${diff} since yesterday`;
-  return `${diff} since yesterday`;
-}
-
 type SortField = "tool_name" | "input_policy" | "output_policy" | "team_id" | "key_alias" | "created_at" | "call_count";
 
 interface FilterValues {
@@ -49,6 +43,7 @@ interface ToolPoliciesProps {
 }
 
 export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelectTool }) => {
+  const { t } = useTranslation();
   const [tools, setTools] = useState<ToolRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
@@ -75,12 +70,12 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
       const rows = await fetchToolsList(accessToken);
       setTools(rows);
     } catch (e: any) {
-      setError(e.message ?? "Failed to load tools");
+      setError(e.message ?? t("toolManagement.policies.loadFailed"));
     } finally {
       setIsFetching(false);
       setLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, t]);
 
   useEffect(() => {
     load();
@@ -99,7 +94,7 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
       await updateToolPolicy(accessToken, toolName, { input_policy: newPolicy });
       setTools((prev) => prev.map((t) => (t.tool_name === toolName ? { ...t, input_policy: newPolicy } : t)));
     } catch (e: any) {
-      alert(`Failed to update input policy: ${e.message}`);
+      alert(t("toolManagement.policies.updateInputFailed", { error: e.message }));
     } finally {
       setSavingInput(null);
     }
@@ -112,7 +107,7 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
       await updateToolPolicy(accessToken, toolName, { output_policy: newPolicy });
       setTools((prev) => prev.map((t) => (t.tool_name === toolName ? { ...t, output_policy: newPolicy } : t)));
     } catch (e: any) {
-      alert(`Failed to update output policy: ${e.message}`);
+      alert(t("toolManagement.policies.updateOutputFailed", { error: e.message }));
     } finally {
       setSavingOutput(null);
     }
@@ -151,22 +146,28 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
   const filterOptions: FilterOption[] = [
     {
       name: "Input Policy",
-      label: "Input Policy",
-      options: INPUT_POLICY_OPTIONS.map((o) => ({ label: o.label, value: o.value })),
+      label: t("toolManagement.policies.input"),
+      options: INPUT_POLICY_OPTIONS.map((o) => ({
+        label: t(`toolManagement.policies.${o.value === "blocked" ? "blockedPolicy" : o.value}`),
+        value: o.value,
+      })),
     },
     {
       name: "Output Policy",
-      label: "Output Policy",
-      options: OUTPUT_POLICY_OPTIONS.map((o) => ({ label: o.label, value: o.value })),
+      label: t("toolManagement.policies.output"),
+      options: OUTPUT_POLICY_OPTIONS.map((o) => ({
+        label: t(`toolManagement.policies.${o.value}`),
+        value: o.value,
+      })),
     },
     {
       name: "Team Name",
-      label: "Team Name",
+      label: t("toolManagement.policies.team"),
       options: teamOptions,
     },
     {
       name: "Key Name",
-      label: "Key Name",
+      label: t("toolManagement.policies.key"),
       options: keyAliasOptions,
     },
   ];
@@ -181,7 +182,11 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
 
       const newToday = countToolsInUTCDay(tools, todayKey);
       const newYesterday = countToolsInUTCDay(tools, yesterdayKey);
-      const trendSubtitle = getTrendSubtitle(newToday, newYesterday);
+      const trendDiff = newToday - newYesterday;
+      const trendSubtitle =
+        trendDiff === 0
+          ? undefined
+          : t("toolManagement.policies.sinceYesterday", { diff: trendDiff > 0 ? `+${trendDiff}` : trendDiff });
 
       const totalTools = tools.length;
       const blockedCount = tools.filter((t) => t.input_policy === "blocked").length;
@@ -200,7 +205,7 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
         activeTeamsCount,
         needsReviewTools,
       };
-    }, [tools]);
+    }, [tools, t]);
 
   const SortHeader = ({ label, field }: { label: string; field: SortField }) => (
     <div className="flex items-center gap-1">
@@ -257,11 +262,11 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Tool Policies</h1>
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">{t("toolManagement.policies.title")}</h1>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <MetricCard
-          label="New Today"
+          label={t("toolManagement.policies.newToday")}
           value={newToday}
           valueColor="text-green-600"
           subtitle={trendSubtitle}
@@ -271,37 +276,39 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
             </svg>
           }
         />
-        <MetricCard label="Total Tools Discovered" value={totalTools} />
+        <MetricCard label={t("toolManagement.policies.total")} value={totalTools} />
         <MetricCard
-          label="Blocked Tools"
+          label={t("toolManagement.policies.blocked")}
           value={blockedCount}
           valueColor={blockedCount > 0 ? "text-red-600" : undefined}
         />
-        <MetricCard label="Active Teams" value={activeTeamsCount > 0 ? activeTeamsCount : "—"} />
+        <MetricCard
+          label={t("toolManagement.policies.activeTeams")}
+          value={activeTeamsCount > 0 ? activeTeamsCount : "—"}
+        />
       </div>
 
       {needsReviewTools.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-          <h2 className="text-sm font-semibold text-amber-900 mb-1">Needs Review</h2>
+          <h2 className="text-sm font-semibold text-amber-900 mb-1">{t("toolManagement.policies.needsReview")}</h2>
           <p className="text-sm text-amber-800 mb-3">
-            {needsReviewTools.length} new tool{needsReviewTools.length !== 1 ? "s" : ""} discovered that require policy
-            decisions.
+            {t("toolManagement.policies.reviewMessage", { count: needsReviewTools.length })}
           </p>
           <div className="flex flex-wrap gap-2">
-            {needsReviewTools.map((t) => (
+            {needsReviewTools.map((tool) => (
               <span
-                key={t.tool_id}
+                key={tool.tool_id}
                 className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-amber-200 rounded-md text-sm"
               >
-                <span className="font-mono text-amber-900 truncate max-w-[200px]" title={t.tool_name}>
-                  {t.tool_name}
+                <span className="font-mono text-amber-900 truncate max-w-[200px]" title={tool.tool_name}>
+                  {tool.tool_name}
                 </span>
                 <button
                   type="button"
-                  onClick={() => scrollToToolRow(t.tool_id)}
+                  onClick={() => scrollToToolRow(tool.tool_id)}
                   className="text-amber-700 hover:text-amber-900 font-medium text-xs whitespace-nowrap"
                 >
-                  Review
+                  {t("toolManagement.policies.review")}
                 </button>
               </span>
             ))}
@@ -316,7 +323,7 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
               <div className="relative w-64">
                 <input
                   type="text"
-                  placeholder="Search by Tool Name"
+                  placeholder={t("toolManagement.policies.search")}
                   className="w-full px-3 py-2 pl-8 border rounded-md text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={searchTerm}
                   onChange={(e) => {
@@ -340,7 +347,7 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-900">Live Tail</span>
+                <span className="text-sm font-medium text-gray-900">{t("toolManagement.policies.liveTail")}</span>
                 <Switch checked={isLiveTail} onChange={setIsLiveTail} />
               </div>
 
@@ -362,32 +369,33 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                {isButtonLoading ? "Fetching" : "Fetch"}
+                {isButtonLoading ? t("toolManagement.policies.fetching") : t("toolManagement.policies.fetch")}
               </button>
             </div>
 
             <div className="flex items-center gap-4 text-sm text-gray-600 whitespace-nowrap">
               <span>
-                Showing {filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} -{" "}
-                {Math.min(currentPage * pageSize, filtered.length)} of {filtered.length} results
+                {t("toolManagement.policies.showing", {
+                  from: filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1,
+                  to: Math.min(currentPage * pageSize, filtered.length),
+                  total: filtered.length,
+                })}
               </span>
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
+              <span>{t("toolManagement.policies.page", { page: currentPage, total: totalPages })}</span>
               <div className="flex gap-1">
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   className="px-3 py-1.5 border rounded-md text-sm hover:bg-gray-50 disabled:opacity-40"
                 >
-                  Previous
+                  {t("toolManagement.common.previous")}
                 </button>
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                   className="px-3 py-1.5 border rounded-md text-sm hover:bg-gray-50 disabled:opacity-40"
                 >
-                  Next
+                  {t("toolManagement.common.next")}
                 </button>
               </div>
             </div>
@@ -398,16 +406,16 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
               options={filterOptions}
               onApplyFilters={handleApplyFilters}
               onResetFilters={handleResetFilters}
-              buttonLabel="Filters"
+              buttonLabel={t("toolManagement.policies.filters")}
             />
           </div>
         </div>
 
         {isLiveTail && (
           <div className="bg-green-50 border-b border-green-100 px-6 py-2 flex items-center justify-between">
-            <span className="text-sm text-green-700">Auto-refreshing every 15 seconds</span>
+            <span className="text-sm text-green-700">{t("toolManagement.policies.autoRefresh")}</span>
             <button onClick={() => setIsLiveTail(false)} className="text-xs text-green-600 underline">
-              Stop
+              {t("toolManagement.policies.stop")}
             </button>
           </div>
         )}
@@ -420,41 +428,41 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
           <TableHead>
             <TableRow>
               <TableHeaderCell className="py-1 h-8">
-                <SortHeader label="Discovered" field="created_at" />
+                <SortHeader label={t("toolManagement.policies.discovered")} field="created_at" />
               </TableHeaderCell>
               <TableHeaderCell className="py-1 h-8">
-                <SortHeader label="Tool Name" field="tool_name" />
+                <SortHeader label={t("toolManagement.common.name")} field="tool_name" />
               </TableHeaderCell>
               <TableHeaderCell className="py-1 h-8">
-                <SortHeader label="Input Policy" field="input_policy" />
+                <SortHeader label={t("toolManagement.policies.input")} field="input_policy" />
               </TableHeaderCell>
               <TableHeaderCell className="py-1 h-8">
-                <SortHeader label="Output Policy" field="output_policy" />
+                <SortHeader label={t("toolManagement.policies.output")} field="output_policy" />
               </TableHeaderCell>
               <TableHeaderCell className="py-1 h-8">
-                <SortHeader label="# Calls" field="call_count" />
+                <SortHeader label={t("toolManagement.policies.calls")} field="call_count" />
               </TableHeaderCell>
               <TableHeaderCell className="py-1 h-8">
-                <SortHeader label="Team Name" field="team_id" />
+                <SortHeader label={t("toolManagement.policies.team")} field="team_id" />
               </TableHeaderCell>
-              <TableHeaderCell className="py-1 h-8">Key Hash</TableHeaderCell>
+              <TableHeaderCell className="py-1 h-8">{t("toolManagement.policies.keyHash")}</TableHeaderCell>
               <TableHeaderCell className="py-1 h-8">
-                <SortHeader label="Key Name" field="key_alias" />
+                <SortHeader label={t("toolManagement.policies.key")} field="key_alias" />
               </TableHeaderCell>
-              <TableHeaderCell className="py-1 h-8">User Agent</TableHeaderCell>
+              <TableHeaderCell className="py-1 h-8">{t("toolManagement.policies.userAgent")}</TableHeaderCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
                 <TableCell colSpan={9} className="h-8 text-center text-gray-500">
-                  Loading tools…
+                  {t("toolManagement.policies.loading")}
                 </TableCell>
               </TableRow>
             ) : paginated.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="h-8 text-center text-gray-500">
-                  No tools discovered yet. Make a chat completion that returns tool_calls to start auto-discovery.
+                  {t("toolManagement.policies.empty")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -469,7 +477,7 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
                       onClick={() => onSelectTool?.(tool.tool_name)}
                       className="text-left w-full font-mono text-xs max-w-[20ch] truncate block font-medium text-blue-600 hover:text-blue-800 hover:underline focus:outline-hidden focus:ring-0"
                     >
-                      <Tooltip title={onSelectTool ? "Click to view details and block for team/key" : tool.tool_name}>
+                      <Tooltip title={onSelectTool ? t("toolManagement.policies.detailsHelp") : tool.tool_name}>
                         <span>{tool.tool_name}</span>
                       </Tooltip>
                     </button>
@@ -539,14 +547,14 @@ export const ToolPolicies: React.FC<ToolPoliciesProps> = ({ accessToken, onSelec
                 disabled={currentPage === 1}
                 className="px-3 py-1.5 border rounded-md hover:bg-gray-50 disabled:opacity-40"
               >
-                Previous
+                {t("toolManagement.common.previous")}
               </button>
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 className="px-3 py-1.5 border rounded-md hover:bg-gray-50 disabled:opacity-40"
               >
-                Next
+                {t("toolManagement.common.next")}
               </button>
             </div>
           </div>

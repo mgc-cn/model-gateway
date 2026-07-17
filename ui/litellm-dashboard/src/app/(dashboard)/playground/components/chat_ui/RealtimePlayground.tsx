@@ -5,6 +5,7 @@ import { Button, Input, Select, Typography } from "antd";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { getProxyBaseUrl } from "@/components/networking";
 import { OPEN_AI_VOICE_SELECT_OPTIONS } from "./chatConstants";
+import i18n from "@/i18n/i18n";
 
 const { Text } = Typography;
 
@@ -110,7 +111,7 @@ const RealtimePlayground: React.FC<RealtimePlaygroundProps> = ({
       ws.onopen = () => {
         setIsConnected(true);
         setIsConnecting(false);
-        addMessage("status", "Connected to realtime API");
+        addMessage("status", i18n.t("playground.realtime.connectedMessage"));
       };
 
       ws.onmessage = async (event) => {
@@ -195,7 +196,7 @@ const RealtimePlayground: React.FC<RealtimePlaygroundProps> = ({
       };
 
       ws.onclose = () => {
-        addMessage("status", "Disconnected");
+        addMessage("status", i18n.t("playground.realtime.disconnected"));
         setIsConnected(false);
         setIsConnecting(false);
         wsRef.current = null;
@@ -203,7 +204,7 @@ const RealtimePlayground: React.FC<RealtimePlaygroundProps> = ({
 
       wsRef.current = ws;
     } catch (err: any) {
-      addMessage("status", `Connection failed: ${err.message}`);
+      addMessage("status", i18n.t("playground.realtime.connectionFailed", { error: err.message }));
       setIsConnecting(false);
     }
   }, [
@@ -297,7 +298,7 @@ const RealtimePlayground: React.FC<RealtimePlaygroundProps> = ({
       source.connect(processor);
       processor.connect(ctx.destination);
       setIsRecording(true);
-      addMessage("status", "🎙️ Listening...");
+      addMessage("status", i18n.t("playground.realtime.listeningShort"));
     } catch (err: any) {
       addMessage("status", `Microphone error: ${err.message}`);
     }
@@ -367,10 +368,14 @@ const RealtimePlayground: React.FC<RealtimePlaygroundProps> = ({
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center gap-3">
           <SoundOutlined className="text-lg text-blue-500" />
-          <Text className="font-semibold text-gray-800">Realtime Voice Chat</Text>
+          <Text className="font-semibold text-gray-800">{i18n.t("playground.realtime.title")}</Text>
           <span className={`inline-block w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-gray-300"}`} />
           <Text className="text-xs text-gray-500">
-            {isConnected ? "Connected" : isConnecting ? "Connecting..." : "Disconnected"}
+            {isConnected
+              ? i18n.t("playground.realtime.connected")
+              : isConnecting
+                ? i18n.t("playground.realtime.connecting")
+                : i18n.t("playground.realtime.disconnected")}
           </Text>
         </div>
         <div className="flex items-center gap-2">
@@ -384,11 +389,11 @@ const RealtimePlayground: React.FC<RealtimePlaygroundProps> = ({
           />
           {!isConnected ? (
             <Button type="primary" onClick={connect} loading={isConnecting} size="small">
-              Connect
+              {i18n.t("playground.realtime.connect")}
             </Button>
           ) : (
             <Button danger onClick={disconnect} size="small" icon={<CloseCircleOutlined />}>
-              Disconnect
+              {i18n.t("playground.realtime.disconnect")}
             </Button>
           )}
         </div>
@@ -399,10 +404,9 @@ const RealtimePlayground: React.FC<RealtimePlaygroundProps> = ({
         {messages.length === 0 && !isConnected && (
           <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
             <SoundOutlined style={{ fontSize: 48 }} />
-            <Text className="text-lg text-gray-500">Realtime Voice Playground</Text>
+            <Text className="text-lg text-gray-500">{i18n.t("playground.realtime.emptyTitle")}</Text>
             <Text className="text-sm text-gray-400 text-center max-w-md">
-              Click <b>Connect</b> to start a realtime session. You can speak using your microphone or type messages.
-              The AI will respond with voice and text.
+              {i18n.t("playground.realtime.emptyDescription")}
             </Text>
           </div>
         )}
@@ -445,7 +449,7 @@ const RealtimePlayground: React.FC<RealtimePlaygroundProps> = ({
               className={isRecording ? "animate-pulse" : ""}
             />
             <Input
-              placeholder="Type a message or use the mic..."
+              placeholder={i18n.t("playground.realtime.messagePlaceholder")}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onPressEnter={sendTextMessage}
@@ -463,7 +467,7 @@ const RealtimePlayground: React.FC<RealtimePlaygroundProps> = ({
           {isRecording && (
             <div className="mt-2 flex items-center gap-2 text-red-500 text-xs">
               <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              Listening — speak into your microphone. Server VAD will detect when you stop.
+              {i18n.t("playground.realtime.listening")}
             </div>
           )}
         </div>

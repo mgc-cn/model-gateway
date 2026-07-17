@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import ChatShell from "./ChatShell";
+import i18n from "@/i18n/i18n";
 
 const { mockPush, mockUsePathname, mockUseChatShell } = vi.hoisted(() => ({
   mockPush: vi.fn(),
@@ -72,5 +73,16 @@ describe("ChatShell", () => {
       </ChatShell>,
     );
     expect(screen.getByRole("button", { name: "Usage" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("renders shared navigation in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+    render(
+      <ChatShell>
+        <div />
+      </ChatShell>,
+    );
+    expect(screen.getByRole("button", { name: "对话" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "集成" })).toBeInTheDocument();
   });
 });

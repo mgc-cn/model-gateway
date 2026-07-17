@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card, Text } from "@tremor/react";
+import { useTranslation } from "react-i18next";
 
 interface ModelGroupInfo {
   model_group: string;
@@ -32,11 +33,22 @@ const ModelFilters: React.FC<ModelFiltersProps> = ({
   showFiltersCard = true,
   className = "",
 }) => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedProvider, setSelectedProvider] = useState<string>("");
   const [selectedMode, setSelectedMode] = useState<string>("");
   const [selectedFeature, setSelectedFeature] = useState<string>("");
   const previousFilteredDataRef = useRef<ModelGroupInfo[]>([]);
+  const formatLabel = (value: string) =>
+    value
+      .replace(/^supports_/, "")
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  const featureLabel = (key: string) =>
+    t(`modelCenter.features.${key.replace(/^supports_/, "")}`, { defaultValue: formatLabel(key) });
+  const modeLabel = (mode: string) =>
+    t(`modelCenter.modes.${mode.toLowerCase().replaceAll("-", "_")}`, { defaultValue: mode });
 
   // Helper functions to get unique values
   const getUniqueProviders = (data: ModelGroupInfo[]) => {
@@ -61,12 +73,7 @@ const ModelFilters: React.FC<ModelFiltersProps> = ({
       Object.entries(model)
         .filter(([key, value]) => key.startsWith("supports_") && value === true)
         .forEach(([key]) => {
-          const featureName = key
-            .replace(/^supports_/, "")
-            .split("_")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-          features.add(featureName);
+          features.add(key);
         });
     });
     return Array.from(features).sort();
@@ -86,12 +93,7 @@ const ModelFilters: React.FC<ModelFiltersProps> = ({
           Object.entries(model)
             .filter(([key, value]) => key.startsWith("supports_") && value === true)
             .some(([key]) => {
-              const featureName = key
-                .replace(/^supports_/, "")
-                .split("_")
-                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(" ");
-              return featureName === selectedFeature;
+              return key === selectedFeature;
             });
 
         return matchesSearch && matchesProvider && matchesMode && matchesFeature;
@@ -132,24 +134,24 @@ const ModelFilters: React.FC<ModelFiltersProps> = ({
   const filtersContent = (
     <div className="flex flex-wrap gap-4 items-center">
       <div>
-        <Text className="text-sm font-medium mb-2">Search Models:</Text>
+        <Text className="text-sm font-medium mb-2">{t("modelCenter.filters.search")}</Text>
         <input
           type="text"
-          placeholder="Search model names..."
+          placeholder={t("modelCenter.filters.searchPlaceholder")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="border rounded-sm px-3 py-2 w-64 h-10 text-sm"
         />
       </div>
       <div>
-        <Text className="text-sm font-medium mb-2">Provider:</Text>
+        <Text className="text-sm font-medium mb-2">{t("modelCenter.filters.provider")}</Text>
         <select
           value={selectedProvider}
           onChange={(e) => setSelectedProvider(e.target.value)}
           className="border rounded-sm px-3 py-2 text-sm text-gray-600 w-40 h-10"
         >
           <option value="" className="text-sm text-gray-600">
-            All Providers
+            {t("modelCenter.filters.allProviders")}
           </option>
           {modelHubData &&
             getUniqueProviders(modelHubData).map((provider) => (
@@ -160,37 +162,37 @@ const ModelFilters: React.FC<ModelFiltersProps> = ({
         </select>
       </div>
       <div>
-        <Text className="text-sm font-medium mb-2">Mode:</Text>
+        <Text className="text-sm font-medium mb-2">{t("modelCenter.filters.mode")}</Text>
         <select
           value={selectedMode}
           onChange={(e) => setSelectedMode(e.target.value)}
           className="border rounded-sm px-3 py-2 text-sm text-gray-600 w-32 h-10"
         >
           <option value="" className="text-sm text-gray-600">
-            All Modes
+            {t("modelCenter.filters.allModes")}
           </option>
           {modelHubData &&
             getUniqueModes(modelHubData).map((mode) => (
               <option key={mode} value={mode} className="text-sm text-gray-800">
-                {mode}
+                {modeLabel(mode)}
               </option>
             ))}
         </select>
       </div>
       <div>
-        <Text className="text-sm font-medium mb-2">Features:</Text>
+        <Text className="text-sm font-medium mb-2">{t("modelCenter.filters.features")}</Text>
         <select
           value={selectedFeature}
           onChange={(e) => setSelectedFeature(e.target.value)}
           className="border rounded-sm px-3 py-2 text-sm text-gray-600 w-48 h-10"
         >
           <option value="" className="text-sm text-gray-600">
-            All Features
+            {t("modelCenter.filters.allFeatures")}
           </option>
           {modelHubData &&
             getUniqueFeatures(modelHubData).map((feature) => (
               <option key={feature} value={feature} className="text-sm text-gray-800">
-                {feature}
+                {featureLabel(feature)}
               </option>
             ))}
         </select>
@@ -203,7 +205,7 @@ const ModelFilters: React.FC<ModelFiltersProps> = ({
             onClick={resetFilters}
             className="text-blue-600 hover:text-blue-800 text-sm underline h-10 flex items-center"
           >
-            Clear Filters
+            {t("modelCenter.filters.clear")}
           </button>
         </div>
       )}

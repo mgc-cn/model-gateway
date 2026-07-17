@@ -26,6 +26,8 @@ import { AgentModel, fetchAvailableAgentModels, MCPToolEntry } from "../../llm_c
 import { fetchAvailableModels, ModelGroup } from "@/components/llm_calls/fetch_models";
 import ComplianceUI from "../complianceUI/ComplianceUI";
 import ChatUI from "./ChatUI";
+import i18n from "@/i18n/i18n";
+import { useTranslation } from "react-i18next";
 
 const { TextArea } = Input;
 
@@ -101,31 +103,28 @@ function ConnectTabContent({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-1">Proxy base URL</h3>
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">{i18n.t("playground.agentBuilder.proxyBaseUrl")}</h3>
         <p className="text-sm text-gray-600 font-mono bg-gray-50 px-2 py-1.5 rounded-sm border border-gray-200 break-all">
           {baseUrl}
         </p>
       </div>
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Call your agent (cURL)</h3>
+        <h3 className="text-sm font-semibold text-gray-900 mb-2">{i18n.t("playground.agentBuilder.callAgent")}</h3>
         <CodeBlock code={curlExample} language="bash" />
       </div>
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Create a key for this agent</h3>
+        <h3 className="text-sm font-semibold text-gray-900 mb-2">{i18n.t("playground.agentBuilder.createKeyTitle")}</h3>
         <p className="text-sm text-gray-600 mb-3">
-          Create a virtual key that can only call this agent. The key will be scoped to you (user_id) and restricted to
-          the model <span className="font-mono text-gray-800">{agentName}</span>.
+          {i18n.t("playground.agentBuilder.createKeyDescription", { agent: agentName })}
         </p>
         <Button type="primary" onClick={onCreateKey} loading={creatingKey} disabled={disabledPersonalKeyCreation}>
-          Create key for this agent
+          {i18n.t("playground.agentBuilder.createKey")}
         </Button>
         {disabledPersonalKeyCreation && (
-          <p className="text-xs text-amber-600 mt-2">Key creation is disabled for your account.</p>
+          <p className="text-xs text-amber-600 mt-2">{i18n.t("playground.agentBuilder.keyDisabled")}</p>
         )}
         {createdKeyValue && (
-          <p className="text-xs text-green-700 mt-2">
-            Key created. It is shown in the cURL example above — copy the snippet to use it.
-          </p>
+          <p className="text-xs text-green-700 mt-2">{i18n.t("playground.agentBuilder.keyCreated")}</p>
         )}
       </div>
     </div>
@@ -186,6 +185,7 @@ export default function AgentBuilderView({
   apiKey,
   customProxyBaseUrl,
 }: AgentBuilderViewProps) {
+  useTranslation();
   const [agentModels, setAgentModels] = useState<AgentModel[]>([]);
   const [modelGroups, setModelGroups] = useState<ModelGroup[]>([]);
   const [loadingAgents, setLoadingAgents] = useState(true);
@@ -226,7 +226,7 @@ export default function AgentBuilderView({
       return list;
     } catch (e) {
       console.error(e);
-      NotificationsManager.fromBackend("Failed to load agents");
+      NotificationsManager.fromBackend(i18n.t("playground.agentBuilder.notifications.loadFailed"));
       return [];
     } finally {
       setLoadingAgents(false);
@@ -309,7 +309,7 @@ export default function AgentBuilderView({
   const handleAddAgent = () => {
     setSelectedId(NEW_AGENT_ID);
     setDraftName("");
-    setDraftSystemPrompt("You are a helpful assistant.");
+    setDraftSystemPrompt(i18n.t("playground.agentBuilder.defaultSystemPrompt"));
     setDraftUnderlyingModel(modelGroups[0]?.model_group);
     setDraftTemperature(0.7);
     setDraftMaxTokens(4096);
@@ -319,7 +319,7 @@ export default function AgentBuilderView({
 
   const handleSaveAgent = async () => {
     if (!accessToken || !draftName?.trim() || !draftUnderlyingModel) {
-      NotificationsManager.fromBackend("Name and underlying model are required");
+      NotificationsManager.fromBackend(i18n.t("playground.agentBuilder.notifications.required"));
       return;
     }
     setSaving(true);
@@ -346,7 +346,7 @@ export default function AgentBuilderView({
       setSelectedId(created ? getAgentSelectionKey(created) : list[0] ? getAgentSelectionKey(list[0]) : null);
       setActiveTab("chat");
     } catch (e) {
-      NotificationsManager.fromBackend("Failed to save agent");
+      NotificationsManager.fromBackend(i18n.t("playground.agentBuilder.notifications.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -354,7 +354,7 @@ export default function AgentBuilderView({
 
   const handleUpdateAgent = async () => {
     if (!accessToken || !selectedAgent || !selectedAgentModelId || !draftName?.trim() || !draftUnderlyingModel) {
-      NotificationsManager.fromBackend("Name and underlying model are required");
+      NotificationsManager.fromBackend(i18n.t("playground.agentBuilder.notifications.required"));
       return;
     }
     setSaving(true);
@@ -374,13 +374,13 @@ export default function AgentBuilderView({
         },
         selectedAgentModelId,
       );
-      NotificationsManager.success("Agent updated successfully");
+      NotificationsManager.success(i18n.t("playground.agentBuilder.notifications.updated"));
       const list = await loadAgents();
       const stillSelected = list.find((a) => getAgentModelId(a) === selectedAgentModelId);
       const target = stillSelected ?? list[0];
       setSelectedId(target ? getAgentSelectionKey(target) : null);
     } catch (e) {
-      NotificationsManager.fromBackend("Failed to update agent");
+      NotificationsManager.fromBackend(i18n.t("playground.agentBuilder.notifications.updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -398,12 +398,12 @@ export default function AgentBuilderView({
       const keyValue = response?.key ?? null;
       if (keyValue) {
         setCreatedKeyValue(keyValue);
-        NotificationsManager.success("Virtual key created. Use it in the curl example below.");
+        NotificationsManager.success(i18n.t("playground.agentBuilder.notifications.keyCreated"));
       } else {
-        NotificationsManager.fromBackend("Key created but value not returned");
+        NotificationsManager.fromBackend(i18n.t("playground.agentBuilder.notifications.keyMissing"));
       }
     } catch (e) {
-      NotificationsManager.fromBackend("Failed to create key for agent");
+      NotificationsManager.fromBackend(i18n.t("playground.agentBuilder.notifications.keyFailed"));
     } finally {
       setCreatingKey(false);
     }
@@ -412,21 +412,21 @@ export default function AgentBuilderView({
   const handleDeleteAgent = () => {
     if (!selectedAgent || !selectedAgentModelId || !accessToken) return;
     Modal.confirm({
-      title: "Delete agent",
-      content: `Are you sure you want to delete "${selectedAgent.model_name}"? This cannot be undone.`,
-      okText: "Delete",
+      title: i18n.t("playground.agentBuilder.delete.title"),
+      content: i18n.t("playground.agentBuilder.delete.message", { agent: selectedAgent.model_name }),
+      okText: i18n.t("common.delete"),
       okType: "danger",
-      cancelText: "Cancel",
+      cancelText: i18n.t("common.cancel"),
       onOk: async () => {
         setDeleting(true);
         try {
           await modelDeleteCall(accessToken, selectedAgentModelId);
-          NotificationsManager.success("Agent deleted");
+          NotificationsManager.success(i18n.t("playground.agentBuilder.notifications.deleted"));
           const list = await loadAgents();
           const remaining = list.filter((a) => getAgentModelId(a) !== selectedAgentModelId);
           setSelectedId(remaining.length > 0 ? getAgentSelectionKey(remaining[0]) : null);
         } catch (e) {
-          NotificationsManager.fromBackend("Failed to delete agent");
+          NotificationsManager.fromBackend(i18n.t("playground.agentBuilder.notifications.deleteFailed"));
         } finally {
           setDeleting(false);
         }
@@ -436,7 +436,9 @@ export default function AgentBuilderView({
 
   if (!accessToken || !userID || !userRole) {
     return (
-      <div className="flex h-full items-center justify-center p-8 text-gray-500">Sign in to use Agent Builder.</div>
+      <div className="flex h-full items-center justify-center p-8 text-gray-500">
+        {i18n.t("playground.agentBuilder.signIn")}
+      </div>
     );
   }
 
@@ -444,7 +446,7 @@ export default function AgentBuilderView({
     <div className="flex h-full flex-col bg-white text-gray-900">
       <div className="flex shrink-0 flex-col border-b border-gray-200">
         <div className="flex h-12 items-center justify-between px-4">
-          <span className="text-sm font-medium text-gray-900">Agent Builder</span>
+          <span className="text-sm font-medium text-gray-900">{i18n.t("playground.agentBuilder.title")}</span>
           {isNewAgent ? (
             <Button
               type="primary"
@@ -453,21 +455,19 @@ export default function AgentBuilderView({
               loading={saving}
               disabled={!draftName?.trim() || !draftUnderlyingModel}
             >
-              Save Agent
+              {i18n.t("playground.agentBuilder.save")}
             </Button>
           ) : (
-            <span className="text-xs text-gray-500">Build Agents that pass your compliance requirements.</span>
+            <span className="text-xs text-gray-500">{i18n.t("playground.agentBuilder.description")}</span>
           )}
         </div>
         <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
           <ExperimentOutlined className="shrink-0 text-amber-600" />
           <span>
-            Agent Builder is experimental and may change or be removed without notice. We’d love your feedback—email us
-            at{" "}
+            {i18n.t("playground.agentBuilder.experimental")}{" "}
             <a href="mailto:product@berri.ai" className="font-medium text-amber-900 underline hover:text-amber-700">
               product@berri.ai
             </a>
-            .
           </span>
         </div>
       </div>
@@ -476,8 +476,16 @@ export default function AgentBuilderView({
         {/* Roster */}
         <div className="w-60 shrink-0 border-r border-gray-200 bg-white flex flex-col">
           <div className="flex items-center justify-between border-b border-gray-200 p-3">
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Agents</span>
-            <Button type="text" size="small" icon={<PlusOutlined />} onClick={handleAddAgent} aria-label="Add agent" />
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              {i18n.t("playground.agentBuilder.agents")}
+            </span>
+            <Button
+              type="text"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={handleAddAgent}
+              aria-label={i18n.t("playground.agentBuilder.addAgent")}
+            />
           </div>
           <div className="flex-1 overflow-y-auto p-2">
             {loadingAgents ? (
@@ -509,7 +517,7 @@ export default function AgentBuilderView({
                   onClick={handleAddAgent}
                   className="mb-1 w-full rounded-md border border-dashed border-gray-300 px-3 py-2 text-left text-sm text-gray-500 hover:border-blue-400 hover:bg-blue-50/50 hover:text-gray-700"
                 >
-                  <PlusOutlined className="mr-1" /> New agent
+                  <PlusOutlined className="mr-1" /> {i18n.t("playground.agentBuilder.newAgent")}
                 </button>
               </>
             )}
@@ -520,7 +528,7 @@ export default function AgentBuilderView({
         <div className="flex flex-1 flex-col overflow-hidden">
           {selectedId === null && !isNewAgent && agentModels.length === 0 && !loadingAgents && (
             <div className="flex flex-1 items-center justify-center p-8 text-gray-500">
-              No agents yet. Add an agent to get started.
+              {i18n.t("playground.agentBuilder.empty")}
             </div>
           )}
           {(selectedId !== null || isNewAgent) && (
@@ -534,7 +542,7 @@ export default function AgentBuilderView({
                     key: "configure",
                     label: (
                       <span>
-                        <RobotOutlined className="mr-1" /> Configure
+                        <RobotOutlined className="mr-1" /> {i18n.t("playground.agentBuilder.tabs.configure")}
                       </span>
                     ),
                     children: (
@@ -543,40 +551,47 @@ export default function AgentBuilderView({
                           <div className="mx-auto max-w-xl space-y-4">
                             {!selectedAgentModelId && selectedAgent && (
                               <div className="rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                                This agent cannot be updated or deleted here (missing model id). Manage it from Models
-                                &amp; Endpoints.
+                                {i18n.t("playground.agentBuilder.missingModelId")}
                               </div>
                             )}
                             <div>
-                              <label className="mb-1 block text-sm font-medium text-gray-700">Agent name</label>
+                              <label className="mb-1 block text-sm font-medium text-gray-700">
+                                {i18n.t("playground.agentBuilder.fields.name")}
+                              </label>
                               <Input
                                 value={draftName}
                                 onChange={(e) => setDraftName(e.target.value)}
-                                placeholder="My Agent"
+                                placeholder={i18n.t("playground.agentBuilder.fields.namePlaceholder")}
                               />
                             </div>
                             <div>
-                              <label className="mb-1 block text-sm font-medium text-gray-700">System prompt</label>
+                              <label className="mb-1 block text-sm font-medium text-gray-700">
+                                {i18n.t("playground.agentBuilder.fields.systemPrompt")}
+                              </label>
                               <TextArea
                                 value={draftSystemPrompt}
                                 onChange={(e) => setDraftSystemPrompt(e.target.value)}
-                                placeholder="You are a helpful assistant..."
+                                placeholder={i18n.t("playground.agentBuilder.fields.systemPromptPlaceholder")}
                                 rows={6}
                               />
                             </div>
                             <div>
-                              <label className="mb-1 block text-sm font-medium text-gray-700">Underlying LLM</label>
+                              <label className="mb-1 block text-sm font-medium text-gray-700">
+                                {i18n.t("playground.agentBuilder.fields.model")}
+                              </label>
                               <Select
                                 value={draftUnderlyingModel}
                                 onChange={setDraftUnderlyingModel}
                                 className="w-full"
                                 options={modelGroups.map((m) => ({ value: m.model_group, label: m.model_group }))}
-                                placeholder="Select model"
+                                placeholder={i18n.t("playground.agentBuilder.fields.modelPlaceholder")}
                               />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Temperature</label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                  {i18n.t("playground.agentBuilder.fields.temperature")}
+                                </label>
                                 <Input
                                   type="number"
                                   min={0}
@@ -587,7 +602,9 @@ export default function AgentBuilderView({
                                 />
                               </div>
                               <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Max tokens</label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                  {i18n.t("playground.agentBuilder.fields.maxTokens")}
+                                </label>
                                 <Input
                                   type="number"
                                   min={1}
@@ -597,10 +614,12 @@ export default function AgentBuilderView({
                               </div>
                             </div>
                             <div>
-                              <label className="mb-1 block text-sm font-medium text-gray-700">MCP servers</label>
+                              <label className="mb-1 block text-sm font-medium text-gray-700">
+                                {i18n.t("playground.agentBuilder.fields.mcpServers")}
+                              </label>
                               <Select
                                 mode="multiple"
-                                placeholder="Select MCP servers to attach (same format as chat completions API)"
+                                placeholder={i18n.t("playground.agentBuilder.fields.mcpServersPlaceholder")}
                                 value={selectedMCPServerIds}
                                 onChange={handleMCPServerChange}
                                 loading={loadingMCPServers}
@@ -615,9 +634,7 @@ export default function AgentBuilderView({
                               />
                               {selectedAgent && draftTools.length > 0 && (
                                 <p className="mt-1 text-xs text-gray-500">
-                                  {draftTools.length} MCP server{draftTools.length !== 1 ? "s" : ""} saved. Use the same{" "}
-                                  <code className="rounded-sm bg-gray-100 px-1">tools</code> array in chat completions
-                                  when calling this agent.
+                                  {i18n.t("playground.agentBuilder.mcpSaved", { count: draftTools.length })}
                                 </p>
                               )}
                             </div>
@@ -632,7 +649,7 @@ export default function AgentBuilderView({
                                       loading={saving}
                                       disabled={!draftName?.trim() || !draftUnderlyingModel}
                                     >
-                                      Update Agent
+                                      {i18n.t("playground.agentBuilder.update")}
                                     </Button>
                                     <Button
                                       type="default"
@@ -641,12 +658,12 @@ export default function AgentBuilderView({
                                       onClick={handleDeleteAgent}
                                       loading={deleting}
                                     >
-                                      Delete
+                                      {i18n.t("common.delete")}
                                     </Button>
                                   </>
                                 )}
                                 <Button type="primary" icon={<CommentOutlined />} onClick={() => setActiveTab("chat")}>
-                                  Test in Chat
+                                  {i18n.t("playground.agentBuilder.testInChat")}
                                 </Button>
                               </div>
                             )}
@@ -659,7 +676,7 @@ export default function AgentBuilderView({
                     key: "chat",
                     label: (
                       <span>
-                        <CommentOutlined className="mr-1" /> Chat
+                        <CommentOutlined className="mr-1" /> {i18n.t("playground.agentBuilder.tabs.chat")}
                       </span>
                     ),
                     disabled: isNewAgent,
@@ -679,7 +696,7 @@ export default function AgentBuilderView({
                           />
                         ) : (
                           <div className="flex flex-1 items-center justify-center text-gray-500">
-                            Save an agent first to test in Chat.
+                            {i18n.t("playground.agentBuilder.saveBeforeChat")}
                           </div>
                         )}
                       </div>
@@ -689,7 +706,7 @@ export default function AgentBuilderView({
                     key: "test",
                     label: (
                       <span>
-                        <ExperimentOutlined className="mr-1" /> Batch Test
+                        <ExperimentOutlined className="mr-1" /> {i18n.t("playground.agentBuilder.tabs.batchTest")}
                       </span>
                     ),
                     disabled: isNewAgent,
@@ -705,7 +722,7 @@ export default function AgentBuilderView({
                           />
                         ) : (
                           <div className="flex flex-1 items-center justify-center text-gray-500">
-                            Select an agent to run batch tests.
+                            {i18n.t("playground.agentBuilder.selectForBatch")}
                           </div>
                         )}
                       </div>
@@ -715,7 +732,7 @@ export default function AgentBuilderView({
                     key: "connect",
                     label: (
                       <span>
-                        <LinkOutlined className="mr-1" /> Connect
+                        <LinkOutlined className="mr-1" /> {i18n.t("playground.agentBuilder.tabs.connect")}
                       </span>
                     ),
                     disabled: isNewAgent,
@@ -735,7 +752,7 @@ export default function AgentBuilderView({
                           />
                         ) : (
                           <div className="flex flex-1 items-center justify-center text-gray-500">
-                            Select an agent to see how to connect.
+                            {i18n.t("playground.agentBuilder.selectForConnect")}
                           </div>
                         )}
                       </div>

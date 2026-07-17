@@ -8,6 +8,7 @@ import { TableHeaderSortDropdown } from "../common_components/TableHeaderSortDro
 import { TimeCell } from "./time_cell";
 import { AGENT_CALL_TYPES, MCP_CALL_TYPES } from "./constants";
 import { AgentBadge, AgentIcon, LlmBadge, McpBadge, SparkleIcon, WrenchIcon } from "./TypeBadges";
+import i18n from "@/i18n/i18n";
 
 /** API sort field mapping for /spend/logs/ui endpoint */
 export const LOGS_SORT_FIELD_MAP = {
@@ -105,25 +106,25 @@ const SortableHeader = ({
   </div>
 );
 
-export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] => [
+export const createColumns = (sortProps?: LogsSortProps, _language?: string): ColumnDef<LogEntry>[] => [
   {
     header: sortProps
       ? () => (
           <SortableHeader
-            label="Time"
+            label={i18n.t("observability.logs.columns.time")}
             field="startTime"
             sortBy={sortProps.sortBy}
             sortOrder={sortProps.sortOrder}
             onSortChange={sortProps.onSortChange}
           />
         )
-      : "Time",
+      : i18n.t("observability.logs.columns.time"),
     accessorKey: "startTime",
     size: 200,
     cell: (info: any) => <TimeCell utcTime={info.getValue()} />,
   },
   {
-    header: "Type",
+    header: i18n.t("observability.logs.columns.type"),
     id: "type",
     size: 90,
     cell: (info: any) => {
@@ -168,7 +169,7 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
     },
   },
   {
-    header: "Status",
+    header: i18n.t("observability.logs.columns.status"),
     accessorKey: "metadata.status",
     size: 100,
     cell: (info: any) => {
@@ -181,13 +182,13 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
             isSuccess ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
           }`}
         >
-          {isSuccess ? "Success" : "Failure"}
+          {isSuccess ? i18n.t("observability.logs.success") : i18n.t("observability.logs.failure")}
         </span>
       );
     },
   },
   {
-    header: "Session ID",
+    header: i18n.t("observability.logs.columns.sessionId"),
     accessorKey: "session_id",
     size: 120,
     cell: (info: any) => {
@@ -209,7 +210,7 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
   },
 
   {
-    header: "Request ID",
+    header: i18n.t("observability.logs.columns.requestId"),
     accessorKey: "request_id",
     cell: (info: any) => (
       <Tooltip title={String(info.getValue() || "")}>
@@ -221,14 +222,14 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
     header: sortProps
       ? () => (
           <SortableHeader
-            label="Cost"
+            label={i18n.t("observability.logs.columns.cost")}
             field="spend"
             sortBy={sortProps.sortBy}
             sortOrder={sortProps.sortOrder}
             onSortChange={sortProps.onSortChange}
           />
         )
-      : "Cost",
+      : i18n.t("observability.logs.columns.cost"),
     accessorKey: "spend",
     size: 110,
     cell: (info: any) => {
@@ -243,7 +244,7 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
           </Tooltip>
           {mcpCount > 0 && mcpSpend > 0 && (
             <span className="text-[10px] text-amber-600">
-              incl. {getSpendString(mcpSpend)} from {mcpCount} MCP
+              {i18n.t("observability.logs.includesMcp", { spend: getSpendString(mcpSpend), count: mcpCount })}
             </span>
           )}
         </div>
@@ -254,14 +255,14 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
     header: sortProps
       ? () => (
           <SortableHeader
-            label="Duration (s)"
+            label={i18n.t("observability.logs.columns.duration")}
             field="request_duration_ms"
             sortBy={sortProps.sortBy}
             sortOrder={sortProps.sortOrder}
             onSortChange={sortProps.onSortChange}
           />
         )
-      : "Duration (s)",
+      : i18n.t("observability.logs.columns.duration"),
     accessorKey: "request_duration_ms",
     cell: (info: any) => {
       const ms = info.getValue();
@@ -304,7 +305,7 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
     },
   },
   {
-    header: "Team Name",
+    header: i18n.t("observability.logs.columns.team"),
     accessorKey: "metadata.user_api_key_team_alias",
     size: 150,
     cell: (info: any) => (
@@ -314,7 +315,7 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
     ),
   },
   {
-    header: "Key Hash",
+    header: i18n.t("observability.logs.columns.keyHash"),
     accessorKey: "metadata.user_api_key",
     size: 110,
     cell: (info: any) => {
@@ -334,7 +335,7 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
     },
   },
   {
-    header: "Key Alias",
+    header: i18n.t("observability.logs.columns.keyAlias"),
     accessorKey: "metadata.user_api_key_alias",
     size: 150,
     cell: (info: any) => (
@@ -347,14 +348,14 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
     header: sortProps
       ? () => (
           <SortableHeader
-            label="Model"
+            label={i18n.t("observability.logs.columns.model")}
             field="model"
             sortBy={sortProps.sortBy}
             sortOrder={sortProps.sortOrder}
             onSortChange={sortProps.onSortChange}
           />
         )
-      : "Model",
+      : i18n.t("observability.logs.columns.model"),
     accessorKey: "model",
     size: 200,
     cell: (info: any) => {
@@ -385,14 +386,14 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
     header: sortProps
       ? () => (
           <SortableHeader
-            label="Tokens"
+            label={i18n.t("observability.logs.columns.tokens")}
             field="total_tokens"
             sortBy={sortProps.sortBy}
             sortOrder={sortProps.sortOrder}
             onSortChange={sortProps.onSortChange}
           />
         )
-      : "Tokens",
+      : i18n.t("observability.logs.columns.tokens"),
     accessorKey: "total_tokens",
     size: 140,
     cell: (info: any) => {
@@ -408,7 +409,7 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
     },
   },
   {
-    header: "Internal User",
+    header: i18n.t("observability.logs.columns.internalUser"),
     accessorKey: "user",
     size: 150,
     cell: (info: any) => (
@@ -418,7 +419,7 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
     ),
   },
   {
-    header: "End User",
+    header: i18n.t("observability.logs.columns.endUser"),
     accessorKey: "end_user",
     size: 140,
     cell: (info: any) => (
@@ -429,7 +430,7 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
   },
 
   {
-    header: "Tags",
+    header: i18n.t("observability.logs.columns.tags"),
     accessorKey: "request_tags",
     size: 150,
     cell: (info: any) => {
@@ -468,7 +469,7 @@ export const createColumns = (sortProps?: LogsSortProps): ColumnDef<LogEntry>[] 
 export const columns = createColumns();
 
 const formatMessage = (message: any): string => {
-  if (!message) return "N/A";
+  if (!message) return i18n.t("observability.logs.noData");
   if (typeof message === "string") return message;
   if (typeof message === "object") {
     // Handle the {text, type} object specifically
@@ -496,11 +497,11 @@ export const RequestResponsePanel = ({ request, response }: { request: any; resp
     <div className="grid grid-cols-2 gap-4 mt-4">
       <div className="rounded-lg border border-gray-200 bg-gray-50">
         <div className="flex justify-between items-center p-3 border-b border-gray-200">
-          <h3 className="text-sm font-medium">Request</h3>
+          <h3 className="text-sm font-medium">{i18n.t("observability.logs.request")}</h3>
           <button
             onClick={() => copyToClipboard(requestStr)}
             className="p-1 hover:bg-gray-200 rounded-sm"
-            title="Copy request"
+            title={i18n.t("observability.logs.copyRequest")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -523,11 +524,11 @@ export const RequestResponsePanel = ({ request, response }: { request: any; resp
 
       <div className="rounded-lg border border-gray-200 bg-gray-50">
         <div className="flex justify-between items-center p-3 border-b border-gray-200">
-          <h3 className="text-sm font-medium">Response</h3>
+          <h3 className="text-sm font-medium">{i18n.t("observability.logs.response")}</h3>
           <button
             onClick={() => copyToClipboard(responseStr)}
             className="p-1 hover:bg-gray-200 rounded-sm"
-            title="Copy response"
+            title={i18n.t("observability.logs.copyResponse")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

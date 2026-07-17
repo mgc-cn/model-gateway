@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Input, Typography, Spin } from "antd";
 import MessageManager from "@/components/molecules/message_manager";
 import { SearchOutlined, LoadingOutlined } from "@ant-design/icons";
@@ -25,6 +26,7 @@ interface SearchToolTesterProps {
 }
 
 export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolName, accessToken, className = "" }) => {
+  const { t, i18n } = useTranslation();
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [searchHistory, setSearchHistory] = useState<
@@ -40,7 +42,7 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
 
   const handleSearch = async () => {
     if (!query.trim()) {
-      MessageManager.warning("Please enter a search query");
+      MessageManager.warning(t("toolManagement.search.tester.queryRequired"));
       return;
     }
 
@@ -63,20 +65,20 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
       // Don't clear query after search so user can modify it
     } catch (error) {
       console.error("Error querying search tool:", error);
-      NotificationsManager.fromBackend("Failed to query search tool");
+      NotificationsManager.fromBackend(t("toolManagement.search.tester.queryFailed"));
     } finally {
       setIsLoading(false);
     }
   };
 
   const formatTimestamp = (timestamp: number): string => {
-    return new Date(timestamp).toLocaleString();
+    return new Date(timestamp).toLocaleString(i18n.language);
   };
 
   const clearHistory = () => {
     setSearchHistory([]);
     setExpandedResults({});
-    NotificationsManager.success("Search history cleared");
+    NotificationsManager.success(t("toolManagement.search.tester.historyCleared"));
   };
 
   const toggleResultExpansion = (historyIndex: number, resultIndex: number) => {
@@ -94,7 +96,7 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
   return (
     <Card className="mt-6">
       <div className="mb-6">
-        <TremorTitle>Test Search Tool</TremorTitle>
+        <TremorTitle>{t("toolManagement.search.tester.title")}</TremorTitle>
       </div>
 
       <div className="flex flex-col" style={{ minHeight: "600px" }}>
@@ -121,7 +123,7 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
                     handleSearch();
                   }
                 }}
-                placeholder="Enter your search query..."
+                placeholder={t("toolManagement.search.tester.placeholder")}
                 disabled={isLoading}
                 bordered={false}
                 style={{ fontSize: "15px", padding: 0, height: "100%", boxShadow: "none" }}
@@ -145,7 +147,7 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
                 boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
               }}
             >
-              Search
+              {t("toolManagement.search.tester.search")}
             </Button>
           </div>
         </div>
@@ -157,15 +159,17 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
               <div className="flex items-center justify-center w-24 h-24 rounded-full bg-gray-100 mb-6">
                 <SearchOutlined style={{ fontSize: "48px", color: "#9ca3af" }} />
               </div>
-              <Text className="text-lg text-gray-600 font-medium">Test your search tool</Text>
-              <Text className="text-sm text-gray-500 mt-2">Enter a query above to see search results</Text>
+              <Text className="text-lg text-gray-600 font-medium">
+                {t("toolManagement.search.tester.initialTitle")}
+              </Text>
+              <Text className="text-sm text-gray-500 mt-2">{t("toolManagement.search.tester.initialHelp")}</Text>
             </div>
           ) : (
             <div>
               {isLoading && (
                 <div className="flex flex-col justify-center items-center py-16">
                   <Spin indicator={antIcon} />
-                  <Text className="mt-4 text-gray-600 font-medium">Searching...</Text>
+                  <Text className="mt-4 text-gray-600 font-medium">{t("toolManagement.search.tester.searching")}</Text>
                 </div>
               )}
 
@@ -179,7 +183,7 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                          Search Query
+                          {t("toolManagement.search.tester.query")}
                         </Text>
                         <div className="text-base font-semibold text-gray-900 mt-1.5">{latestResults.query}</div>
                       </div>
@@ -188,7 +192,9 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
                         <div className="flex items-center gap-3 mt-1">
                           <div className="text-sm font-semibold text-blue-600">
                             {latestResults.response?.results?.length || 0}{" "}
-                            {latestResults.response?.results?.length === 1 ? "result" : "results"}
+                            {latestResults.response?.results?.length === 1
+                              ? t("toolManagement.search.tester.result")
+                              : t("toolManagement.search.tester.results")}
                           </div>
                           {latestResults.latency !== undefined && (
                             <>
@@ -280,7 +286,9 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
                                     color: "#3b82f6",
                                   }}
                                 >
-                                  {isResultExpanded ? "Show less" : "Show more"}
+                                  {isResultExpanded
+                                    ? t("toolManagement.search.tester.showLess")
+                                    : t("toolManagement.search.tester.showMore")}
                                 </Button>
                               )}
                             </div>
@@ -293,8 +301,10 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
                       <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mx-auto mb-4">
                         <SearchOutlined style={{ fontSize: "24px", color: "#9ca3af" }} />
                       </div>
-                      <Text className="text-gray-600 font-medium">No results found</Text>
-                      <Text className="text-sm text-gray-500 mt-1">Try a different search query</Text>
+                      <Text className="text-gray-600 font-medium">{t("toolManagement.search.tester.noResults")}</Text>
+                      <Text className="text-sm text-gray-500 mt-1">
+                        {t("toolManagement.search.tester.tryDifferent")}
+                      </Text>
                     </div>
                   )}
                 </>
@@ -304,7 +314,9 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
               {searchHistory.length > 1 && (
                 <div className="mt-8 pt-6 border-t border-gray-200">
                   <div className="flex items-center justify-between mb-4">
-                    <Text className="text-sm font-semibold text-gray-700">Previous Searches</Text>
+                    <Text className="text-sm font-semibold text-gray-700">
+                      {t("toolManagement.search.tester.history")}
+                    </Text>
                     <Button
                       onClick={clearHistory}
                       size="small"
@@ -314,7 +326,7 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
                         fontWeight: 500,
                       }}
                     >
-                      Clear All
+                      {t("toolManagement.search.tester.clearAll")}
                     </Button>
                   </div>
                   <div className="space-y-2">
@@ -330,7 +342,9 @@ export const SearchToolTester: React.FC<SearchToolTesterProps> = ({ searchToolNa
                         <div className="text-xs text-gray-500 mt-1.5 flex items-center gap-2">
                           <span className="font-medium text-blue-600">
                             {entry.response?.results?.length || 0}{" "}
-                            {entry.response?.results?.length === 1 ? "result" : "results"}
+                            {entry.response?.results?.length === 1
+                              ? t("toolManagement.search.tester.result")
+                              : t("toolManagement.search.tester.results")}
                           </span>
                           {entry.latency !== undefined && (
                             <>

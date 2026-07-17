@@ -12,10 +12,12 @@ import RoutingGroupsTable from "./RoutingGroupsTable";
 import RoutingGroupModal from "./RoutingGroupModal";
 import NotificationsManager from "../molecules/notifications_manager";
 import type { RoutingGroup } from "./types";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
 const RoutingGroups: React.FC = () => {
+  const { t } = useTranslation();
   const { data, isLoading, refetch, isFetching } = useRoutingGroups();
   const { data: routerFields } = useRouterFields();
   const { data: modelHub } = useModelHub();
@@ -78,12 +80,12 @@ const RoutingGroups: React.FC = () => {
       await saveMutation.mutateAsync(next);
       NotificationsManager.success(
         drawerMode === "create"
-          ? `Created routing group "${incoming.group_name}"`
-          : `Updated routing group "${incoming.group_name}"`,
+          ? t("routerSettings.routingGroups.created", { name: incoming.group_name })
+          : t("routerSettings.routingGroups.updated", { name: incoming.group_name }),
       );
       setDrawerOpen(false);
     } catch (err) {
-      NotificationsManager.error(err instanceof Error ? err.message : "Failed to save routing group");
+      NotificationsManager.error(err instanceof Error ? err.message : t("routerSettings.routingGroups.saveFailed"));
     }
   };
 
@@ -92,10 +94,10 @@ const RoutingGroups: React.FC = () => {
     const next = groups.filter((g) => g.group_name !== deletingGroup.group_name);
     try {
       await saveMutation.mutateAsync(next);
-      NotificationsManager.success(`Deleted routing group "${deletingGroup.group_name}"`);
+      NotificationsManager.success(t("routerSettings.routingGroups.deleted", { name: deletingGroup.group_name }));
       setDeletingGroup(null);
     } catch (err) {
-      NotificationsManager.error(err instanceof Error ? err.message : "Failed to delete routing group");
+      NotificationsManager.error(err instanceof Error ? err.message : t("routerSettings.routingGroups.deleteFailed"));
     }
   };
 
@@ -106,20 +108,27 @@ const RoutingGroups: React.FC = () => {
           <Input
             allowClear
             prefix={<SearchOutlined className="text-gray-400" />}
-            placeholder="Search groups..."
+            placeholder={t("routerSettings.routingGroups.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="max-w-sm"
           />
           <Flex align="center" gap={12}>
             <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching && !isLoading}>
-              Refresh
+              {t("routerSettings.actions.refresh")}
             </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-              Create Group
+              {t("routerSettings.actions.createGroup")}
             </Button>
             <Text type="secondary" className="text-sm whitespace-nowrap">
-              Showing {filteredGroups.length} {filteredGroups.length === 1 ? "result" : "results"}
+              {t("routerSettings.routingGroups.showing", {
+                count: filteredGroups.length,
+                result: t(
+                  filteredGroups.length === 1
+                    ? "routerSettings.routingGroups.result"
+                    : "routerSettings.routingGroups.results",
+                ),
+              })}
             </Text>
           </Flex>
         </Flex>
@@ -148,17 +157,14 @@ const RoutingGroups: React.FC = () => {
 
       <Modal
         open={Boolean(deletingGroup)}
-        title="Delete routing group?"
-        okText="Delete"
+        title={t("routerSettings.routingGroups.deleteTitle")}
+        okText={t("routerSettings.actions.delete")}
         okButtonProps={{ danger: true, loading: saveMutation.isPending }}
-        cancelText="Cancel"
+        cancelText={t("routerSettings.actions.cancel")}
         onOk={confirmDelete}
         onCancel={() => setDeletingGroup(null)}
       >
-        <Text>
-          Models in <Text strong>{deletingGroup?.group_name}</Text> will fall back to the proxy&apos;s top-level routing
-          strategy. This cannot be undone.
-        </Text>
+        <Text>{t("routerSettings.routingGroups.deleteMessage", { name: deletingGroup?.group_name ?? "" })}</Text>
       </Modal>
     </Space>
   );

@@ -9,6 +9,8 @@ import CacheFieldSection from "./CacheFieldSection";
 import { EmbeddingModelOption } from "./CacheFormField";
 import { REDIS_TYPES, REDIS_TYPE_DESCRIPTIONS, RedisType } from "./cacheSettingsFields";
 import { buildCachePayload, buildInitialValues, CacheFormValues } from "./cacheSettingsUtils";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n/i18n";
 
 interface CacheSettingsProps {
   accessToken: string | null;
@@ -20,6 +22,7 @@ const toRedisType = (value: unknown): RedisType =>
   REDIS_TYPES.includes(value as RedisType) ? (value as RedisType) : "node";
 
 const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm<CacheFormValues>();
   const [redisType, setRedisType] = useState<RedisType>("node");
   const [embeddingModels, setEmbeddingModels] = useState<EmbeddingModelOption[]>([]);
@@ -37,7 +40,7 @@ const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
       setRedisType(toRedisType(currentValues.redis_type));
     } catch (error) {
       console.error("Failed to load cache settings:", error);
-      NotificationsManager.fromBackend("Failed to load cache settings");
+      NotificationsManager.fromBackend(i18n.t("caching.settings.notifications.loadFailed"));
     }
   }, [accessToken, form]);
 
@@ -84,14 +87,18 @@ const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
         buildCachePayload(redisType, values, { forTesting: true }),
       );
       if (result.status === "success") {
-        NotificationsManager.success("Cache connection test successful!");
+        NotificationsManager.success(i18n.t("caching.settings.notifications.testSucceeded"));
       } else {
-        NotificationsManager.fromBackend(`Connection test failed: ${result.message || result.error}`);
+        NotificationsManager.fromBackend(
+          i18n.t("caching.settings.notifications.testFailed", { error: result.message || result.error }),
+        );
       }
     } catch (error) {
       console.error("Test connection error:", error);
       NotificationsManager.fromBackend(
-        `Connection test failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        i18n.t("caching.settings.notifications.testFailed", {
+          error: error instanceof Error ? error.message : i18n.t("caching.health.unknownError"),
+        }),
       );
     } finally {
       setIsTesting(false);
@@ -110,11 +117,11 @@ const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
     setIsSaving(true);
     try {
       await updateCacheSettingsCall(accessToken, buildCachePayload(redisType, values, { forTesting: false }));
-      NotificationsManager.success("Cache settings updated successfully");
+      NotificationsManager.success(i18n.t("caching.settings.notifications.updated"));
       await loadCacheSettings();
     } catch (error) {
       console.error("Failed to save cache settings:", error);
-      NotificationsManager.fromBackend("Failed to update cache settings");
+      NotificationsManager.fromBackend(i18n.t("caching.settings.notifications.updateFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -128,8 +135,8 @@ const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
     <div className="w-full space-y-8 py-2">
       <Form form={form} layout="vertical" requiredMark={false} className="space-y-6">
         <div className="max-w-3xl">
-          <h3 className="text-sm font-medium text-gray-900">Cache Settings</h3>
-          <p className="text-xs text-gray-500 mt-1">Configure Redis cache for LiteLLM</p>
+          <h3 className="text-sm font-medium text-gray-900">{t("caching.settings.title")}</h3>
+          <p className="text-xs text-gray-500 mt-1">{t("caching.settings.description")}</p>
         </div>
 
         <RedisTypeSelector
@@ -140,7 +147,7 @@ const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
 
         <div className="pt-4 border-t border-gray-200">
           <CacheFieldSection
-            title="Connection Settings"
+            title={t("caching.settings.sections.connection")}
             section="connection"
             redisType={redisType}
             embeddingModels={embeddingModels}
@@ -150,7 +157,7 @@ const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
         {redisType === "cluster" && (
           <div className="pt-4 border-t border-gray-200">
             <CacheFieldSection
-              title="Cluster Configuration"
+              title={t("caching.settings.sections.cluster")}
               section="cluster"
               redisType={redisType}
               embeddingModels={embeddingModels}
@@ -162,7 +169,7 @@ const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
         {redisType === "sentinel" && (
           <div className="pt-4 border-t border-gray-200">
             <CacheFieldSection
-              title="Sentinel Configuration"
+              title={t("caching.settings.sections.sentinel")}
               section="sentinel"
               redisType={redisType}
               embeddingModels={embeddingModels}
@@ -173,7 +180,7 @@ const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
         {redisType === "semantic" && (
           <div className="pt-4 border-t border-gray-200">
             <CacheFieldSection
-              title="Semantic Configuration"
+              title={t("caching.settings.sections.semantic")}
               section="semantic"
               redisType={redisType}
               embeddingModels={embeddingModels}
@@ -183,26 +190,26 @@ const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
 
         <Accordion className="mt-4">
           <AccordionHeader>
-            <span className="text-sm font-medium text-gray-900">Advanced Settings</span>
+            <span className="text-sm font-medium text-gray-900">{t("caching.settings.sections.advanced")}</span>
           </AccordionHeader>
           <AccordionBody>
             <div className="space-y-6">
               <CacheFieldSection
-                title="SSL Settings"
+                title={t("caching.settings.sections.ssl")}
                 section="ssl"
                 redisType={redisType}
                 embeddingModels={embeddingModels}
                 headingLevel="h5"
               />
               <CacheFieldSection
-                title="Cache Management"
+                title={t("caching.settings.sections.cacheManagement")}
                 section="cacheManagement"
                 redisType={redisType}
                 embeddingModels={embeddingModels}
                 headingLevel="h5"
               />
               <CacheFieldSection
-                title="GCP Authentication"
+                title={t("caching.settings.sections.gcp")}
                 section="gcp"
                 redisType={redisType}
                 embeddingModels={embeddingModels}
@@ -215,10 +222,10 @@ const CacheSettings: React.FC<CacheSettingsProps> = ({ accessToken }) => {
 
       <div className="border-t border-gray-200 pt-6 flex justify-end gap-3">
         <Button variant="secondary" size="sm" onClick={handleTestConnection} disabled={isTesting} className="text-sm">
-          {isTesting ? "Testing..." : "Test Connection"}
+          {isTesting ? t("caching.settings.testing") : t("caching.settings.testConnection")}
         </Button>
         <Button size="sm" onClick={handleSaveChanges} disabled={isSaving} className="text-sm font-medium">
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? t("caching.settings.saving") : t("caching.settings.saveChanges")}
         </Button>
       </div>
     </div>

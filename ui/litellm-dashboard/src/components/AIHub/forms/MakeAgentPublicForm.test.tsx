@@ -2,6 +2,9 @@ import { render, screen, fireEvent, act, waitFor } from "@testing-library/react"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import MakeAgentPublicForm from "./MakeAgentPublicForm";
 import { AgentHubData } from "@/components/AIHub/AgentHubTableColumns";
+import i18n from "@/i18n/i18n";
+import { en } from "@/i18n/resources/en";
+import { zhCN } from "@/i18n/resources/zh-CN";
 
 // Mock the networking function
 vi.mock("../../networking", () => ({
@@ -105,12 +108,42 @@ describe("MakeAgentPublicForm", () => {
     onSuccess: vi.fn(),
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.resetAllMocks();
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
+  });
+
+  it("keeps agent publishing resources aligned", () => {
+    expect(Object.keys(zhCN.modelCenter.agentPublish)).toEqual(Object.keys(en.modelCenter.agentPublish));
+  });
+
+  it("localizes the complete agent publishing flow", async () => {
+    await act(async () => {
+      await i18n.changeLanguage("zh-CN");
+    });
+
+    render(<MakeAgentPublicForm {...mockProps} />);
+
+    expect(screen.getByText("公开智能体")).toBeInTheDocument();
+    expect(screen.getByText("选择要公开的智能体")).toBeInTheDocument();
+    expect(screen.getByLabelText("全选 (2)")).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    });
+
+    expect(screen.getByText("确认公开智能体")).toBeInTheDocument();
+    expect(screen.getByText("将公开的智能体：")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "公开" })).toBeInTheDocument();
   });
 
   it("should render the component", () => {

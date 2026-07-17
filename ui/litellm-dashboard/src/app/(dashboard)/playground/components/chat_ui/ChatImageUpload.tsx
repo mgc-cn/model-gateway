@@ -1,6 +1,7 @@
 import React from "react";
 import { Upload, Tooltip } from "antd";
 import { PaperClipOutlined } from "@ant-design/icons";
+import i18n from "@/i18n/i18n";
 
 const { Dragger } = Upload;
 
@@ -28,7 +29,7 @@ const ChatImageUpload: React.FC<ChatImageUploadProps> = ({
           className="inline-block"
           style={{ padding: 0, border: "none", background: "none" }}
         >
-          <Tooltip title="Attach image or PDF">
+          <Tooltip title={i18n.t("playground.media.attachImageOrPdf")}>
             <button
               type="button"
               className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"

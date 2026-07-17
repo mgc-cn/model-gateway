@@ -2,12 +2,14 @@ import React from "react";
 import { BarChart, Card, Title } from "@tremor/react";
 import { CustomLegend, CustomTooltip } from "@/components/common_components/chartUtils";
 import { MetricWithMetadata } from "../../../types";
+import { useTranslation } from "react-i18next";
 
 interface EndpointUsageBarChartProps {
   endpointData?: Record<string, MetricWithMetadata>;
 }
 
 const EndpointUsageBarChart: React.FC<EndpointUsageBarChartProps> = ({ endpointData }) => {
+  const { t } = useTranslation();
   const dataToUse = endpointData || {};
 
   // Transform endpoint data into chart format
@@ -28,7 +30,7 @@ const EndpointUsageBarChart: React.FC<EndpointUsageBarChartProps> = ({ endpointD
   return (
     <Card>
       <div className="flex justify-between items-center">
-        <Title>Success vs Failed Requests by Endpoint</Title>
+        <Title>{t("observability.usage.endpointSuccessFailed")}</Title>
         <CustomLegend
           categories={["metrics.successful_requests", "metrics.failed_requests"]}
           colors={["green", "red"]}

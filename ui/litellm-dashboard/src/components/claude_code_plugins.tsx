@@ -8,6 +8,8 @@ import SkillDetail from "./claude_code_plugins/skill_detail";
 import { isAdminRole } from "@/utils/roles";
 import NotificationsManager from "./molecules/notifications_manager";
 import { Plugin, ListPluginsResponse } from "./claude_code_plugins/types";
+import { useTranslation } from "react-i18next";
+import { PlusIcon } from "@heroicons/react/outline";
 
 interface ClaudeCodePluginsPanelProps {
   accessToken: string | null;
@@ -15,6 +17,7 @@ interface ClaudeCodePluginsPanelProps {
 }
 
 const ClaudeCodePluginsPanel: React.FC<ClaudeCodePluginsPanelProps> = ({ accessToken, userRole }) => {
+  const { t } = useTranslation();
   const [pluginsList, setPluginsList] = useState<Plugin[]>([]);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,11 +58,11 @@ const ClaudeCodePluginsPanel: React.FC<ClaudeCodePluginsPanelProps> = ({ accessT
     setIsDeleting(true);
     try {
       await deleteClaudeCodePlugin(accessToken, pluginToDelete.name);
-      NotificationsManager.success(`Skill "${pluginToDelete.displayName}" deleted successfully`);
+      NotificationsManager.success(t("skills.notifications.deleted", { name: pluginToDelete.displayName }));
       fetchPlugins();
     } catch (error) {
       console.error("Error deleting skill:", error);
-      NotificationsManager.error("Failed to delete skill");
+      NotificationsManager.error(t("skills.notifications.deleteFailed"));
     } finally {
       setIsDeleting(false);
       setPluginToDelete(null);
@@ -79,14 +82,14 @@ const ClaudeCodePluginsPanel: React.FC<ClaudeCodePluginsPanelProps> = ({ accessT
       ) : (
         <>
           <div className="flex flex-col gap-2 mb-4">
-            <h1 className="text-2xl font-bold">Skills</h1>
+            <h1 className="text-2xl font-bold">{t("skills.title")}</h1>
             <p className="text-sm text-gray-600">
-              Register Claude Code skills. Published skills appear in the Skill Hub for all users and are served via{" "}
+              {t("skills.description")}{" "}
               <code className="bg-gray-100 px-1 rounded-sm">/claude-code/marketplace.json</code>.
             </p>
             <div className="mt-2 flex gap-2">
-              <Button onClick={() => setIsAddModalVisible(true)} disabled={!accessToken || !isAdmin}>
-                + Add Skill
+              <Button icon={PlusIcon} onClick={() => setIsAddModalVisible(true)} disabled={!accessToken || !isAdmin}>
+                {t("skills.add")}
               </Button>
             </div>
           </div>
@@ -114,18 +117,18 @@ const ClaudeCodePluginsPanel: React.FC<ClaudeCodePluginsPanelProps> = ({ accessT
 
       {pluginToDelete && (
         <Modal
-          title="Delete Skill"
+          title={t("skills.delete.title")}
           open={pluginToDelete !== null}
           onOk={handleDeleteConfirm}
           onCancel={() => setPluginToDelete(null)}
           confirmLoading={isDeleting}
-          okText="Delete"
+          okText={t("common.delete")}
           okButtonProps={{ danger: true }}
         >
           <p>
-            Are you sure you want to delete skill: <strong>{pluginToDelete.displayName}</strong>?
+            {t("skills.delete.confirm")} <strong>{pluginToDelete.displayName}</strong>?
           </p>
-          <p>This action cannot be undone.</p>
+          <p>{t("skills.delete.irreversible")}</p>
         </Modal>
       )}
     </div>

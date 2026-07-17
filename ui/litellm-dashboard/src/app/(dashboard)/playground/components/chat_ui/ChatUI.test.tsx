@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ChatUI from "./ChatUI";
 import * as fetchModelsModule from "@/components/llm_calls/fetch_models";
+import i18n from "@/i18n/i18n";
 
 // Mock the fetchAvailableModels function
 vi.mock("@/components/llm_calls/fetch_models", () => ({
@@ -13,7 +14,11 @@ vi.mock("@/components/networking", () => ({
   tagListCall: vi.fn().mockResolvedValue({ data: [] }),
   vectorStoreListCall: vi.fn().mockResolvedValue({ data: [] }),
   getGuardrailsList: vi.fn().mockResolvedValue({ data: [] }),
+  getPoliciesList: vi.fn().mockResolvedValue({ policies: [] }),
   modelHubCall: vi.fn().mockResolvedValue({ data: [] }),
+  fetchMCPServers: vi.fn().mockResolvedValue([]),
+  fetchMCPToolsets: vi.fn().mockResolvedValue([]),
+  listMCPTools: vi.fn().mockResolvedValue([]),
 }));
 
 // Mock scrollIntoView which is not available in jsdom
@@ -22,7 +27,11 @@ beforeEach(() => {
 });
 
 describe("ChatUI", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
+
     // Reset mocks before each test
     vi.clearAllMocks();
     sessionStorage.clear();
@@ -49,6 +58,37 @@ describe("ChatUI", () => {
       />,
     );
     expect(getByText("Test Key")).toBeInTheDocument();
+  });
+
+  it("localizes the model playground core workflow in Simplified Chinese", async () => {
+    await act(async () => {
+      await i18n.changeLanguage("zh-CN");
+    });
+
+    render(
+      <ChatUI
+        accessToken="1234567890"
+        token="1234567890"
+        userRole="user"
+        userID="1234567890"
+        disabledPersonalKeyCreation={false}
+      />,
+    );
+
+    expect(await screen.findByText("模型测试")).toBeInTheDocument();
+    expect(screen.getByText("调试配置")).toBeInTheDocument();
+    expect(screen.getByText("虚拟密钥来源")).toBeInTheDocument();
+    expect(screen.getByText("端点类型")).toBeInTheDocument();
+    expect(screen.getByText("选择模型")).toBeInTheDocument();
+    expect(screen.getByText("标签")).toBeInTheDocument();
+    expect(screen.getByText("MCP 服务")).toBeInTheDocument();
+    expect(screen.getByText("向量存储")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /清空对话/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /获取代码/ })).toBeInTheDocument();
+    expect(screen.getByText("开始对话、生成图像或处理音频")).toBeInTheDocument();
+    expect(screen.getByText("请选择模型")).toBeInTheDocument();
+    expect(screen.getByText("选择或创建标签")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("输入消息...（Shift+Enter 换行）")).toBeInTheDocument();
   });
 
   it("should show the voice selector when the endpoint type is audio_speech", async () => {

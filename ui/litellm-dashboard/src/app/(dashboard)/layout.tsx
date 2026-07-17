@@ -12,6 +12,7 @@ import { MIGRATED_PAGES, migratedHref, legacyPageHref, legacyKeyForPathname } fr
 import { PluginModeProvider, usePluginMode } from "@/contexts/PluginModeContext";
 import { createApiClient } from "@/lib/http/client";
 import { getProxyBaseUrl } from "@/components/networking";
+import { useTranslation } from "react-i18next";
 
 const pluginApiClient = createApiClient({ getBaseUrl: () => getProxyBaseUrl() ?? "" });
 
@@ -29,6 +30,7 @@ export function AgentControlPlaneView() {
   const { accessToken } = useAuth();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [auth, setAuth] = useState<{ plugin: string; claim: string } | null>(null);
+  const { t } = useTranslation();
 
   // Fetch a short-lived identity claim scoped to the *active* plugin. The claim
   // is encrypted under that plugin's own per-plugin key, so it must be requested
@@ -67,8 +69,8 @@ export function AgentControlPlaneView() {
     return (
       <div className="flex flex-1 items-center justify-center text-gray-500">
         <div className="text-center">
-          <p className="text-lg font-medium mb-2">Plugin</p>
-          <p className="text-sm">Configure the plugin URL in settings</p>
+          <p className="text-lg font-medium mb-2">{t("dashboard.plugin")}</p>
+          <p className="text-sm">{t("dashboard.configurePlugin")}</p>
         </div>
       </div>
     );

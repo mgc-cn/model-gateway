@@ -2,12 +2,14 @@ import React from "react";
 import { Title } from "@tremor/react";
 import { Descriptions } from "antd";
 import { Agent } from "./types";
+import { useTranslation } from "react-i18next";
 
 interface AgentCostViewProps {
   agent: Agent;
 }
 
 const AgentCostView: React.FC<AgentCostViewProps> = ({ agent }) => {
+  const { t } = useTranslation();
   const params = agent.litellm_params;
 
   if (
@@ -20,16 +22,20 @@ const AgentCostView: React.FC<AgentCostViewProps> = ({ agent }) => {
 
   return (
     <div style={{ marginTop: 24 }}>
-      <Title>Cost Configuration</Title>
+      <Title>{t("agentManagement.cost.title")}</Title>
       <Descriptions bordered column={1} style={{ marginTop: 16 }}>
         {params.cost_per_query !== undefined && (
-          <Descriptions.Item label="Cost Per Query">${params.cost_per_query}</Descriptions.Item>
+          <Descriptions.Item label={t("agentManagement.cost.perQuery")}>${params.cost_per_query}</Descriptions.Item>
         )}
         {params.input_cost_per_token !== undefined && (
-          <Descriptions.Item label="Input Cost Per Token">${params.input_cost_per_token}</Descriptions.Item>
+          <Descriptions.Item label={t("agentManagement.cost.inputToken")}>
+            ${params.input_cost_per_token}
+          </Descriptions.Item>
         )}
         {params.output_cost_per_token !== undefined && (
-          <Descriptions.Item label="Output Cost Per Token">${params.output_cost_per_token}</Descriptions.Item>
+          <Descriptions.Item label={t("agentManagement.cost.outputToken")}>
+            ${params.output_cost_per_token}
+          </Descriptions.Item>
         )}
       </Descriptions>
     </div>

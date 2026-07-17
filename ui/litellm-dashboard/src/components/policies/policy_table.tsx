@@ -11,6 +11,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Policy } from "./types";
+import { useTranslation } from "react-i18next";
 
 /** One row per policy name; primaryPolicy is used for display and for Edit (FlowBuilder loads all versions) */
 interface PolicyRow {
@@ -55,6 +56,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
   onViewClick,
   isAdmin = false,
 }) => {
+  const { t, i18n } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([{ id: "policy_name", desc: false }]);
 
   const rows = useMemo(() => groupPoliciesByName(policies), [policies]);
@@ -62,19 +64,19 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
-    return date.toLocaleString();
+    return date.toLocaleString(i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en-US");
   };
 
   const columns: ColumnDef<PolicyRow>[] = [
     {
-      header: "Name",
+      header: t("policyManagement.fields.name"),
       accessorKey: "policy_name",
       cell: ({ row }) => {
         const { primaryPolicy, versionCount } = row.original;
         return (
           <div className="flex items-center gap-2">
             <Tooltip
-              title={`${primaryPolicy.policy_name || "-"}${versionCount > 1 ? ` (${versionCount} versions)` : ""}`}
+              title={`${primaryPolicy.policy_name || "-"}${versionCount > 1 ? ` (${t("policyManagement.table.versionCount", { count: versionCount })})` : ""}`}
             >
               <Button
                 size="xs"
@@ -87,7 +89,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
             </Tooltip>
             {versionCount > 1 && (
               <Badge color="gray" size="xs">
-                {versionCount} version{versionCount !== 1 ? "s" : ""}
+                {t("policyManagement.table.versionCount", { count: versionCount })}
               </Badge>
             )}
           </div>
@@ -95,7 +97,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
       },
     },
     {
-      header: "Description",
+      header: t("policyManagement.fields.description"),
       accessorFn: (row) => row.primaryPolicy.description ?? "",
       cell: ({ row }) => {
         const policy = row.original.primaryPolicy;
@@ -107,7 +109,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
       },
     },
     {
-      header: "Inherits From",
+      header: t("policyManagement.fields.inheritsFrom"),
       accessorFn: (row) => row.primaryPolicy.inherit ?? "",
       cell: ({ row }) => {
         const policy = row.original.primaryPolicy;
@@ -121,7 +123,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
       },
     },
     {
-      header: "Guardrails (Add)",
+      header: t("policyManagement.fields.guardrailsAdd"),
       accessorFn: (row) => (row.primaryPolicy.guardrails_add ?? []).join(", "),
       cell: ({ row }) => {
         const policy = row.original.primaryPolicy;
@@ -146,7 +148,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
       },
     },
     {
-      header: "Guardrails (Remove)",
+      header: t("policyManagement.fields.guardrailsRemove"),
       accessorFn: (row) => (row.primaryPolicy.guardrails_remove ?? []).join(", "),
       cell: ({ row }) => {
         const policy = row.original.primaryPolicy;
@@ -171,7 +173,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
       },
     },
     {
-      header: "Model Condition",
+      header: t("policyManagement.fields.modelCondition"),
       accessorFn: (row) => {
         const m = row.primaryPolicy.condition?.model;
         return typeof m === "string" ? m : JSON.stringify(m ?? "");
@@ -189,14 +191,14 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
                 ? modelCondition.length > 20
                   ? modelCondition.slice(0, 20) + "..."
                   : modelCondition
-                : "Multiple"}
+                : t("policyManagement.table.multiple")}
             </code>
           </Tooltip>
         );
       },
     },
     {
-      header: "Created At",
+      header: t("policyManagement.fields.createdAt"),
       id: "created_at",
       accessorFn: (row) => row.primaryPolicy.created_at ?? "",
       cell: ({ row }) => {
@@ -210,7 +212,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
     },
     {
       id: "actions",
-      header: "Actions",
+      header: t("policyManagement.fields.actions"),
       cell: ({ row }) => {
         const { primaryPolicy } = row.original;
         const policy = primaryPolicy;
@@ -218,7 +220,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
           <div className="flex space-x-2">
             {isAdmin && (
               <>
-                <Tooltip title="Edit policy">
+                <Tooltip title={t("policyManagement.actions.editPolicy")}>
                   <Icon
                     icon={PencilIcon}
                     size="sm"
@@ -226,12 +228,13 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
                     className="cursor-pointer hover:text-blue-500"
                   />
                 </Tooltip>
-                <Tooltip title="Delete policy">
+                <Tooltip title={t("policyManagement.actions.deletePolicy")}>
                   <Icon
                     icon={TrashIcon}
                     size="sm"
                     onClick={() =>
-                      policy.policy_id && onDeleteClick(policy.policy_id, policy.policy_name || "Unnamed Policy")
+                      policy.policy_id &&
+                      onDeleteClick(policy.policy_id, policy.policy_name || t("policyManagement.table.unnamed"))
                     }
                     className="cursor-pointer hover:text-red-500"
                   />
@@ -298,7 +301,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-8 text-center">
                   <div className="text-center text-gray-500">
-                    <p>Loading...</p>
+                    <p>{t("policyManagement.loading")}</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -323,7 +326,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-8 text-center">
                   <div className="text-center text-gray-500">
-                    <p>No policies found</p>
+                    <p>{t("policyManagement.table.empty")}</p>
                   </div>
                 </TableCell>
               </TableRow>

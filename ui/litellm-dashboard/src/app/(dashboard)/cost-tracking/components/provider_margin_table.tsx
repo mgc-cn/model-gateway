@@ -4,6 +4,7 @@ import { TrashIcon, PencilAltIcon, CheckIcon, XIcon } from "@heroicons/react/out
 import { SimpleTable } from "@/components/common_components/simple_table";
 import { MarginConfig } from "./types";
 import { getProviderDisplayInfo, handleImageError } from "./provider_display_helpers";
+import { useTranslation } from "react-i18next";
 
 interface ProviderMarginTableProps {
   marginConfig: MarginConfig;
@@ -21,6 +22,7 @@ const ProviderMarginTable: React.FC<ProviderMarginTableProps> = ({
   onMarginChange,
   onRemoveProvider,
 }) => {
+  const { t } = useTranslation();
   const [editingProvider, setEditingProvider] = useState<string | null>(null);
   const [editPercentage, setEditPercentage] = useState<string>("");
   const [editFixedAmount, setEditFixedAmount] = useState<string>("");
@@ -106,12 +108,12 @@ const ProviderMarginTable: React.FC<ProviderMarginTableProps> = ({
       data={data}
       columns={[
         {
-          header: "Provider",
+          header: t("costTracking.fields.provider"),
           cell: (row) => {
             if (row.provider === "global") {
               return (
                 <div className="flex items-center space-x-2">
-                  <span className="font-medium">Global (All Providers)</span>
+                  <span className="font-medium">{t("costTracking.globalProviders")}</span>
                 </div>
               );
             }
@@ -132,7 +134,7 @@ const ProviderMarginTable: React.FC<ProviderMarginTableProps> = ({
           },
         },
         {
-          header: "Margin",
+          header: t("costTracking.fields.margin"),
           cell: (row) => (
             <div className="flex items-center gap-2">
               {editingProvider === row.provider ? (
@@ -184,7 +186,7 @@ const ProviderMarginTable: React.FC<ProviderMarginTableProps> = ({
           width: "350px",
         },
         {
-          header: "Actions",
+          header: t("costTracking.fields.actions"),
           cell: (row) => {
             const displayName = row.provider === "global" ? "Global" : getProviderDisplayInfo(row.provider).displayName;
             return (
@@ -200,7 +202,7 @@ const ProviderMarginTable: React.FC<ProviderMarginTableProps> = ({
         },
       ]}
       getRowKey={(row) => row.provider}
-      emptyMessage="No provider margins configured"
+      emptyMessage={t("costTracking.margins.empty")}
     />
   );
 };

@@ -2,6 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button, Badge, Text } from "@tremor/react";
 import { Tooltip, Tag } from "antd";
 import { CopyOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import type { TFunction } from "i18next";
 
 export interface MCPServerData {
   server_id: string;
@@ -34,11 +35,12 @@ export interface MCPServerData {
 export const mcpHubColumns = (
   showModal: (server: MCPServerData) => void,
   copyToClipboard: (text: string) => void,
+  t: TFunction,
   publicPage: boolean = false,
 ): ColumnDef<MCPServerData>[] => {
   const allColumns: ColumnDef<MCPServerData>[] = [
     {
-      header: "Server Name",
+      header: t("modelCenter.mcpTable.columns.name"),
       accessorKey: "server_name",
       enableSorting: true,
       sortingFn: "alphanumeric",
@@ -49,7 +51,7 @@ export const mcpHubColumns = (
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <Text className="font-medium text-sm">{server.server_name}</Text>
-              <Tooltip title="Copy server name">
+              <Tooltip title={t("modelCenter.mcpTable.copyName")}>
                 <CopyOutlined
                   onClick={() => copyToClipboard(server.server_name)}
                   className="cursor-pointer text-gray-500 hover:text-blue-500 text-xs"
@@ -65,7 +67,7 @@ export const mcpHubColumns = (
       },
     },
     {
-      header: "Description",
+      header: t("modelCenter.mcpTable.columns.description"),
       accessorKey: "description",
       enableSorting: true,
       sortingFn: "alphanumeric",
@@ -79,7 +81,7 @@ export const mcpHubColumns = (
       },
     },
     {
-      header: "Transport",
+      header: t("modelCenter.mcpTable.columns.transport"),
       accessorKey: "transport",
       enableSorting: true,
       sortingFn: "alphanumeric",
@@ -97,7 +99,7 @@ export const mcpHubColumns = (
       },
     },
     {
-      header: "Auth Type",
+      header: t("modelCenter.mcpTable.columns.authType"),
       accessorKey: "auth_type",
       enableSorting: true,
       sortingFn: "alphanumeric",
@@ -117,7 +119,7 @@ export const mcpHubColumns = (
       },
     },
     {
-      header: "Status",
+      header: t("modelCenter.mcpTable.columns.status"),
       accessorKey: "status",
       enableSorting: true,
       sortingFn: "alphanumeric",
@@ -136,13 +138,15 @@ export const mcpHubColumns = (
 
         return (
           <Badge color={color} size="sm">
-            {server.status || "unknown"}
+            {t(`modelCenter.mcpTable.status.${server.status || "unknown"}`, {
+              defaultValue: server.status || t("modelCenter.mcpTable.status.unknown"),
+            })}
           </Badge>
         );
       },
     },
     {
-      header: "Tools",
+      header: t("modelCenter.mcpTable.columns.tools"),
       accessorKey: "allowed_tools",
       enableSorting: false,
       cell: ({ row }) => {
@@ -152,7 +156,9 @@ export const mcpHubColumns = (
         return (
           <div className="space-y-1">
             <Text className="text-xs font-medium">
-              {tools.length > 0 ? `${tools.length} tool${tools.length !== 1 ? "s" : ""}` : "All tools"}
+              {tools.length > 0
+                ? t("modelCenter.mcpTable.toolCount", { count: tools.length })
+                : t("modelCenter.mcpTable.allTools")}
             </Text>
             {tools.length > 0 && (
               <div className="flex flex-wrap gap-1">
@@ -172,7 +178,7 @@ export const mcpHubColumns = (
       },
     },
     {
-      header: "Created By",
+      header: t("modelCenter.mcpTable.columns.createdBy"),
       accessorKey: "created_by",
       enableSorting: true,
       sortingFn: "alphanumeric",
@@ -186,7 +192,7 @@ export const mcpHubColumns = (
       },
     },
     {
-      header: "Public",
+      header: t("modelCenter.mcpTable.columns.public"),
       accessorKey: "mcp_info.is_public",
       enableSorting: true,
       sortingFn: (rowA, rowB) => {
@@ -199,11 +205,11 @@ export const mcpHubColumns = (
 
         return server.mcp_info?.is_public === true ? (
           <Badge color="green" size="xs">
-            Yes
+            {t("modelCenter.values.yes")}
           </Badge>
         ) : (
           <Badge color="gray" size="xs">
-            No
+            {t("modelCenter.values.no")}
           </Badge>
         );
       },
@@ -212,7 +218,7 @@ export const mcpHubColumns = (
       },
     },
     {
-      header: "Details",
+      header: t("modelCenter.mcpTable.columns.details"),
       id: "details",
       enableSorting: false,
       cell: ({ row }) => {
@@ -220,8 +226,8 @@ export const mcpHubColumns = (
 
         return (
           <Button size="xs" variant="secondary" onClick={() => showModal(server)} icon={InfoCircleOutlined}>
-            <span className="hidden lg:inline">Details</span>
-            <span className="lg:hidden">Info</span>
+            <span className="hidden lg:inline">{t("modelCenter.mcpTable.details")}</span>
+            <span className="lg:hidden">{t("modelCenter.mcpTable.info")}</span>
           </Button>
         );
       },

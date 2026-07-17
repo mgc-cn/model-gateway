@@ -4,6 +4,7 @@ import { Form } from "antd";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { Providers } from "../provider_info_helpers";
 import ProviderSpecificFields from "./provider_specific_fields";
+import i18n from "@/i18n/i18n";
 
 vi.mock("../networking", async () => {
   const actual = await vi.importActual("../networking");
@@ -125,6 +126,24 @@ const createQueryClient = () =>
   });
 
 describe("ProviderSpecificFields", () => {
+  it("localizes common provider field labels in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+    const queryClient = createQueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Form>
+          <ProviderSpecificFields selectedProvider={Providers.Azure} />
+        </Form>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByLabelText("API 地址")).toBeInTheDocument();
+    expect(screen.getByLabelText("API 版本")).toBeInTheDocument();
+    expect(screen.getByLabelText("基础模型")).toBeInTheDocument();
+    expect(screen.getByLabelText("API 密钥")).toBeInTheDocument();
+    expect(screen.getByLabelText("Azure AD 令牌")).toBeInTheDocument();
+  });
+
   it("should render", async () => {
     const queryClient = createQueryClient();
     render(

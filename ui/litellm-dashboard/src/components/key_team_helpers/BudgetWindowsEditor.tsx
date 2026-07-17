@@ -1,5 +1,6 @@
 import { Button, InputNumber, Select } from "antd";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 export interface BudgetWindowEntry {
   budget_duration: string;
@@ -19,6 +20,25 @@ interface BudgetWindowsEditorProps {
 }
 
 export function BudgetWindowsEditor({ value, onChange }: BudgetWindowsEditorProps) {
+  const { t } = useTranslation();
+  const optionLabels: Record<string, { label: string; hint: string }> = {
+    "1h": {
+      label: t("virtualKeys.create.budgetWindow.hourly"),
+      hint: t("virtualKeys.create.budgetWindow.hourlyHint"),
+    },
+    "24h": {
+      label: t("virtualKeys.create.budgetWindow.daily"),
+      hint: t("virtualKeys.create.budgetWindow.dailyHint"),
+    },
+    "7d": {
+      label: t("virtualKeys.create.budgetWindow.weekly"),
+      hint: t("virtualKeys.create.budgetWindow.weeklyHint"),
+    },
+    "30d": {
+      label: t("virtualKeys.create.budgetWindow.monthly"),
+      hint: t("virtualKeys.create.budgetWindow.monthlyHint"),
+    },
+  };
   const addWindow = () => {
     onChange([...value, { budget_duration: "24h", max_budget: null }]);
   };
@@ -35,7 +55,7 @@ export function BudgetWindowsEditor({ value, onChange }: BudgetWindowsEditorProp
   return (
     <div>
       {value.map((window, idx) => {
-        const hint = BUDGET_WINDOW_OPTIONS.find((o) => o.value === window.budget_duration)?.resetHint;
+        const hint = optionLabels[window.budget_duration]?.hint;
         return (
           <div key={idx} style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -43,7 +63,10 @@ export function BudgetWindowsEditor({ value, onChange }: BudgetWindowsEditorProp
                 value={window.budget_duration}
                 onChange={(v) => updateWindow(idx, "budget_duration", v)}
                 style={{ width: 130 }}
-                options={BUDGET_WINDOW_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                options={BUDGET_WINDOW_OPTIONS.map((o) => ({
+                  value: o.value,
+                  label: optionLabels[o.value]?.label ?? o.label,
+                }))}
               />
               <InputNumber
                 step={0.01}
@@ -51,7 +74,7 @@ export function BudgetWindowsEditor({ value, onChange }: BudgetWindowsEditorProp
                 precision={2}
                 value={window.max_budget ?? undefined}
                 onChange={(v) => updateWindow(idx, "max_budget", v ?? null)}
-                placeholder="Max spend ($)"
+                placeholder={t("virtualKeys.create.budgetWindow.maxSpend")}
                 style={{ width: 160 }}
                 prefix="$"
               />
@@ -70,7 +93,7 @@ export function BudgetWindowsEditor({ value, onChange }: BudgetWindowsEditorProp
           addWindow();
         }}
       >
-        + Add Budget Window
+        + {t("virtualKeys.create.budgetWindow.add")}
       </Button>
     </div>
   );

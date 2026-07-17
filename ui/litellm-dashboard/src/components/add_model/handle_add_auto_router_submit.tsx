@@ -1,5 +1,6 @@
 import { modelCreateCall, Model } from "../networking";
 import NotificationManager from "../molecules/notifications_manager";
+import i18n from "@/i18n/i18n";
 
 export const handleAddAutoRouterSubmit = async (values: any, accessToken: string, form: any, callback?: () => void) => {
   try {
@@ -52,11 +53,20 @@ export const handleAddAutoRouterSubmit = async (values: any, accessToken: string
     }
 
     // Create the auto router using the same model creation endpoint
-    const response: any = await modelCreateCall(accessToken, autoRouterConfig as Model);
+    await modelCreateCall(accessToken, autoRouterConfig as Model);
 
     // Show success notification
-    const routerTypeName = values.model_type === "complexity_router" ? "Complexity Router" : "Semantic Router";
-    NotificationManager.success(`Successfully created ${routerTypeName}: ${values.auto_router_name}`);
+    const routerTypeName = i18n.t(
+      values.model_type === "complexity_router"
+        ? "modelsAndEndpoints.addModel.autoRouter.complexity.name"
+        : "modelsAndEndpoints.addModel.autoRouter.semantic.name",
+    );
+    NotificationManager.success(
+      i18n.t("modelsAndEndpoints.addModel.autoRouter.notifications.created", {
+        type: routerTypeName,
+        name: values.auto_router_name,
+      }),
+    );
 
     // Reset the form
     form.resetFields();
@@ -67,6 +77,8 @@ export const handleAddAutoRouterSubmit = async (values: any, accessToken: string
     }
   } catch (error) {
     console.error("Failed to add auto router:", error);
-    NotificationManager.fromBackend("Failed to add auto router: " + error);
+    NotificationManager.fromBackend(
+      i18n.t("modelsAndEndpoints.addModel.autoRouter.notifications.failed", { error: String(error) }),
+    );
   }
 };

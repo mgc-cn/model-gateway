@@ -16,6 +16,8 @@ import {
   Typography,
 } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { getLocalizedUserRole } from "@/utils/roles";
 import BulkCreateUsers from "./bulk_create_users_button";
 import TeamDropdown from "./common_components/team_dropdown";
 import { getModelDisplayName } from "./key_team_helpers/fetch_available_models_team_key";
@@ -68,6 +70,7 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
   onUserCreated,
   isEmbedded = false,
 }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [uiSettings, setUISettings] = useState<UISettings | null>(null);
   const [form] = Form.useForm();
@@ -128,7 +131,7 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
     send_invite_email?: boolean;
   }) => {
     try {
-      NotificationsManager.info("Making API Call");
+      NotificationsManager.info(t("userManagement.notifications.creating"));
       if (!isEmbedded) {
         setIsModalVisible(true);
       }
@@ -175,11 +178,12 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
         setIsInvitationLinkModalVisible(true);
       }
 
-      NotificationsManager.success("API user Created");
+      NotificationsManager.success(t("userManagement.notifications.created"));
       form.resetFields();
       localStorage.removeItem("userData" + userID);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || error?.message || "Error creating the user";
+      const errorMessage =
+        error.response?.data?.detail || error?.message || t("userManagement.notifications.createFailed");
       NotificationsManager.fromBackend(errorMessage);
       console.error("Error creating the user:", error);
     }
@@ -197,13 +201,12 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
         initialValues={{ user_role: "internal_user_viewer", send_invite_email: true }}
       >
         <Alert
-          message="Email invitations"
+          message={t("userManagement.invite.emailInvitations")}
           description={
             <>
-              New users receive an email invite only when an email integration (SMTP, Resend, or SendGrid) is
-              configured.{" "}
+              {t("userManagement.invite.emailDescription")}{" "}
               <Link href="https://docs.litellm.ai/docs/proxy/email" target="_blank">
-                Learn how to set up email notifications
+                {t("userManagement.invite.emailSetupLink")}
               </Link>
             </>
           }
@@ -211,38 +214,41 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
           showIcon
           className="mb-4"
         />
-        <Form.Item label="User Email" name="user_email">
+        <Form.Item label={t("userManagement.form.userEmail")} name="user_email">
           <TextInput placeholder="" />
         </Form.Item>
-        <Form.Item label="User Role" name="user_role">
+        <Form.Item label={t("userManagement.form.userRole")} name="user_role">
           <Select2>
             {possibleUIRoles &&
-              Object.entries(possibleUIRoles).map(([role, { ui_label, description }]) => (
-                <SelectItem key={role} value={role} title={ui_label}>
-                  <div className="flex">
-                    {ui_label}{" "}
-                    <Text className="ml-2" style={{ color: "gray", fontSize: "12px" }}>
-                      {description}
-                    </Text>
-                  </div>
-                </SelectItem>
-              ))}
+              Object.keys(possibleUIRoles).map((role) => {
+                const localizedRole = getLocalizedUserRole(role, possibleUIRoles, t);
+                return (
+                  <SelectItem key={role} value={role} title={localizedRole.label}>
+                    <div className="flex">
+                      {localizedRole.label}{" "}
+                      <Text className="ml-2" style={{ color: "gray", fontSize: "12px" }}>
+                        {localizedRole.description}
+                      </Text>
+                    </div>
+                  </SelectItem>
+                );
+              })}
           </Select2>
         </Form.Item>
-        <Form.Item label="Team" name="team_id">
+        <Form.Item label={t("userManagement.team.team")} name="team_id">
           <TeamDropdown />
         </Form.Item>
 
-        <Form.Item label="Metadata" name="metadata">
-          <Input.TextArea rows={4} placeholder="Enter metadata as JSON" />
+        <Form.Item label={t("userManagement.form.metadata")} name="metadata">
+          <Input.TextArea rows={4} placeholder={t("userManagement.form.metadataPlaceholder")} />
         </Form.Item>
 
-        <Form.Item label="Send invitation email" name="send_invite_email" valuePropName="checked">
+        <Form.Item label={t("userManagement.invite.sendEmail")} name="send_invite_email" valuePropName="checked">
           <Checkbox />
         </Form.Item>
 
         <div style={{ textAlign: "right", marginTop: "10px" }}>
-          <Button htmlType="submit">Create User</Button>
+          <Button htmlType="submit">{t("userManagement.invite.createUser")}</Button>
         </div>
       </Form>
     );
@@ -252,11 +258,11 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
   return (
     <div className="flex gap-2">
       <Button type="primary" className="mb-0" onClick={() => setIsModalVisible(true)}>
-        + Invite User
+        + {t("userManagement.invite.inviteUser")}
       </Button>
       <BulkCreateUsers accessToken={accessToken} teams={teams} possibleUIRoles={possibleUIRoles} />
       <Modal
-        title="Invite User"
+        title={t("userManagement.invite.inviteUser")}
         open={isModalVisible}
         width={800}
         footer={null}
@@ -264,15 +270,14 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
         onCancel={handleCancel}
       >
         <Space direction="vertical" size="middle">
-          <Text className="mb-1">Create a User who can own keys</Text>
+          <Text className="mb-1">{t("userManagement.invite.description")}</Text>
           <Alert
-            message="Email invitations"
+            message={t("userManagement.invite.emailInvitations")}
             description={
               <>
-                New users receive an email invite only when an email integration (SMTP, Resend, or SendGrid) is
-                configured.{" "}
+                {t("userManagement.invite.emailDescription")}{" "}
                 <Link href="https://docs.litellm.ai/docs/proxy/email" target="_blank">
-                  Learn how to set up email notifications
+                  {t("userManagement.invite.emailSetupLink")}
                 </Link>
               </>
             }
@@ -289,14 +294,14 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
           labelAlign="left"
           initialValues={{ user_role: "internal_user_viewer", send_invite_email: true }}
         >
-          <Form.Item label="User Email" name="user_email">
+          <Form.Item label={t("userManagement.form.userEmail")} name="user_email">
             <Input />
           </Form.Item>
           <Form.Item
             label={
               <span>
-                Global Proxy Role{" "}
-                <Tooltip title="This role is independent of any team/org specific roles. Configure Team / Organization Admins in the Settings">
+                {t("userManagement.fields.globalRole")}{" "}
+                <Tooltip title={t("userManagement.invite.globalRoleHelp")}>
                   <InfoCircleOutlined />
                 </Tooltip>
               </span>
@@ -305,33 +310,40 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
           >
             <Select2>
               {possibleUIRoles &&
-                Object.entries(possibleUIRoles).map(([role, { ui_label, description }]) => (
-                  <SelectItem key={role} value={role} title={ui_label}>
-                    <Text>{ui_label}</Text>
-                    <Text type="secondary">
-                      {" - "}
-                      {description}
-                    </Text>
-                  </SelectItem>
-                ))}
+                Object.keys(possibleUIRoles).map((role) => {
+                  const localizedRole = getLocalizedUserRole(role, possibleUIRoles, t);
+                  return (
+                    <SelectItem key={role} value={role} title={localizedRole.label}>
+                      <Text>{localizedRole.label}</Text>
+                      <Text type="secondary">
+                        {" - "}
+                        {localizedRole.description}
+                      </Text>
+                    </SelectItem>
+                  );
+                })}
             </Select2>
           </Form.Item>
 
           <Form.Item
-            label="Team"
+            label={t("userManagement.team.team")}
             className="gap-2"
             name="team_id"
-            help="If selected, user will be added as a 'user' role to the team."
+            help={t("userManagement.invite.teamHelp")}
           >
             <TeamDropdown />
           </Form.Item>
 
           <Form.Item
-            label="Organization"
+            label={t("userManagement.invite.organization")}
             name="organization_ids"
-            help="The user will be added to the selected organization(s)."
+            help={t("userManagement.invite.organizationHelp")}
           >
-            <Select mode="multiple" placeholder="Select Organization" style={{ width: "100%" }}>
+            <Select
+              mode="multiple"
+              placeholder={t("userManagement.invite.selectOrganization")}
+              style={{ width: "100%" }}
+            >
               {organizations.map((org) => (
                 <Option key={org.organization_id} value={org.organization_id}>
                   {org.organization_alias} ({org.organization_id})
@@ -340,36 +352,36 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
             </Select>
           </Form.Item>
 
-          <Form.Item label="Metadata" name="metadata">
-            <Input.TextArea rows={4} placeholder="Enter metadata as JSON" />
+          <Form.Item label={t("userManagement.form.metadata")} name="metadata">
+            <Input.TextArea rows={4} placeholder={t("userManagement.form.metadataPlaceholder")} />
           </Form.Item>
-          <Form.Item label="Send invitation email" name="send_invite_email" valuePropName="checked">
+          <Form.Item label={t("userManagement.invite.sendEmail")} name="send_invite_email" valuePropName="checked">
             <Checkbox />
           </Form.Item>
           <Accordion>
             <AccordionHeader>
-              <Text strong>Personal Key Creation</Text>
+              <Text strong>{t("userManagement.invite.personalKeyCreation")}</Text>
             </AccordionHeader>
             <AccordionBody>
               <Form.Item
                 className="gap-2"
                 label={
                   <span>
-                    Models{" "}
-                    <Tooltip title="Models user has access to, outside of team scope.">
+                    {t("userManagement.invite.models")}{" "}
+                    <Tooltip title={t("userManagement.invite.modelsHelp")}>
                       <InfoCircleOutlined style={{ marginLeft: "4px" }} />
                     </Tooltip>
                   </span>
                 }
                 name="models"
-                help="Models user has access to, outside of team scope."
+                help={t("userManagement.invite.modelsHelp")}
               >
-                <Select2 mode="multiple" placeholder="Select models" style={{ width: "100%" }}>
+                <Select2 mode="multiple" placeholder={t("userManagement.form.selectModels")} style={{ width: "100%" }}>
                   <Select2.Option key="all-proxy-models" value="all-proxy-models">
-                    All Proxy Models
+                    {t("userManagement.form.allProxyModels")}
                   </Select2.Option>
                   <Select2.Option key="no-default-models" value="no-default-models">
-                    No Default Models
+                    {t("userManagement.form.noDefaultModels")}
                   </Select2.Option>
                   {userModels.map((model) => (
                     <Select2.Option key={model} value={model}>
@@ -383,7 +395,7 @@ export const CreateUserButton: React.FC<CreateuserProps> = ({
 
           <div style={{ textAlign: "right", marginTop: "10px" }}>
             <Button type="primary" icon={<UserAddOutlined />} htmlType="submit">
-              Invite User
+              {t("userManagement.invite.inviteUser")}
             </Button>
           </div>
         </Form>

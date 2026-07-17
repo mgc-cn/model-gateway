@@ -21,11 +21,14 @@ import { LayersIcon, SearchIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { CreateProjectModal } from "./ProjectModals/CreateProjectModal";
 import { ProjectDetail } from "./ProjectDetailsPage";
+import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
 export function ProjectsPage() {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en-US";
   const { token } = theme.useToken();
   const { data: projects, isLoading } = useProjects();
   const { data: teams, isLoading: isTeamsLoading } = useTeams();
@@ -86,14 +89,14 @@ export function ProjectsPage() {
       ),
     },
     {
-      title: "Name",
+      title: t("projectManagement.columns.name"),
       dataIndex: "project_alias",
       key: "project_alias",
       sorter: (a, b) => (a.project_alias ?? "").localeCompare(b.project_alias ?? ""),
       render: (alias: string | null) => alias ?? "—",
     },
     {
-      title: "Team",
+      title: t("projectManagement.columns.team"),
       key: "team",
       sorter: (a, b) => {
         const aAlias = teamAliasMap.get(a.team_id ?? "") ?? "";
@@ -109,12 +112,12 @@ export function ProjectsPage() {
       },
     },
     {
-      title: "Models",
+      title: t("projectManagement.columns.models"),
       key: "models",
       render: (_: unknown, record: ProjectResponse) => {
         const models = record.models ?? [];
         return (
-          <Tooltip title={models.length > 0 ? models.join(", ") : "No models"}>
+          <Tooltip title={models.length > 0 ? models.join(", ") : t("projectManagement.noModels")}>
             <Tag color="blue" style={{ fontSize: 14, padding: "2px 8px", margin: 0 }}>
               <Flex align="center" gap={6}>
                 <LayersIcon size={14} />
@@ -126,25 +129,29 @@ export function ProjectsPage() {
       },
     },
     {
-      title: "Status",
+      title: t("projectManagement.columns.status"),
       dataIndex: "blocked",
       key: "status",
-      render: (blocked: boolean) => <Tag color={blocked ? "red" : "green"}>{blocked ? "Blocked" : "Active"}</Tag>,
+      render: (blocked: boolean) => (
+        <Tag color={blocked ? "red" : "green"}>
+          {blocked ? t("projectManagement.status.blocked") : t("projectManagement.status.active")}
+        </Tag>
+      ),
     },
     {
-      title: "Created",
+      title: t("projectManagement.columns.created"),
       dataIndex: "created_at",
       key: "created_at",
       sorter: (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
       responsive: ["lg"],
-      render: (date: string) => new Date(date).toLocaleDateString(),
+      render: (date: string) => new Date(date).toLocaleDateString(locale),
     },
     {
-      title: "Updated",
+      title: t("projectManagement.columns.updated"),
       dataIndex: "updated_at",
       key: "updated_at",
       responsive: ["xl"],
-      render: (date: string) => new Date(date).toLocaleDateString(),
+      render: (date: string) => new Date(date).toLocaleDateString(locale),
     },
   ];
 
@@ -157,12 +164,12 @@ export function ProjectsPage() {
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
         <Space direction="vertical" size={0}>
           <Title level={2} style={{ margin: 0 }}>
-            Projects
+            {t("projectManagement.title")}
           </Title>
-          <Text type="secondary">Manage projects within your teams</Text>
+          <Text type="secondary">{t("projectManagement.description")}</Text>
         </Space>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCreateModalVisible(true)}>
-          Create Project
+          {t("projectManagement.create")}
         </Button>
       </Flex>
 
@@ -170,7 +177,7 @@ export function ProjectsPage() {
         <Flex justify="space-between" align="center" style={{ padding: "12px 16px" }}>
           <Input
             prefix={<SearchIcon size={16} />}
-            placeholder="Search projects by name, ID, description, or team..."
+            placeholder={t("projectManagement.searchPlaceholder")}
             style={{ maxWidth: 400 }}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -182,7 +189,7 @@ export function ProjectsPage() {
             pageSize={pageSize}
             onChange={(page) => setCurrentPage(page)}
             size="small"
-            showTotal={(total) => `${total} projects`}
+            showTotal={(total) => t("projectManagement.projectCount", { count: total })}
             showSizeChanger={false}
           />
         </Flex>

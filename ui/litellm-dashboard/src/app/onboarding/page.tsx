@@ -2,6 +2,7 @@
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { OnboardingForm } from "./OnboardingForm";
+import RouteStatus from "@/components/common_components/RouteStatus";
 
 function OnboardingContent() {
   const searchParams = useSearchParams()!;
@@ -12,7 +13,7 @@ function OnboardingContent() {
 
 export default function Onboarding() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+    <Suspense fallback={<RouteStatus kind="loading" />}>
       <OnboardingContent />
     </Suspense>
   );

@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ChatShellProvider } from "@/contexts/ChatShellContext";
 import ChatShell from "@/components/chat/ChatShell";
 import { migratedHref } from "@/utils/migratedPages";
+import LoadingScreen from "@/components/common_components/LoadingScreen";
 
 // ChatShellProvider uses useSearchParams(), which requires a Suspense boundary for static export.
 function ChatLayoutContent({ children }: { children: React.ReactNode }) {
@@ -23,7 +24,8 @@ function ChatLayoutContent({ children }: { children: React.ReactNode }) {
     if (blocked) router.replace(migratedHref(""));
   }, [blocked, router]);
 
-  if (isUISettingsLoading || blocked) return null;
+  if (isUISettingsLoading) return <LoadingScreen />;
+  if (blocked) return null;
 
   return (
     <ThemeProvider accessToken={accessToken}>

@@ -2,8 +2,9 @@ import { CredentialItem } from "@/components/networking";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { UploadProps } from "antd/es/upload";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CredentialsPanel from "./credentials";
+import i18n from "@/i18n/i18n";
 
 const DEFAULT_UPLOAD_PROPS = {} as UploadProps;
 
@@ -29,6 +30,14 @@ const createQueryClient = () =>
   });
 
 describe("CredentialsPanel", () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should render", () => {
     mockUseAuthorized.mockReturnValue({ accessToken: "test-token", userRole: "Admin" });
     mockUseCredentials.mockReturnValue({
@@ -107,6 +116,33 @@ describe("CredentialsPanel", () => {
     await waitFor(() => {
       expect(screen.getByText("Add New Credential")).toBeInTheDocument();
     });
+  });
+
+  it("localizes the credential list and add workflow in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+    mockUseAuthorized.mockReturnValue({ accessToken: "test-token", userRole: "Admin" });
+    mockUseCredentials.mockReturnValue({
+      data: { credentials: [] },
+      refetch: vi.fn(),
+    });
+
+    render(
+      <QueryClientProvider client={createQueryClient()}>
+        <CredentialsPanel uploadProps={DEFAULT_UPLOAD_PROPS} />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("配置不同 AI 提供商的凭证，并管理其 API 访问凭证。")).toBeInTheDocument();
+    expect(screen.getByText("凭证名称")).toBeInTheDocument();
+    expect(screen.getByText("提供商")).toBeInTheDocument();
+    expect(screen.getByText("尚未配置凭证")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "添加凭证" }));
+
+    expect(await screen.findByText("添加新凭证")).toBeInTheDocument();
+    expect(screen.getByLabelText("凭证名称：")).toBeInTheDocument();
+    expect(screen.getByLabelText("提供商：")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /取\s*消/ })).toBeInTheDocument();
   });
 
   describe("Admin Viewer write-action gating", () => {

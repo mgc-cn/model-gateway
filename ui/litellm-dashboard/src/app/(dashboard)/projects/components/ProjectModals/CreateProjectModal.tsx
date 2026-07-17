@@ -4,6 +4,8 @@ import MessageManager from "@/components/molecules/message_manager";
 import { useCreateProject, ProjectCreateParams } from "@/app/(dashboard)/hooks/projects/useCreateProject";
 import { ProjectBaseForm, ProjectFormValues } from "./ProjectBaseForm";
 import { buildProjectApiParams } from "./projectFormUtils";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n/i18n";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface CreateProjectModalProps {
 }
 
 export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps) {
+  const { t } = useTranslation();
   const [form] = Form.useForm<ProjectFormValues>();
   const createMutation = useCreateProject();
 
@@ -24,12 +27,12 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
 
       createMutation.mutate(params, {
         onSuccess: () => {
-          MessageManager.success("Project created successfully");
+          MessageManager.success(i18n.t("projectManagement.notifications.created"));
           form.resetFields();
           onClose();
         },
         onError: (error) => {
-          MessageManager.error(error.message || "Failed to create project");
+          MessageManager.error(error.message || i18n.t("projectManagement.notifications.createFailed"));
         },
       });
     } catch (error) {
@@ -46,7 +49,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
     <Modal
       title={
         <Typography.Text strong style={{ fontSize: 18 }}>
-          Create New Project
+          {t("projectManagement.form.createTitle")}
         </Typography.Text>
       }
       open={isOpen}
@@ -55,7 +58,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
       destroyOnHidden
       footer={[
         <Button key="cancel" onClick={handleCancel}>
-          Cancel
+          {t("common.cancel")}
         </Button>,
         <Button
           key="submit"
@@ -64,7 +67,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
           loading={createMutation.isPending}
           onClick={handleSubmit}
         >
-          Create Project
+          {t("projectManagement.create")}
         </Button>,
       ]}
     >

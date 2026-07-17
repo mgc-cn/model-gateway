@@ -6,7 +6,7 @@ services:
       url: ghcr.io/berriai/litellm:main-stable
     envVars:
       - key: PORT
-        value: 4000
+        value: 4333
     numInstances: 1
     healthCheckPath: /health/liveliness
     autoDeploy: true

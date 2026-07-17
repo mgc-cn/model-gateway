@@ -7,6 +7,7 @@ import type { Team } from "../key_team_helpers/key_list";
 import type { CredentialItem } from "../networking";
 import { Providers } from "../provider_info_helpers";
 import AddModelForm from "./AddModelForm";
+import i18n from "@/i18n/i18n";
 
 vi.mock("../molecules/models/ProviderLogo", () => ({
   ProviderLogo: ({ provider, className }: { provider: string; className?: string }) => (
@@ -176,6 +177,25 @@ const createTestProps = (userRole = "proxy_admin", userId = "user-1", isTeamAdmi
 };
 
 describe("AddModelForm", () => {
+  it("localizes the standard add-model form in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+    const mockUseAuthorized = vi.mocked(await import("@/app/(dashboard)/hooks/useAuthorized"));
+    mockUseAuthorized.default.mockReturnValue(mockAuthorizedUser("proxy_admin", "user-1", true));
+
+    renderWithProviders(<AddModelForm {...createTestProps()} />);
+
+    expect(await screen.findByRole("heading", { name: "添加模型" })).toBeInTheDocument();
+    expect(screen.getByText("提供商")).toBeInTheDocument();
+    expect(screen.getByText("LiteLLM 模型名称", { selector: "label" })).toBeInTheDocument();
+    expect(screen.getByText("模式")).toBeInTheDocument();
+    expect(screen.getByText("已有凭证")).toBeInTheDocument();
+    expect(screen.getByText("其他模型信息设置")).toBeInTheDocument();
+    expect(screen.getByText("模型访问组")).toBeInTheDocument();
+    expect(screen.getByText("高级设置")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "测试连接" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "添加模型" })).toBeInTheDocument();
+  });
+
   it("should render", async () => {
     const mockUseAuthorized = vi.mocked(await import("@/app/(dashboard)/hooks/useAuthorized"));
     mockUseAuthorized.default.mockReturnValue(mockAuthorizedUser("proxy_admin", "user-1", true));

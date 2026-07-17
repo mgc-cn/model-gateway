@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { OnboardingFormBody } from "./OnboardingFormBody";
+import i18n from "@/i18n/i18n";
 
 const defaultProps = {
   variant: "signup" as const,
@@ -81,5 +82,18 @@ describe("OnboardingFormBody", () => {
   it("should show 'Reset Password' on the submit button for reset_password variant", () => {
     render(<OnboardingFormBody {...defaultProps} variant="reset_password" />);
     expect(screen.getByRole("button", { name: /reset password/i })).toBeInTheDocument();
+  });
+
+  it("renders signup fields and actions in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+    const { unmount } = render(<OnboardingFormBody {...defaultProps} />);
+
+    expect(screen.getByRole("heading", { name: "注册" })).toBeInTheDocument();
+    expect(screen.getByLabelText("邮箱地址")).toBeDisabled();
+    expect(screen.getByLabelText("密码")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /注\s*册/ })).toBeInTheDocument();
+
+    unmount();
+    await i18n.changeLanguage("en");
   });
 });

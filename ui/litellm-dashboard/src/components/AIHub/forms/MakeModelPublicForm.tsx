@@ -4,6 +4,7 @@ import { Text, Title, Badge } from "@tremor/react";
 import { makeModelGroupPublic } from "../../networking";
 import ModelFilters from "../../model_filters";
 import NotificationsManager from "../../molecules/notifications_manager";
+import { useTranslation } from "react-i18next";
 
 const { Step } = Steps;
 
@@ -40,6 +41,7 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
   modelHubData,
   onSuccess,
 }) => {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
   const [filteredData, setFilteredData] = useState<ModelGroupInfo[]>([]);
@@ -57,7 +59,7 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
   const handleNext = () => {
     if (currentStep === 0) {
       if (selectedModels.size === 0) {
-        NotificationsManager.fromBackend("Please select at least one model to make public");
+        NotificationsManager.fromBackend(t("modelCenter.publish.selectRequired"));
         return;
       }
       setCurrentStep(1);
@@ -110,7 +112,7 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
 
   const handleSubmit = async () => {
     if (selectedModels.size === 0) {
-      NotificationsManager.fromBackend("Please select at least one model to make public");
+      NotificationsManager.fromBackend(t("modelCenter.publish.selectRequired"));
       return;
     }
 
@@ -119,12 +121,12 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
       const modelGroupsToMakePublic = Array.from(selectedModels);
       await makeModelGroupPublic(accessToken, modelGroupsToMakePublic);
 
-      NotificationsManager.success(`Successfully made ${modelGroupsToMakePublic.length} model group(s) public!`);
+      NotificationsManager.success(t("modelCenter.publish.success", { count: modelGroupsToMakePublic.length }));
       handleClose();
       onSuccess();
     } catch (error) {
       console.error("Error making model groups public:", error);
-      NotificationsManager.fromBackend("Failed to make model groups public. Please try again.");
+      NotificationsManager.fromBackend(t("modelCenter.publish.failed"));
     } finally {
       setLoading(false);
     }
@@ -138,7 +140,7 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Title>Select Models to Make Public</Title>
+          <Title>{t("modelCenter.selectModels")}</Title>
           <div className="flex items-center space-x-2">
             <Checkbox
               checked={allModelsSelected}
@@ -146,15 +148,12 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
               onChange={(e) => handleSelectAll(e.target.checked)}
               disabled={filteredData.length === 0}
             >
-              Select All {filteredData.length > 0 && `(${filteredData.length})`}
+              {t("modelCenter.publish.selectAll")} {filteredData.length > 0 && `(${filteredData.length})`}
             </Checkbox>
           </div>
         </div>
 
-        <Text className="text-sm text-gray-600">
-          Select the models you want to be visible on the public model hub. Users will still require a valid Virtual Key
-          to use these models.
-        </Text>
+        <Text className="text-sm text-gray-600">{t("modelCenter.publish.description")}</Text>
 
         {/* Filters */}
         <ModelFilters
@@ -168,7 +167,7 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
           <div className="space-y-3">
             {filteredData.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <Text>No models match the current filters.</Text>
+                <Text>{t("modelCenter.publish.noMatches")}</Text>
               </div>
             ) : (
               filteredData.map((model) => (
@@ -206,7 +205,8 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
         {selectedModels.size > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <Text className="text-sm text-blue-800">
-              <strong>{selectedModels.size}</strong> model{selectedModels.size !== 1 ? "s" : ""} selected
+              {t("modelCenter.publish.selectedPrefix")} <strong>{selectedModels.size}</strong>{" "}
+              {t("modelCenter.publish.selected", { count: selectedModels.size })}
             </Text>
           </div>
         )}
@@ -217,17 +217,16 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
   const renderStep2Content = () => {
     return (
       <div className="space-y-4">
-        <Title>Confirm Making Models Public</Title>
+        <Title>{t("modelCenter.publish.confirmTitle")}</Title>
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <Text className="text-sm text-yellow-800">
-            <strong>Warning:</strong> Once you make these models public, anyone who can go to the{" "}
-            <code>/ui/model_hub_table</code> will be able to know they exist on the proxy.
+            <strong>{t("modelCenter.publish.warningLabel")}</strong> {t("modelCenter.publish.warning")}
           </Text>
         </div>
 
         <div className="space-y-3">
-          <Text className="font-medium">Models to be made public:</Text>
+          <Text className="font-medium">{t("modelCenter.publish.models")}</Text>
           <div className="max-h-48 overflow-y-auto border rounded-lg p-3">
             <div className="space-y-2">
               {Array.from(selectedModels).map((modelGroup) => {
@@ -255,8 +254,8 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <Text className="text-sm text-blue-800">
-            Total: <strong>{selectedModels.size}</strong> model{selectedModels.size !== 1 ? "s" : ""} will be made
-            public
+            {t("modelCenter.publish.selectedPrefix")} <strong>{selectedModels.size}</strong>{" "}
+            {t("modelCenter.publish.selected", { count: selectedModels.size })}
           </Text>
         </div>
       </div>
@@ -278,19 +277,19 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
     return (
       <div className="flex justify-between mt-6">
         <Button onClick={currentStep === 0 ? handleClose : handlePrevious}>
-          {currentStep === 0 ? "Cancel" : "Previous"}
+          {currentStep === 0 ? t("modelCenter.publish.cancel") : t("modelCenter.publish.previous")}
         </Button>
 
         <div className="flex space-x-2">
           {currentStep === 0 && (
             <Button onClick={handleNext} disabled={selectedModels.size === 0}>
-              Next
+              {t("modelCenter.publish.next")}
             </Button>
           )}
 
           {currentStep === 1 && (
             <Button onClick={handleSubmit} loading={loading}>
-              Make Public
+              {t("modelCenter.publish.submit")}
             </Button>
           )}
         </div>
@@ -300,7 +299,7 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
 
   return (
     <Modal
-      title="Make Models Public"
+      title={t("modelCenter.publish.modalTitle")}
       open={visible}
       onCancel={handleClose}
       footer={null}
@@ -309,8 +308,8 @@ const MakeModelPublicForm: React.FC<MakeModelPublicFormProps> = ({
     >
       <Form form={form} layout="vertical">
         <Steps current={currentStep} className="mb-6">
-          <Step title="Select Models" />
-          <Step title="Confirm" />
+          <Step title={t("modelCenter.publish.selectStep")} />
+          <Step title={t("modelCenter.publish.confirmStep")} />
         </Steps>
 
         {renderStepContent()}

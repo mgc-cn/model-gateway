@@ -1,4 +1,5 @@
 import type { FormItemProps } from "antd";
+import i18n from "@/i18n/i18n";
 
 export type CacheFieldType = "string" | "password" | "integer" | "float" | "boolean" | "list" | "model-select";
 
@@ -22,10 +23,10 @@ export interface CacheField {
 export const REDIS_TYPES: readonly RedisType[] = ["node", "cluster", "sentinel", "semantic"];
 
 export const REDIS_TYPE_DESCRIPTIONS: Readonly<Record<RedisType, string>> = {
-  node: "Standard Redis node/single instance",
-  cluster: "Redis Cluster mode for high availability and horizontal scaling",
-  sentinel: "Redis Sentinel mode for high availability with automatic failover",
-  semantic: "Semantic caching that reuses responses for similar prompts",
+  node: i18n.t("caching.settings.redisTypes.node.description"),
+  cluster: i18n.t("caching.settings.redisTypes.cluster.description"),
+  sentinel: i18n.t("caching.settings.redisTypes.sentinel.description"),
+  semantic: i18n.t("caching.settings.redisTypes.semantic.description"),
 };
 
 const portRule: CacheFieldRule = {
@@ -35,7 +36,7 @@ const portRule: CacheFieldRule = {
     }
     const port = Number(value);
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
-      return Promise.reject(new Error("Port must be an integer between 1 and 65535"));
+      return Promise.reject(new Error(i18n.t("caching.settings.validation.port")));
     }
     return Promise.resolve();
   },
@@ -50,10 +51,10 @@ const jsonListRule: CacheFieldRule = {
     try {
       parsed = JSON.parse(String(value));
     } catch {
-      return Promise.reject(new Error("Must be a valid JSON array (use double quotes)"));
+      return Promise.reject(new Error(i18n.t("caching.settings.validation.validJsonArray")));
     }
     if (!Array.isArray(parsed)) {
-      return Promise.reject(new Error("Must be a JSON array"));
+      return Promise.reject(new Error(i18n.t("caching.settings.validation.jsonArray")));
     }
     return Promise.resolve();
   },
@@ -66,7 +67,7 @@ const nonNegativeIntegerRule: CacheFieldRule = {
     }
     const parsed = Number(value);
     if (!Number.isInteger(parsed) || parsed < 0) {
-      return Promise.reject(new Error("Must be a non-negative integer"));
+      return Promise.reject(new Error(i18n.t("caching.settings.validation.nonNegativeInteger")));
     }
     return Promise.resolve();
   },
@@ -78,7 +79,7 @@ const numberRule: CacheFieldRule = {
       return Promise.resolve();
     }
     if (Number.isNaN(Number(value))) {
-      return Promise.reject(new Error("Must be a number"));
+      return Promise.reject(new Error(i18n.t("caching.settings.validation.number")));
     }
     return Promise.resolve();
   },
@@ -87,175 +88,173 @@ const numberRule: CacheFieldRule = {
 export const CACHE_FIELDS: readonly CacheField[] = [
   {
     name: "url",
-    label: "Redis URL",
+    label: i18n.t("caching.settings.fields.url.label"),
     type: "string",
     section: "connection",
-    helpText:
-      "Full Redis/Valkey connection URL (e.g. redis://:password@host:6379/1). When set, it takes precedence over Host, Port, Password, and Database Index.",
+    helpText: i18n.t("caching.settings.fields.url.help"),
     redisType: null,
   },
   {
     name: "host",
-    label: "Host",
+    label: i18n.t("caching.settings.fields.host.label"),
     type: "string",
     section: "connection",
-    helpText: "Redis server hostname or IP address",
+    helpText: i18n.t("caching.settings.fields.host.help"),
     redisType: null,
   },
   {
     name: "port",
-    label: "Port",
+    label: i18n.t("caching.settings.fields.port.label"),
     type: "string",
     section: "connection",
-    helpText: "Redis server port number",
+    helpText: i18n.t("caching.settings.fields.port.help"),
     redisType: null,
     defaultValue: "6379",
     rules: [portRule],
   },
   {
     name: "db",
-    label: "Database Index",
+    label: i18n.t("caching.settings.fields.db.label"),
     type: "integer",
     section: "connection",
-    helpText: "Logical database index to isolate the cache (e.g. 1 for redis://host:6379/1)",
+    helpText: i18n.t("caching.settings.fields.db.help"),
     redisType: null,
     rules: [nonNegativeIntegerRule],
   },
   {
     name: "password",
-    label: "Password",
+    label: i18n.t("caching.settings.fields.password.label"),
     type: "password",
     section: "connection",
-    helpText: "Redis server password",
+    helpText: i18n.t("caching.settings.fields.password.help"),
     redisType: null,
   },
   {
     name: "username",
-    label: "Username",
+    label: i18n.t("caching.settings.fields.username.label"),
     type: "string",
     section: "connection",
-    helpText: "Redis server username (if required)",
+    helpText: i18n.t("caching.settings.fields.username.help"),
     redisType: null,
   },
   {
     name: "redis_startup_nodes",
-    label: "Startup Nodes",
+    label: i18n.t("caching.settings.fields.redis_startup_nodes.label"),
     type: "list",
     section: "cluster",
-    helpText: 'List of startup nodes for Redis Cluster (e.g., [{"host": "127.0.0.1", "port": "7001"}])',
+    helpText: i18n.t("caching.settings.fields.redis_startup_nodes.help"),
     redisType: "cluster",
     rules: [jsonListRule],
   },
   {
     name: "sentinel_nodes",
-    label: "Sentinel Nodes",
+    label: i18n.t("caching.settings.fields.sentinel_nodes.label"),
     type: "list",
     section: "sentinel",
-    helpText: 'List of Sentinel nodes (e.g., [["localhost", 26379]])',
+    helpText: i18n.t("caching.settings.fields.sentinel_nodes.help"),
     redisType: "sentinel",
     rules: [jsonListRule],
   },
   {
     name: "service_name",
-    label: "Service Name",
+    label: i18n.t("caching.settings.fields.service_name.label"),
     type: "string",
     section: "sentinel",
-    helpText: "Master service name for Redis Sentinel",
+    helpText: i18n.t("caching.settings.fields.service_name.help"),
     redisType: "sentinel",
   },
   {
     name: "sentinel_password",
-    label: "Sentinel Password",
+    label: i18n.t("caching.settings.fields.sentinel_password.label"),
     type: "password",
     section: "sentinel",
-    helpText: "Password for Redis Sentinel authentication",
+    helpText: i18n.t("caching.settings.fields.sentinel_password.help"),
     redisType: "sentinel",
   },
   {
     name: "similarity_threshold",
-    label: "Similarity Threshold",
+    label: i18n.t("caching.settings.fields.similarity_threshold.label"),
     type: "float",
     section: "semantic",
-    helpText: "Similarity threshold for semantic cache",
+    helpText: i18n.t("caching.settings.fields.similarity_threshold.help"),
     redisType: "semantic",
     defaultValue: 0.8,
     rules: [numberRule],
   },
   {
     name: "redis_semantic_cache_embedding_model",
-    label: "Embedding Model",
+    label: i18n.t("caching.settings.fields.redis_semantic_cache_embedding_model.label"),
     type: "model-select",
     section: "semantic",
-    helpText: "Embedding model for semantic cache",
+    helpText: i18n.t("caching.settings.fields.redis_semantic_cache_embedding_model.help"),
     redisType: "semantic",
   },
   {
     name: "ssl",
-    label: "SSL",
+    label: i18n.t("caching.settings.fields.ssl.label"),
     type: "boolean",
     section: "ssl",
-    helpText: "Enable SSL/TLS connection",
+    helpText: i18n.t("caching.settings.fields.ssl.help"),
     redisType: null,
     defaultValue: false,
   },
   {
     name: "ssl_cert_reqs",
-    label: "SSL Cert Reqs",
+    label: i18n.t("caching.settings.fields.ssl_cert_reqs.label"),
     type: "string",
     section: "ssl",
-    helpText: "SSL certificate requirements (None, CERT_REQUIRED, CERT_OPTIONAL)",
+    helpText: i18n.t("caching.settings.fields.ssl_cert_reqs.help"),
     redisType: null,
   },
   {
     name: "ssl_check_hostname",
-    label: "SSL Check Hostname",
+    label: i18n.t("caching.settings.fields.ssl_check_hostname.label"),
     type: "boolean",
     section: "ssl",
-    helpText: "Enable SSL hostname verification",
+    helpText: i18n.t("caching.settings.fields.ssl_check_hostname.help"),
     redisType: null,
     defaultValue: false,
   },
   {
     name: "namespace",
-    label: "Namespace",
+    label: i18n.t("caching.settings.fields.namespace.label"),
     type: "string",
     section: "cacheManagement",
-    helpText: "Namespace prefix for cache keys",
+    helpText: i18n.t("caching.settings.fields.namespace.help"),
     redisType: null,
   },
   {
     name: "ttl",
-    label: "TTL (seconds)",
+    label: i18n.t("caching.settings.fields.ttl.label"),
     type: "float",
     section: "cacheManagement",
-    helpText: "Time-to-live for cached items in seconds",
+    helpText: i18n.t("caching.settings.fields.ttl.help"),
     redisType: null,
     rules: [numberRule],
   },
   {
     name: "max_connections",
-    label: "Max Connections",
+    label: i18n.t("caching.settings.fields.max_connections.label"),
     type: "integer",
     section: "cacheManagement",
-    helpText: "Maximum number of connections in the connection pool",
+    helpText: i18n.t("caching.settings.fields.max_connections.help"),
     redisType: null,
     rules: [nonNegativeIntegerRule],
   },
   {
     name: "gcp_service_account",
-    label: "GCP Service Account",
+    label: i18n.t("caching.settings.fields.gcp_service_account.label"),
     type: "string",
     section: "gcp",
-    helpText:
-      "GCP service account for IAM authentication (e.g., projects/-/serviceAccounts/your-sa@project.iam.gserviceaccount.com)",
+    helpText: i18n.t("caching.settings.fields.gcp_service_account.help"),
     redisType: null,
   },
   {
     name: "gcp_ssl_ca_certs",
-    label: "GCP SSL CA Certs",
+    label: i18n.t("caching.settings.fields.gcp_ssl_ca_certs.label"),
     type: "string",
     section: "gcp",
-    helpText: "Path to SSL CA certificate file for GCP Memorystore Redis",
+    helpText: i18n.t("caching.settings.fields.gcp_ssl_ca_certs.help"),
     redisType: null,
   },
 ];

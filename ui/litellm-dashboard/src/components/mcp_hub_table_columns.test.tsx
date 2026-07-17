@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { vi } from "vitest";
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { mcpHubColumns, MCPServerData } from "./mcp_hub_table_columns";
+import i18n from "@/i18n/i18n";
 
 const SERVER_URL = "https://mcp.exa.ai/mcp";
 
@@ -27,8 +28,8 @@ const mockServer: MCPServerData = {
   env: {},
 };
 
-function TestTable({ data }: { data: MCPServerData[] }) {
-  const columns = mcpHubColumns(vi.fn(), vi.fn(), false);
+function TestTable({ data, locale = "en" }: { data: MCPServerData[]; locale?: "en" | "zh-CN" }) {
+  const columns = mcpHubColumns(vi.fn(), vi.fn(), i18n.getFixedT(locale), false);
   const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel() });
 
   return (
@@ -56,6 +57,16 @@ function TestTable({ data }: { data: MCPServerData[] }) {
 }
 
 describe("mcpHubColumns", () => {
+  it("localizes the MCP list columns and values", () => {
+    render(<TestTable data={[mockServer]} locale="zh-CN" />);
+
+    expect(screen.getByText("服务名称")).toBeInTheDocument();
+    expect(screen.getByText("传输协议")).toBeInTheDocument();
+    expect(screen.getByText("认证类型")).toBeInTheDocument();
+    expect(screen.getByText("活跃")).toBeInTheDocument();
+    expect(screen.getByText("全部工具")).toBeInTheDocument();
+  });
+
   it("renders the server row", () => {
     render(<TestTable data={[mockServer]} />);
     expect(screen.getByText("exa_test")).toBeInTheDocument();
@@ -71,7 +82,7 @@ describe("mcpHubColumns", () => {
   it("does not expose a URL column header", () => {
     render(<TestTable data={[mockServer]} />);
     expect(screen.queryByText("URL")).not.toBeInTheDocument();
-    expect(mcpHubColumns(vi.fn(), vi.fn(), false).some((c) => c.header === "URL")).toBe(false);
+    expect(mcpHubColumns(vi.fn(), vi.fn(), i18n.getFixedT("en"), false).some((c) => c.header === "URL")).toBe(false);
   });
 
   it("does not render the server url anywhere in the table", () => {

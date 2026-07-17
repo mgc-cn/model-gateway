@@ -1,9 +1,16 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdditionalModelSettings from "./AdditionalModelSettings";
+import i18n from "@/i18n/i18n";
 
 describe("AdditionalModelSettings", () => {
+  beforeEach(async () => {
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
+  });
+
   it("should render correctly", () => {
     const { container } = render(<AdditionalModelSettings />);
     expect(container).toBeTruthy();

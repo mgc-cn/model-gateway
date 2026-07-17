@@ -4,6 +4,7 @@ import { Form, Input, Modal } from "antd";
 import MessageManager from "@/components/molecules/message_manager";
 import { useEffect } from "react";
 import { CloudZeroSettings } from "./types";
+import { useTranslation } from "react-i18next";
 
 interface CloudZeroUpdateModalProps {
   open: boolean;
@@ -13,6 +14,7 @@ interface CloudZeroUpdateModalProps {
 }
 
 export default function CloudZeroUpdateModal({ open, onOk, onCancel, settings }: CloudZeroUpdateModalProps) {
+  const { t } = useTranslation();
   const { accessToken } = useAuthorized();
   const [form] = Form.useForm();
   const updateMutation = useCloudZeroUpdateSettings(accessToken || "");
@@ -40,7 +42,7 @@ export default function CloudZeroUpdateModal({ open, onOk, onCancel, settings }:
         },
         {
           onSuccess: () => {
-            MessageManager.success("CloudZero integration updated successfully");
+            MessageManager.success(t("loggingAndAlerts.cloudZero.notifications.updated"));
             form.resetFields();
             onOk();
           },
@@ -48,7 +50,7 @@ export default function CloudZeroUpdateModal({ open, onOk, onCancel, settings }:
             if (error?.errorFields) {
               return;
             }
-            MessageManager.error(error?.message || "Failed to update CloudZero integration");
+            MessageManager.error(error?.message || t("loggingAndAlerts.cloudZero.notifications.updateFailed"));
           },
         },
       );
@@ -56,7 +58,7 @@ export default function CloudZeroUpdateModal({ open, onOk, onCancel, settings }:
       if (error?.errorFields) {
         return;
       }
-      MessageManager.error(error?.message || "Failed to update CloudZero integration");
+      MessageManager.error(error?.message || t("loggingAndAlerts.cloudZero.notifications.updateFailed"));
     }
   };
 
@@ -67,13 +69,15 @@ export default function CloudZeroUpdateModal({ open, onOk, onCancel, settings }:
 
   return (
     <Modal
-      title="Edit CloudZero Integration"
+      title={t("loggingAndAlerts.cloudZero.editTitle")}
       open={open}
       onOk={handleSubmit}
       onCancel={handleCancel}
       confirmLoading={updateMutation.isPending}
-      okText={updateMutation.isPending ? "Updating..." : "Update"}
-      cancelText="Cancel"
+      okText={
+        updateMutation.isPending ? t("loggingAndAlerts.cloudZero.updating") : t("loggingAndAlerts.cloudZero.update")
+      }
+      cancelText={t("loggingAndAlerts.cloudZero.cancel")}
       okButtonProps={{
         disabled: updateMutation.isPending,
       }}
@@ -83,24 +87,24 @@ export default function CloudZeroUpdateModal({ open, onOk, onCancel, settings }:
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
-          label="CloudZero API Key"
+          label={t("loggingAndAlerts.cloudZero.apiKey")}
           name="api_key"
-          rules={[{ required: false, message: "Please enter your CloudZero API key" }]}
-          tooltip="Leave empty to keep the existing API key"
+          rules={[{ required: false, message: t("loggingAndAlerts.cloudZero.apiKeyRequired") }]}
+          tooltip={t("loggingAndAlerts.cloudZero.apiKeyKeepHelp")}
         >
-          <Input.Password placeholder="Leave empty to keep existing" />
+          <Input.Password placeholder={t("loggingAndAlerts.cloudZero.apiKeyKeepPlaceholder")} />
         </Form.Item>
         <Form.Item
-          label="Connection ID"
+          label={t("loggingAndAlerts.cloudZero.connectionId")}
           name="connection_id"
-          rules={[{ required: true, message: "Please enter your CloudZero connection ID" }]}
+          rules={[{ required: true, message: t("loggingAndAlerts.cloudZero.connectionIdRequired") }]}
         >
-          <Input placeholder="Enter your CloudZero connection ID" />
+          <Input placeholder={t("loggingAndAlerts.cloudZero.connectionIdPlaceholder")} />
         </Form.Item>
         <Form.Item
-          label="Timezone"
+          label={t("loggingAndAlerts.cloudZero.timezone")}
           name="timezone"
-          tooltip="Timezone for date handling (defaults to UTC if not provided)"
+          tooltip={t("loggingAndAlerts.cloudZero.timezoneHelp")}
         >
           <Input placeholder="UTC" />
         </Form.Item>

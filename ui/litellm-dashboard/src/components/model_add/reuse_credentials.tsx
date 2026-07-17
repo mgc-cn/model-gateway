@@ -2,6 +2,7 @@ import React from "react";
 import { Form, Button, Tooltip, Typography, Modal } from "antd";
 import { TextInput } from "@tremor/react";
 import { CredentialItem } from "../networking";
+import { useTranslation } from "react-i18next";
 const { Title, Link } = Typography;
 
 interface ReuseCredentialsModalProps {
@@ -19,6 +20,7 @@ const ReuseCredentialsModal: React.FC<ReuseCredentialsModalProps> = ({
   existingCredential,
   setIsCredentialModalOpen,
 }) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
 
   const handleSubmit = (values: any) => {
@@ -29,7 +31,7 @@ const ReuseCredentialsModal: React.FC<ReuseCredentialsModalProps> = ({
 
   return (
     <Modal
-      title="Reuse Credentials"
+      title={t("modelsAndEndpoints.reuseCredentials.title")}
       open={isVisible}
       onCancel={() => {
         onCancel();
@@ -41,25 +43,28 @@ const ReuseCredentialsModal: React.FC<ReuseCredentialsModalProps> = ({
       <Form form={form} onFinish={handleSubmit} layout="vertical">
         {/* Credential Name */}
         <Form.Item
-          label="Credential Name:"
+          label={t("modelsAndEndpoints.credentials.nameLabel")}
           name="credential_name"
-          rules={[{ required: true, message: "Credential name is required" }]}
+          rules={[{ required: true, message: t("modelsAndEndpoints.credentials.nameRequired") }]}
           initialValue={existingCredential?.credential_name}
         >
-          <TextInput placeholder="Enter a friendly name for these credentials" />
+          <TextInput placeholder={t("modelsAndEndpoints.credentials.namePlaceholder")} />
         </Form.Item>
 
         {/* Display Credential Values of existingCredential, don't allow user to edit. Credential values is a dictionary */}
         {Object.entries(existingCredential?.credential_values || {}).map(([key, value]) => (
           <Form.Item key={key} label={key} name={key} initialValue={value}>
-            <TextInput placeholder={`Enter ${key}`} disabled={true} />
+            <TextInput
+              placeholder={t("modelsAndEndpoints.reuseCredentials.valuePlaceholder", { field: key })}
+              disabled={true}
+            />
           </Form.Item>
         ))}
 
         {/* Modal Footer */}
         <div className="flex justify-between items-center">
-          <Tooltip title="Get help on our github">
-            <Link href="https://github.com/BerriAI/litellm/issues">Need Help?</Link>
+          <Tooltip title={t("modelsAndEndpoints.credentials.helpTooltip")}>
+            <Link href="https://github.com/BerriAI/litellm/issues">{t("modelsAndEndpoints.credentials.help")}</Link>
           </Tooltip>
 
           <div>
@@ -70,9 +75,9 @@ const ReuseCredentialsModal: React.FC<ReuseCredentialsModalProps> = ({
               }}
               style={{ marginRight: 10 }}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
-            <Button htmlType="submit">Reuse Credentials</Button>
+            <Button htmlType="submit">{t("modelsAndEndpoints.reuseCredentials.submit")}</Button>
           </div>
         </div>
       </Form>

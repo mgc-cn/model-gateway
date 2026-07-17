@@ -192,7 +192,7 @@ it("should show loading message only on initial load (isPending)", () => {
 
   renderWithProviders(<VirtualKeysTable />);
 
-  expect(screen.getByText("🚅 Loading keys...")).toBeInTheDocument();
+  expect(screen.getByText("Loading keys...")).toBeInTheDocument();
   expect(screen.queryByText("Test Key Alias")).not.toBeInTheDocument();
   expect(screen.queryByText("Test Team")).not.toBeInTheDocument();
 });

@@ -11,6 +11,7 @@ import {
 } from "@ant-design/icons";
 import { Badge, Select } from "antd";
 import React from "react";
+import { useTranslation } from "react-i18next";
 export type UsageOption =
   | "global"
   | "my-usage"
@@ -117,10 +118,14 @@ export const UsageViewSelect: React.FC<UsageViewSelectProps> = ({
   onChange,
   isAdmin,
   canViewTagUsage = false,
-  title = "Usage View",
-  description = "Select the usage data you want to view",
+  title,
+  description,
   "data-id": dataId,
 }) => {
+  const { t } = useTranslation();
+  const optionKey = (value: UsageOption) =>
+    value === "my-usage" ? "myUsage" : value === "user-agent-activity" ? "userAgentActivity" : value;
+
   const getFilteredOptions = () => {
     return OPTIONS.filter((option) => {
       if (option.value === "tag" && canViewTagUsage) {
@@ -131,14 +136,12 @@ export const UsageViewSelect: React.FC<UsageViewSelectProps> = ({
       }
       return true;
     }).map((option) => {
-      let label = option.label;
-      let desc = option.description;
-      if (option.showForAdmin && option.showForNonAdmin) {
-        label = isAdmin ? option.showForAdmin : option.showForNonAdmin;
-      }
-      if (option.descriptionForAdmin && option.descriptionForNonAdmin) {
-        desc = isAdmin ? option.descriptionForAdmin : option.descriptionForNonAdmin;
-      }
+      const key = optionKey(option.value);
+      const hasPersonalVariant = option.value === "global" || option.value === "organization";
+      const label = t(`observability.usage.views.${key}.${hasPersonalVariant && !isAdmin ? "personalLabel" : "label"}`);
+      const desc = t(
+        `observability.usage.views.${key}.${hasPersonalVariant && !isAdmin ? "personalDescription" : "description"}`,
+      );
       return {
         value: option.value,
         label,
@@ -157,8 +160,12 @@ export const UsageViewSelect: React.FC<UsageViewSelectProps> = ({
             <BarChartOutlined style={{ fontSize: "32px" }} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-gray-900 mb-0.5 leading-tight">{title}</h3>
-            <p className="text-xs text-gray-600 leading-tight">{description}</p>
+            <h3 className="text-sm font-semibold text-gray-900 mb-0.5 leading-tight">
+              {title ?? t("observability.usage.viewTitle")}
+            </h3>
+            <p className="text-xs text-gray-600 leading-tight">
+              {description ?? t("observability.usage.viewDescription")}
+            </p>
           </div>
         </div>
         <div className="shrink-0">

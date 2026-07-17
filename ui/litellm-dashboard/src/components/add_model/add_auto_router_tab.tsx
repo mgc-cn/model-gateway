@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, Form, Button, Tooltip, Typography, Select as AntdSelect, Modal, Radio, Badge, Space } from "antd";
 import type { FormInstance } from "antd";
 import { Text, TextInput } from "@tremor/react";
@@ -31,6 +32,7 @@ interface ComplexityTiers {
 const { Title, Link } = Typography;
 
 const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, accessToken, userRole }) => {
+  const { t } = useTranslation();
   // State for connection testing
   const [isResultModalVisible, setIsResultModalVisible] = useState<boolean>(false);
   const [isTestingConnection, setIsTestingConnection] = useState<boolean>(false);
@@ -90,7 +92,7 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
 
     // Check basic required fields first
     if (!currentFormValues.auto_router_name) {
-      NotificationManager.fromBackend("Please enter an Auto Router Name");
+      NotificationManager.fromBackend(t("modelsAndEndpoints.addModel.autoRouter.validation.enterName"));
       return;
     }
 
@@ -99,7 +101,7 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
       // Complexity Router validation
       const filledTiers = Object.values(complexityTiers).filter(Boolean);
       if (filledTiers.length === 0) {
-        NotificationManager.fromBackend("Please select at least one model for a complexity tier");
+        NotificationManager.fromBackend(t("modelsAndEndpoints.addModel.autoRouter.validation.selectComplexityModel"));
         return;
       }
 
@@ -135,12 +137,12 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
         })
         .catch((error) => {
           console.error("Validation failed:", error);
-          NotificationManager.fromBackend("Please fill in all required fields");
+          NotificationManager.fromBackend(t("modelsAndEndpoints.addModel.autoRouter.validation.requiredFields"));
         });
     } else {
       // Semantic Router validation (existing logic)
       if (!currentFormValues.auto_router_default_model) {
-        NotificationManager.fromBackend("Please select a Default Model");
+        NotificationManager.fromBackend(t("modelsAndEndpoints.addModel.autoRouter.validation.selectDefaultModel"));
         return;
       }
 
@@ -152,7 +154,7 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
 
       // Custom validation for router config
       if (!routerConfig || !routerConfig.routes || routerConfig.routes.length === 0) {
-        NotificationManager.fromBackend("Please configure at least one route for the auto router");
+        NotificationManager.fromBackend(t("modelsAndEndpoints.addModel.autoRouter.validation.configureRoute"));
         return;
       }
 
@@ -162,9 +164,7 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
       );
 
       if (invalidRoutes.length > 0) {
-        NotificationManager.fromBackend(
-          "Please ensure all routes have a target model, description, and at least one utterance",
-        );
+        NotificationManager.fromBackend(t("modelsAndEndpoints.addModel.autoRouter.validation.completeRoutes"));
         return;
       }
 
@@ -185,17 +185,19 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
             const missingFields = fieldErrors.map((field: any) => {
               const fieldName = field.name[0];
               const friendlyNames: { [key: string]: string } = {
-                auto_router_name: "Auto Router Name",
-                auto_router_default_model: "Default Model",
-                auto_router_embedding_model: "Embedding Model",
+                auto_router_name: t("modelsAndEndpoints.addModel.autoRouter.name.label"),
+                auto_router_default_model: t("modelsAndEndpoints.addModel.autoRouter.defaultModel.label"),
+                auto_router_embedding_model: t("modelsAndEndpoints.addModel.autoRouter.embeddingModel.label"),
               };
               return friendlyNames[fieldName] || fieldName;
             });
             NotificationManager.fromBackend(
-              `Please fill in the following required fields: ${missingFields.join(", ")}`,
+              t("modelsAndEndpoints.addModel.autoRouter.validation.requiredFieldsList", {
+                fields: missingFields.join(", "),
+              }),
             );
           } else {
-            NotificationManager.fromBackend("Please fill in all required fields");
+            NotificationManager.fromBackend(t("modelsAndEndpoints.addModel.autoRouter.validation.requiredFields"));
           }
         });
     }
@@ -203,23 +205,22 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
 
   return (
     <>
-      <Title level={2}>Add Auto Router</Title>
-      <Text className="text-gray-600 mb-6">
-        Create an auto router that automatically selects the best model based on request complexity or semantic
-        matching.
-      </Text>
+      <Title level={2}>{t("modelsAndEndpoints.addModel.autoRouter.title")}</Title>
+      <Text className="text-gray-600 mb-6">{t("modelsAndEndpoints.addModel.autoRouter.description")}</Text>
 
       <Card className="mb-4">
         <div className="mb-4">
-          <Text className="text-sm font-medium mb-2 block">Router Type</Text>
+          <Text className="text-sm font-medium mb-2 block">
+            {t("modelsAndEndpoints.addModel.autoRouter.routerType")}
+          </Text>
           <Radio.Group value={routerType} onChange={(e) => setRouterType(e.target.value)} className="w-full">
             <Space direction="vertical" className="w-full">
               <Radio value="complexity" className="w-full">
                 <div className="flex items-center gap-2">
                   <ThunderboltOutlined className="text-yellow-500" />
-                  <span className="font-medium">Complexity Router</span>
+                  <span className="font-medium">{t("modelsAndEndpoints.addModel.autoRouter.complexity.name")}</span>
                   <Badge
-                    count="Recommended"
+                    count={t("modelsAndEndpoints.addModel.autoRouter.complexity.recommended")}
                     style={{
                       backgroundColor: "#52c41a",
                       fontSize: "10px",
@@ -228,21 +229,28 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
                   />
                 </div>
                 <div className="text-xs text-gray-500 ml-6 mt-1">
-                  Automatically routes based on request complexity. No training data needed — just pick 4 models and go.
+                  {t("modelsAndEndpoints.addModel.autoRouter.complexity.description")}
                   <br />
-                  <span className="text-green-600">✓ Zero API calls</span> ·{" "}
-                  <span className="text-green-600">✓ &lt;1ms latency</span> ·{" "}
-                  <span className="text-green-600">✓ No cost</span>
+                  <span className="text-green-600">
+                    ✓ {t("modelsAndEndpoints.addModel.autoRouter.complexity.zeroApiCalls")}
+                  </span>{" "}
+                  ·{" "}
+                  <span className="text-green-600">
+                    ✓ {t("modelsAndEndpoints.addModel.autoRouter.complexity.latency")}
+                  </span>{" "}
+                  ·{" "}
+                  <span className="text-green-600">
+                    ✓ {t("modelsAndEndpoints.addModel.autoRouter.complexity.noCost")}
+                  </span>
                 </div>
               </Radio>
               <Radio value="semantic" className="w-full mt-2">
                 <div className="flex items-center gap-2">
                   <BranchesOutlined className="text-blue-500" />
-                  <span className="font-medium">Semantic Router</span>
+                  <span className="font-medium">{t("modelsAndEndpoints.addModel.autoRouter.semantic.name")}</span>
                 </div>
                 <div className="text-xs text-gray-500 ml-6 mt-1">
-                  Routes based on semantic similarity to example utterances. Requires embedding model and training
-                  examples.
+                  {t("modelsAndEndpoints.addModel.autoRouter.semantic.description")}
                 </div>
               </Radio>
             </Space>
@@ -260,14 +268,14 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
         >
           {/* Auto Router Name */}
           <Form.Item
-            rules={[{ required: true, message: "Auto router name is required" }]}
-            label="Auto Router Name"
+            rules={[{ required: true, message: t("modelsAndEndpoints.addModel.autoRouter.name.required") }]}
+            label={t("modelsAndEndpoints.addModel.autoRouter.name.label")}
             name="auto_router_name"
-            tooltip="Unique name for this auto router configuration"
+            tooltip={t("modelsAndEndpoints.addModel.autoRouter.name.tooltip")}
             labelCol={{ span: 10 }}
             labelAlign="left"
           >
-            <TextInput placeholder="e.g., smart_router, auto_router_1" />
+            <TextInput placeholder={t("modelsAndEndpoints.addModel.autoRouter.name.placeholder")} />
           </Form.Item>
 
           {/* Conditional rendering based on router type */}
@@ -299,15 +307,20 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
 
               {/* Auto Router Default Model */}
               <Form.Item
-                rules={[{ required: routerType === "semantic", message: "Default model is required" }]}
-                label="Default Model"
+                rules={[
+                  {
+                    required: routerType === "semantic",
+                    message: t("modelsAndEndpoints.addModel.autoRouter.defaultModel.required"),
+                  },
+                ]}
+                label={t("modelsAndEndpoints.addModel.autoRouter.defaultModel.label")}
                 name="auto_router_default_model"
-                tooltip="Fallback model to use when auto routing logic cannot determine the best model"
+                tooltip={t("modelsAndEndpoints.addModel.autoRouter.defaultModel.tooltip")}
                 labelCol={{ span: 10 }}
                 labelAlign="left"
               >
                 <AntdSelect
-                  placeholder="Select a default model"
+                  placeholder={t("modelsAndEndpoints.addModel.autoRouter.defaultModel.placeholder")}
                   onChange={(value) => {
                     setShowCustomDefaultModel(value === "custom");
                   }}
@@ -316,7 +329,7 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
                       value: model_group,
                       label: model_group,
                     })),
-                    { value: "custom", label: "Enter custom model name" },
+                    { value: "custom", label: t("modelsAndEndpoints.addModel.autoRouter.customModel") },
                   ]}
                   style={{ width: "100%" }}
                   showSearch={true}
@@ -325,15 +338,15 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
 
               {/* Auto Router Embedding Model */}
               <Form.Item
-                label="Embedding Model"
+                label={t("modelsAndEndpoints.addModel.autoRouter.embeddingModel.label")}
                 name="auto_router_embedding_model"
-                tooltip="Optional: Embedding model to use for semantic routing decisions"
+                tooltip={t("modelsAndEndpoints.addModel.autoRouter.embeddingModel.tooltip")}
                 labelCol={{ span: 10 }}
                 labelAlign="left"
               >
                 <AntdSelect
                   value={form.getFieldValue("auto_router_embedding_model")}
-                  placeholder="Select an embedding model (optional)"
+                  placeholder={t("modelsAndEndpoints.addModel.autoRouter.embeddingModel.placeholder")}
                   onChange={(value) => {
                     setShowCustomEmbeddingModel(value === "custom");
                     form.setFieldValue("auto_router_embedding_model", value);
@@ -343,7 +356,7 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
                       value: model_group,
                       label: model_group,
                     })),
-                    { value: "custom", label: "Enter custom model name" },
+                    { value: "custom", label: t("modelsAndEndpoints.addModel.autoRouter.customModel") },
                   ]}
                   style={{ width: "100%" }}
                   showSearch={true}
@@ -355,22 +368,24 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
 
           <div className="flex items-center my-4">
             <div className="grow border-t border-gray-200"></div>
-            <span className="px-4 text-gray-500 text-sm">Additional Settings</span>
+            <span className="px-4 text-gray-500 text-sm">
+              {t("modelsAndEndpoints.addModel.autoRouter.additionalSettings")}
+            </span>
             <div className="grow border-t border-gray-200"></div>
           </div>
 
           {/* Model Access Groups - Admin only */}
           {isAdmin && (
             <Form.Item
-              label="Model Access Group"
+              label={t("modelsAndEndpoints.addModel.autoRouter.accessGroup.label")}
               name="model_access_group"
               className="mb-4"
-              tooltip="Use model access groups to control who can access this auto router"
+              tooltip={t("modelsAndEndpoints.addModel.autoRouter.accessGroup.tooltip")}
             >
               <AntdSelect
                 mode="tags"
                 showSearch
-                placeholder="Select existing groups or type to create new ones"
+                placeholder={t("modelsAndEndpoints.addModel.autoRouter.accessGroup.placeholder")}
                 optionFilterProp="children"
                 tokenSeparators={[","]}
                 options={modelAccessGroups.map((group) => ({
@@ -384,12 +399,14 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
           )}
 
           <div className="flex justify-between items-center mb-4">
-            <Tooltip title="Get help on our github">
-              <Typography.Link href="https://github.com/BerriAI/litellm/issues">Need Help?</Typography.Link>
+            <Tooltip title={t("modelsAndEndpoints.addModel.autoRouter.actions.helpTooltip")}>
+              <Typography.Link href="https://github.com/BerriAI/litellm/issues">
+                {t("modelsAndEndpoints.addModel.autoRouter.actions.help")}
+              </Typography.Link>
             </Tooltip>
             <div className="space-x-2">
               <Button onClick={handleTestConnection} loading={isTestingConnection}>
-                Test Connection
+                {t("modelsAndEndpoints.addModel.autoRouter.actions.testConnection")}
               </Button>
               <Button
                 type="primary"
@@ -397,7 +414,7 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
                   handleAutoRouterSubmit();
                 }}
               >
-                Add Auto Router
+                {t("modelsAndEndpoints.addModel.autoRouter.actions.submit")}
               </Button>
             </div>
           </div>
@@ -406,7 +423,7 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
 
       {/* Test Connection Results Modal */}
       <Modal
-        title="Connection Test Results"
+        title={t("modelsAndEndpoints.addModel.connection.modalTitle")}
         open={isResultModalVisible}
         onCancel={() => {
           setIsResultModalVisible(false);
@@ -420,7 +437,7 @@ const AddAutoRouterTab: React.FC<AddAutoRouterTabProps> = ({ form, handleOk, acc
               setIsTestingConnection(false);
             }}
           >
-            Close
+            {t("modelsAndEndpoints.addModel.connection.close")}
           </Button>,
         ]}
         width={700}

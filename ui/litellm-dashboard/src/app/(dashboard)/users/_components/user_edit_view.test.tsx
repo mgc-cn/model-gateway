@@ -8,7 +8,8 @@ vi.mock("@/components/key_team_helpers/fetch_available_models_team_key", () => (
   getModelDisplayName: vi.fn((model: string) => model),
 }));
 
-vi.mock("@/utils/roles", () => ({
+vi.mock("@/utils/roles", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/roles")>()),
   all_admin_roles: ["Admin", "Admin Viewer", "proxy_admin", "proxy_admin_viewer", "org_admin"],
 }));
 

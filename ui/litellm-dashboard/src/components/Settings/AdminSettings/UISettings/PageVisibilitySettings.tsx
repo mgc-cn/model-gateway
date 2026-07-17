@@ -3,6 +3,7 @@
 import { getAvailablePages } from "@/components/page_utils";
 import { Button, Checkbox, Collapse, Space, Tag, Typography } from "antd";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface PageVisibilitySettingsProps {
   enabledPagesInternalUsers: string[] | null | undefined;
@@ -17,6 +18,7 @@ export default function PageVisibilitySettings({
   isUpdating,
   onUpdate,
 }: PageVisibilitySettingsProps) {
+  const { t } = useTranslation();
   // Check if page visibility is set (null/undefined means "not set" = all pages visible)
   const isPageVisibilitySet = enabledPagesInternalUsers !== null && enabledPagesInternalUsers !== undefined;
 
@@ -60,15 +62,15 @@ export default function PageVisibilitySettings({
     <Space direction="vertical" size="middle" style={{ width: "100%" }}>
       <Space direction="vertical" size={4}>
         <Space align="center">
-          <Typography.Text strong>Internal User Page Visibility</Typography.Text>
+          <Typography.Text strong>{t("adminSettings.ui.pageVisibility.title")}</Typography.Text>
           {!isPageVisibilitySet && (
             <Tag color="default" style={{ marginLeft: "8px" }}>
-              Not set (all pages visible)
+              {t("adminSettings.ui.pageVisibility.notSet")}
             </Tag>
           )}
           {isPageVisibilitySet && (
             <Tag color="blue" style={{ marginLeft: "8px" }}>
-              {selectedPages.length} page{selectedPages.length !== 1 ? "s" : ""} selected
+              {t("adminSettings.ui.pageVisibility.selected", { count: selectedPages.length })}
             </Tag>
           )}
         </Space>
@@ -76,11 +78,10 @@ export default function PageVisibilitySettings({
           <Typography.Text type="secondary">{enabledPagesPropertyDescription}</Typography.Text>
         )}
         <Typography.Text type="secondary" style={{ fontSize: "12px", fontStyle: "italic" }}>
-          By default, all pages are visible to internal users. Select specific pages to restrict visibility.
+          {t("adminSettings.ui.pageVisibility.defaultHelp")}
         </Typography.Text>
         <Typography.Text type="secondary" style={{ fontSize: "12px", color: "#8b5cf6" }}>
-          Note: Only pages accessible to internal user roles are shown here. Admin-only pages are excluded as they
-          cannot be made visible to internal users regardless of this setting.
+          {t("adminSettings.ui.pageVisibility.note")}
         </Typography.Text>
       </Space>
 
@@ -88,7 +89,7 @@ export default function PageVisibilitySettings({
         items={[
           {
             key: "page-visibility",
-            label: "Configure Page Visibility",
+            label: t("adminSettings.ui.pageVisibility.configure"),
             children: (
               <Space direction="vertical" size="middle" style={{ width: "100%" }}>
                 <Checkbox.Group value={selectedPages} onChange={setSelectedPages} style={{ width: "100%" }}>
@@ -112,7 +113,9 @@ export default function PageVisibilitySettings({
                             <div key={page.page} style={{ marginBottom: "4px" }}>
                               <Checkbox value={page.page}>
                                 <Space direction="vertical" size={0}>
-                                  <Typography.Text>{page.label}</Typography.Text>
+                                  <Typography.Text>
+                                    {t(`navigation.items.${page.page}`, { defaultValue: page.label })}
+                                  </Typography.Text>
                                   <Typography.Text type="secondary" style={{ fontSize: "12px" }}>
                                     {page.description}
                                   </Typography.Text>
@@ -128,11 +131,11 @@ export default function PageVisibilitySettings({
 
                 <Space>
                   <Button type="primary" onClick={handleSavePageVisibility} loading={isUpdating} disabled={isUpdating}>
-                    Save Page Visibility Settings
+                    {t("adminSettings.ui.pageVisibility.save")}
                   </Button>
                   {isPageVisibilitySet && (
                     <Button onClick={handleResetToDefault} loading={isUpdating} disabled={isUpdating}>
-                      Reset to Default (All Pages)
+                      {t("adminSettings.ui.pageVisibility.reset")}
                     </Button>
                   )}
                 </Space>

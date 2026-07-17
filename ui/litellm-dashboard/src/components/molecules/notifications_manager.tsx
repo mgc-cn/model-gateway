@@ -3,6 +3,7 @@ import { notification as staticNotification } from "antd";
 import type { NotificationInstance } from "antd/es/notification/interface";
 import { parseErrorMessage } from "../shared/errorUtils";
 import { ArgsProps } from "antd/es/notification";
+import i18n from "@/i18n/i18n";
 
 let notificationInstance: NotificationInstance | null = null;
 
@@ -33,6 +34,35 @@ function normalize(input: string | NotificationConfig, fallbackTitle: string): N
   if (typeof input === "string") return { message: fallbackTitle, description: input };
   return { message: input.message ?? fallbackTitle, ...input };
 }
+
+const notificationTitleKeys: Record<string, string> = {
+  Error: "common.notifications.error",
+  Warning: "common.notifications.warning",
+  Info: "common.notifications.info",
+  Success: "common.notifications.success",
+  "Authentication Error": "common.notifications.authenticationError",
+  "Access Denied": "common.notifications.accessDenied",
+  "Service Unavailable": "common.notifications.serviceUnavailable",
+  "Budget Exceeded": "common.notifications.budgetExceeded",
+  "Feature Unavailable": "common.notifications.featureUnavailable",
+  "Routing Error": "common.notifications.routingError",
+  "Already Exists": "common.notifications.alreadyExists",
+  "Content Blocked": "common.notifications.contentBlocked",
+  "Validation Error": "common.notifications.validationError",
+  "Integration Error": "common.notifications.integrationError",
+  "Not Found": "common.notifications.notFound",
+  "Rate Limit Exceeded": "common.notifications.rateLimitExceeded",
+  "Server Error": "common.notifications.serverError",
+  "Request Error": "common.notifications.requestError",
+  "Feature Notice": "common.notifications.featureNotice",
+  "Configuration Warning": "common.notifications.configurationWarning",
+  "Rate Limit": "common.notifications.rateLimit",
+};
+
+const translateTitle = (title: string): string => {
+  const key = notificationTitleKeys[title];
+  return key ? i18n.t(key) : title;
+};
 
 function toIntMaybe(val: any): number | undefined {
   if (typeof val === "number") return val;
@@ -260,7 +290,7 @@ function looksErrorPayload(input: any, status?: number): boolean {
 
 const NotificationManager = {
   error(input: string | NotificationConfig) {
-    const cfg = normalize(input, "Error");
+    const cfg = normalize(input, translateTitle("Error"));
     getNotification().error({
       ...COMMON_NOTIFICATION_PROPS,
       ...cfg,
@@ -270,7 +300,7 @@ const NotificationManager = {
   },
 
   warning(input: string | NotificationConfig) {
-    const cfg = normalize(input, "Warning");
+    const cfg = normalize(input, translateTitle("Warning"));
     getNotification().warning({
       ...COMMON_NOTIFICATION_PROPS,
       ...cfg,
@@ -280,7 +310,7 @@ const NotificationManager = {
   },
 
   info(input: string | NotificationConfig) {
-    const cfg = normalize(input, "Info");
+    const cfg = normalize(input, translateTitle("Info"));
     getNotification().info({
       ...COMMON_NOTIFICATION_PROPS,
       ...cfg,
@@ -293,14 +323,14 @@ const NotificationManager = {
     if (React.isValidElement(input)) {
       getNotification().success({
         ...COMMON_NOTIFICATION_PROPS,
-        message: "Success",
+        message: translateTitle("Success"),
         description: input,
         placement: defaultPlacement(),
         duration: 3.5,
       });
       return;
     }
-    const cfg = normalize(input as string | NotificationConfig, "Success");
+    const cfg = normalize(input as string | NotificationConfig, translateTitle("Success"));
     getNotification().success({
       ...COMMON_NOTIFICATION_PROPS,
       ...cfg,
@@ -316,7 +346,7 @@ const NotificationManager = {
 
     if (looksErrorPayload(input, status)) {
       const title = titleFor(status, description);
-      const payload = { ...base, message: title };
+      const payload = { ...base, message: translateTitle(title) };
 
       if (
         title === "Rate Limit Exceeded" ||
@@ -350,7 +380,7 @@ const NotificationManager = {
 
     // Non-error: success/info/warning classifier
     const cls = classifyGeneralMessage(description);
-    const payload = { ...base, message: cls?.title ?? "Info" };
+    const payload = { ...base, message: translateTitle(cls?.title ?? "Info") };
 
     if (cls?.kind === "success") {
       getNotification().success({ ...COMMON_NOTIFICATION_PROPS, ...payload, duration: extra?.duration ?? 3.5 });

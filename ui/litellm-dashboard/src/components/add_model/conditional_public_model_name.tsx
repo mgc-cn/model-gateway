@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Form, Table } from "antd";
 import { TextInput } from "@tremor/react";
 import { Tooltip } from "../atoms/index";
 import { Providers } from "../provider_info_helpers";
 
 const ConditionalPublicModelName: React.FC = () => {
+  const { t } = useTranslation();
   const form = Form.useFormInstance();
   const [tableKey, setTableKey] = useState(0); // Add a key to force table re-render
 
@@ -95,30 +97,29 @@ const ConditionalPublicModelName: React.FC = () => {
 
   const publicNameTooltipContent = (
     <>
-      <div className="mb-2 font-normal">The name you specify in your API calls to LiteLLM Proxy</div>
+      <div className="mb-2 font-normal">{t("modelsAndEndpoints.addModel.mappings.publicNameDescription")}</div>
       <div className="mb-2 font-normal">
-        <strong>Example:</strong> If you name your public model{" "}
-        <code className="bg-gray-700 px-1 py-0.5 rounded-sm text-xs">example-name</code>, and choose{" "}
-        <code className="bg-gray-700 px-1 py-0.5 rounded-sm text-xs">openai/qwen-plus-latest</code> as the LiteLLM model
+        <strong>{t("modelsAndEndpoints.addModel.mappings.exampleLabel")}</strong>{" "}
+        {t("modelsAndEndpoints.addModel.mappings.example")}
       </div>
       <div className="mb-2 font-normal">
-        <strong>Usage:</strong> You make an API call to the LiteLLM proxy with{" "}
-        <code className="bg-gray-700 px-1 py-0.5 rounded-sm text-xs">model = &quot;example-name&quot;</code>
+        <strong>{t("modelsAndEndpoints.addModel.mappings.usageLabel")}</strong>{" "}
+        {t("modelsAndEndpoints.addModel.mappings.usage")}
       </div>
       <div className="font-normal">
-        <strong>Result:</strong> LiteLLM sends{" "}
-        <code className="bg-gray-700 px-1 py-0.5 rounded-sm text-xs">qwen-plus-latest</code> to the provider
+        <strong>{t("modelsAndEndpoints.addModel.mappings.resultLabel")}</strong>{" "}
+        {t("modelsAndEndpoints.addModel.mappings.result")}
       </div>
     </>
   );
 
-  const liteLLMModelTooltipContent = <div>The model name LiteLLM will send to the LLM API</div>;
+  const liteLLMModelTooltipContent = <div>{t("modelsAndEndpoints.addModel.model.tooltip")}</div>;
 
   const columns = [
     {
       title: (
         <span className="flex items-center">
-          Public Model Name
+          {t("modelsAndEndpoints.addModel.mappings.publicName")}
           <Tooltip content={publicNameTooltipContent} width="500px" />
         </span>
       ),
@@ -163,7 +164,7 @@ const ConditionalPublicModelName: React.FC = () => {
     {
       title: (
         <span className="flex items-center">
-          LiteLLM Model Name
+          {t("modelsAndEndpoints.addModel.mappings.litellmName")}
           <Tooltip content={liteLLMModelTooltipContent} width="360px" />
         </span>
       ),
@@ -175,9 +176,9 @@ const ConditionalPublicModelName: React.FC = () => {
   return (
     <>
       <Form.Item
-        label="Model Mappings"
+        label={t("modelsAndEndpoints.addModel.mappings.label")}
         name="model_mappings"
-        tooltip="Map public model names to LiteLLM model names for load balancing"
+        tooltip={t("modelsAndEndpoints.addModel.mappings.tooltip")}
         labelCol={{ span: 10 }}
         wrapperCol={{ span: 16 }}
         labelAlign="left"
@@ -186,14 +187,14 @@ const ConditionalPublicModelName: React.FC = () => {
             required: true,
             validator: async (_, value) => {
               if (!value || value.length === 0) {
-                throw new Error("At least one model mapping is required");
+                throw new Error(t("modelsAndEndpoints.addModel.mappings.required"));
               }
               // Check if all mappings have valid public names
               const invalidMappings = value.filter(
                 (mapping: any) => !mapping.public_name || mapping.public_name.trim() === "",
               );
               if (invalidMappings.length > 0) {
-                throw new Error("All model mappings must have valid public names");
+                throw new Error(t("modelsAndEndpoints.addModel.mappings.validPublicNames"));
               }
             },
           },

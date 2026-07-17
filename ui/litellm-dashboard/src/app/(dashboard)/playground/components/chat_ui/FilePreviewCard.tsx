@@ -1,4 +1,5 @@
 import { DeleteOutlined, FilePdfOutlined } from "@ant-design/icons";
+import i18n from "@/i18n/i18n";
 
 interface FilePreviewCardProps {
   file: File;
@@ -20,7 +21,7 @@ function FilePreviewCard({ file, previewUrl, onRemove }: FilePreviewCardProps) {
           ) : (
             <img
               src={previewUrl || ""}
-              alt="Upload preview"
+              alt={i18n.t("playground.media.uploadPreview")}
               className="w-10 h-10 rounded-md border border-gray-200 object-cover"
             />
           )}

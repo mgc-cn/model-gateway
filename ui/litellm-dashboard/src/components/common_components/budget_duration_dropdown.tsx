@@ -1,5 +1,6 @@
 import React from "react";
 import { Select } from "antd";
+import { useTranslation } from "react-i18next";
 
 const { Option } = Select;
 
@@ -16,19 +17,20 @@ const BudgetDurationDropdown: React.FC<BudgetDurationDropdownProps> = ({
   className = "",
   style = {},
 }) => {
+  const { t } = useTranslation();
   return (
     <Select
       style={{ width: "100%", ...style }}
       value={value || undefined}
       onChange={onChange}
       className={className}
-      placeholder="n/a"
+      placeholder={t("virtualKeys.create.budgetDuration.placeholder")}
       allowClear
     >
-      <Option value="1h">hourly</Option>
-      <Option value="24h">daily</Option>
-      <Option value="7d">weekly</Option>
-      <Option value="30d">monthly</Option>
+      <Option value="1h">{t("virtualKeys.create.budgetDuration.hourly")}</Option>
+      <Option value="24h">{t("virtualKeys.create.budgetDuration.daily")}</Option>
+      <Option value="7d">{t("virtualKeys.create.budgetDuration.weekly")}</Option>
+      <Option value="30d">{t("virtualKeys.create.budgetDuration.monthly")}</Option>
     </Select>
   );
 };

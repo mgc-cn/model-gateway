@@ -6,6 +6,7 @@ import type { MenuProps } from "antd";
 import { usePluginMode } from "@/contexts/PluginModeContext";
 import { useUISettings } from "@/app/(dashboard)/hooks/uiSettings/useUISettings";
 import { migratedHref } from "@/utils/migratedPages";
+import { useTranslation } from "react-i18next";
 
 const GATEWAY = "ai-gateway";
 const CHAT = "chat";
@@ -14,6 +15,7 @@ export default function ViewSwitcher() {
   const { mode, setMode, plugins } = usePluginMode();
   const { data: uiSettings } = useUISettings();
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   const chatEnabled = Boolean(uiSettings?.values?.enable_chat_ui);
 
@@ -23,10 +25,12 @@ export default function ViewSwitcher() {
   const normalizedPathname = (pathname ?? "").replace(/\/+$/, "");
   const isChatRoute = chatEnabled && (normalizedPathname === chatHref || normalizedPathname.startsWith(`${chatHref}/`));
 
-  const activeLabel = isChatRoute ? "Chat" : plugins.find((p) => p.name === mode)?.display_name ?? "AI Gateway";
+  const activeLabel = isChatRoute
+    ? t("views.chat")
+    : plugins.find((p) => p.name === mode)?.display_name ?? t("views.gateway");
 
   const modeEntries = [
-    { key: GATEWAY, label: "AI Gateway" },
+    { key: GATEWAY, label: t("views.gateway") },
     ...plugins.map((p) => ({ key: p.name, label: p.display_name })),
   ];
 
@@ -46,7 +50,7 @@ export default function ViewSwitcher() {
             key: CHAT,
             label: (
               <div className="flex items-center justify-between gap-6 py-0.5">
-                <span className="font-medium">Chat</span>
+                <span className="font-medium">{t("views.chat")}</span>
                 {isChatRoute && <CheckOutlined className="text-blue-600" />}
               </div>
             ),

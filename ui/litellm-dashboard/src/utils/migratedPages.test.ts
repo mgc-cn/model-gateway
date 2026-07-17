@@ -54,6 +54,7 @@ describe("migratedHref / legacyPageHref", () => {
     const { MIGRATED_PAGES } = await import("./migratedPages");
 
     expect(MIGRATED_PAGES["llm-playground"]).toBe("playground");
+    expect(MIGRATED_PAGES.playground).toBe("playground");
   });
 
   it("maps the models sidebar id to the models-and-endpoints route and builds its redirect href", async () => {

@@ -5,6 +5,7 @@ import NotificationsManager from "../molecules/notifications_manager";
 import { getEmailEventSettings, updateEmailEventSettings, resetEmailEventSettings } from "../networking";
 import { EmailEvent } from "../../types";
 import { EmailEventSetting } from "./types";
+import { useTranslation } from "react-i18next";
 
 const { Title } = Typography;
 
@@ -13,6 +14,7 @@ interface EmailEventSettingsProps {
 }
 
 const EmailEventSettings: React.FC<EmailEventSettingsProps> = ({ accessToken }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [eventSettings, setEventSettings] = useState<EmailEventSetting[]>([]);
 
@@ -48,7 +50,7 @@ const EmailEventSettings: React.FC<EmailEventSettingsProps> = ({ accessToken }) 
 
     try {
       await updateEmailEventSettings(accessToken, { settings: eventSettings });
-      NotificationsManager.success("Email event settings updated successfully");
+      NotificationsManager.success(t("loggingAndAlerts.email.notifications.eventsUpdated"));
     } catch (error) {
       console.error("Failed to update email event settings:", error);
       NotificationsManager.fromBackend(error);
@@ -60,7 +62,7 @@ const EmailEventSettings: React.FC<EmailEventSettingsProps> = ({ accessToken }) 
 
     try {
       await resetEmailEventSettings(accessToken);
-      NotificationsManager.success("Email event settings reset to defaults");
+      NotificationsManager.success(t("loggingAndAlerts.email.notifications.eventsReset"));
       // Refresh settings after reset
       fetchEventSettings();
     } catch (error) {
@@ -73,23 +75,33 @@ const EmailEventSettings: React.FC<EmailEventSettingsProps> = ({ accessToken }) 
   const getEventDescription = (event: EmailEvent): string => {
     // Convert event name to a sentence with more context
     if (event.includes("Virtual Key Created")) {
-      return "An email will be sent to the user when a new virtual key is created with their user ID";
+      return t("loggingAndAlerts.email.events.virtualKeyCreatedDescription");
     } else if (event.includes("New User Invitation")) {
-      return "An email will be sent to the email address of the user when a new user is created";
+      return t("loggingAndAlerts.email.events.newUserInvitationDescription");
     } else {
       // Handle any other event type from the API
       const words = event
         .split(/(?=[A-Z])/)
         .join(" ")
         .toLowerCase();
-      return `Receive an email notification when ${words}`;
+      return t("loggingAndAlerts.email.events.genericDescription", { event: words });
     }
+  };
+
+  const getEventLabel = (event: EmailEvent): string => {
+    if (event.includes("Virtual Key Created")) {
+      return t("loggingAndAlerts.email.events.virtualKeyCreated");
+    }
+    if (event.includes("New User Invitation")) {
+      return t("loggingAndAlerts.email.events.newUserInvitation");
+    }
+    return event;
   };
 
   return (
     <Card>
-      <Title level={4}>Email Notifications</Title>
-      <Text>Select which events should trigger email notifications.</Text>
+      <Title level={4}>{t("loggingAndAlerts.email.eventsTitle")}</Title>
+      <Text>{t("loggingAndAlerts.email.eventsDescription")}</Text>
       <Divider />
 
       {loading ? (
@@ -105,7 +117,7 @@ const EmailEventSettings: React.FC<EmailEventSettingsProps> = ({ accessToken }) 
                 onChange={(e) => handleCheckboxChange(setting.event, e.target.checked)}
               />
               <div className="ml-3">
-                <Text>{setting.event}</Text>
+                <Text>{getEventLabel(setting.event)}</Text>
                 <div className="text-sm text-gray-500 block">{getEventDescription(setting.event)}</div>
               </div>
             </div>
@@ -115,10 +127,10 @@ const EmailEventSettings: React.FC<EmailEventSettingsProps> = ({ accessToken }) 
 
       <div className="mt-6 flex space-x-4">
         <Button onClick={handleSaveSettings} disabled={loading}>
-          Save Changes
+          {t("loggingAndAlerts.email.saveChanges")}
         </Button>
         <Button onClick={handleResetSettings} variant="secondary" disabled={loading}>
-          Reset to Defaults
+          {t("loggingAndAlerts.email.resetDefaults")}
         </Button>
       </div>
     </Card>

@@ -21,6 +21,7 @@ import { TrashIcon, CheckCircleIcon } from "@heroicons/react/outline";
 import RouterSettings from "./router_settings";
 import Fallbacks from "./Settings/RouterSettings/Fallbacks/Fallbacks";
 import RoutingGroups from "./routing_groups";
+import { useTranslation } from "react-i18next";
 interface GeneralSettingsPageProps {
   accessToken: string | null;
   userRole: string | null;
@@ -36,6 +37,8 @@ interface generalSettingsItem {
 }
 
 const GeneralSettings: React.FC<GeneralSettingsPageProps> = ({ accessToken, userRole, userID }) => {
+  const { t, i18n } = useTranslation();
+  const isChinese = (i18n.resolvedLanguage || i18n.language).startsWith("zh");
   const [generalSettings, setGeneralSettings] = useState<generalSettingsItem[]>([]);
 
   useEffect(() => {
@@ -105,10 +108,10 @@ const GeneralSettings: React.FC<GeneralSettingsPageProps> = ({ accessToken, user
     <div className="w-full">
       <TabGroup className="h-[75vh] w-full">
         <TabList variant="line" defaultValue="1" className="px-8 pt-4">
-          <Tab value="1">Loadbalancing</Tab>
-          <Tab value="2">Routing Groups</Tab>
-          <Tab value="3">Fallbacks</Tab>
-          <Tab value="4">General</Tab>
+          <Tab value="1">{t("routerSettings.tabs.loadBalancing")}</Tab>
+          <Tab value="2">{t("routerSettings.tabs.routingGroups")}</Tab>
+          <Tab value="3">{t("routerSettings.tabs.fallbacks")}</Tab>
+          <Tab value="4">{t("routerSettings.tabs.general")}</Tab>
         </TabList>
         <TabPanels className="px-8 py-6">
           <TabPanel>
@@ -125,10 +128,10 @@ const GeneralSettings: React.FC<GeneralSettingsPageProps> = ({ accessToken, user
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableHeaderCell>Setting</TableHeaderCell>
-                    <TableHeaderCell>Value</TableHeaderCell>
-                    <TableHeaderCell>Status</TableHeaderCell>
-                    <TableHeaderCell>Action</TableHeaderCell>
+                    <TableHeaderCell>{t("routerSettings.columns.setting")}</TableHeaderCell>
+                    <TableHeaderCell>{t("routerSettings.columns.value")}</TableHeaderCell>
+                    <TableHeaderCell>{t("routerSettings.columns.status")}</TableHeaderCell>
+                    <TableHeaderCell>{t("routerSettings.columns.action")}</TableHeaderCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -137,7 +140,14 @@ const GeneralSettings: React.FC<GeneralSettingsPageProps> = ({ accessToken, user
                     .map((value, index) => (
                       <TableRow key={index}>
                         <TableCell>
-                          <Text>{value.field_name}</Text>
+                          <Text>
+                            {isChinese
+                              ? t(`routerSettings.generalFields.${value.field_name}.label`, {
+                                  defaultValue: value.field_name,
+                                })
+                              : value.field_name}
+                          </Text>
+                          {isChinese && <code className="mt-1 block text-xs text-gray-500">{value.field_name}</code>}
                           <p
                             style={{
                               fontSize: "0.65rem",
@@ -146,7 +156,11 @@ const GeneralSettings: React.FC<GeneralSettingsPageProps> = ({ accessToken, user
                             }}
                             className="mt-1"
                           >
-                            {value.field_description}
+                            {isChinese
+                              ? t(`routerSettings.generalFields.${value.field_name}.description`, {
+                                  defaultValue: value.field_description,
+                                })
+                              : value.field_description}
                           </p>
                         </TableCell>
                         <TableCell>
@@ -166,18 +180,24 @@ const GeneralSettings: React.FC<GeneralSettingsPageProps> = ({ accessToken, user
                         <TableCell>
                           {value.stored_in_db == true ? (
                             <Badge icon={CheckCircleIcon} className="text-white">
-                              In DB
+                              {t("routerSettings.status.inDatabase")}
                             </Badge>
                           ) : value.stored_in_db == false ? (
-                            <Badge className="text-gray bg-white outline-solid">In Config</Badge>
+                            <Badge className="text-gray bg-white outline-solid">
+                              {t("routerSettings.status.inConfig")}
+                            </Badge>
                           ) : (
-                            <Badge className="text-gray bg-white outline-solid">Not Set</Badge>
+                            <Badge className="text-gray bg-white outline-solid">
+                              {t("routerSettings.status.notSet")}
+                            </Badge>
                           )}
                         </TableCell>
                         <TableCell>
-                          <Button onClick={() => handleUpdateField(value.field_name, index)}>Update</Button>
+                          <Button onClick={() => handleUpdateField(value.field_name, index)}>
+                            {t("routerSettings.update")}
+                          </Button>
                           <Icon icon={TrashIcon} color="red" onClick={() => handleResetField(value.field_name, index)}>
-                            Reset
+                            {t("routerSettings.reset")}
                           </Icon>
                         </TableCell>
                       </TableRow>

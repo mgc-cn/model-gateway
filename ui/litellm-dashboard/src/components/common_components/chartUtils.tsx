@@ -1,5 +1,6 @@
 import type { CustomTooltipProps } from "@tremor/react";
 import { SpendMetrics } from "../UsagePage/types";
+import { useTranslation } from "react-i18next";
 
 interface ChartDataPoint {
   date: string;
@@ -17,14 +18,17 @@ const colorNameToHex: { [key: string]: string } = {
 };
 
 export const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  const { t, i18n } = useTranslation();
+
   if (active && payload && payload.length) {
     const formatCategoryName = (name: string): string => {
-      return name
-        .replace("metrics.", "")
+      const metricKey = name.replace("metrics.", "");
+      const fallback = metricKey
         .replace(/_/g, " ")
         .split(" ")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
+      return t(`observability.usage.activity.chart.${metricKey}`, { defaultValue: fallback });
     };
 
     const getRawValue = (dataPoint: ChartDataPoint, key: string): number | undefined => {
@@ -48,9 +52,9 @@ export const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) =>
           const formattedValue =
             rawValue !== undefined
               ? isSpend
-                ? `$${rawValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                : rawValue.toLocaleString()
-              : "N/A";
+                ? `$${rawValue.toLocaleString(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : rawValue.toLocaleString(i18n.language)
+              : t("observability.usage.activity.notAvailable");
 
           const colorName = item.color as keyof typeof colorNameToHex;
           const hexColor = colorNameToHex[colorName] || item.color;
@@ -78,13 +82,15 @@ export const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) =>
 };
 
 export const CustomLegend = ({ categories, colors }: { categories: string[]; colors: string[] }) => {
+  const { t } = useTranslation();
   const formatCategoryName = (name: string): string => {
-    return name
-      .replace("metrics.", "")
+    const metricKey = name.replace("metrics.", "");
+    const fallback = metricKey
       .replace(/_/g, " ")
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+    return t(`observability.usage.activity.chart.${metricKey}`, { defaultValue: fallback });
   };
 
   return (

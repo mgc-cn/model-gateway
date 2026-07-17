@@ -10,6 +10,7 @@ import {
 } from "@ant-design/icons";
 import type { MCPServer } from "./types";
 import { getMaskedAndFullUrl } from "./utils";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -48,6 +49,7 @@ const MCPServerCard: FC<MCPServerCardProps> = ({
   onOpenFillFields,
   onDelete,
 }) => {
+  const { t } = useTranslation();
   const alias = server.alias || server.server_name || "";
   const name = server.server_name || alias || server.server_id;
   // Logo is sourced exclusively from the admin-set `mcp_info.logo_url`.
@@ -102,7 +104,7 @@ const MCPServerCard: FC<MCPServerCardProps> = ({
   if (onRecheckHealth) {
     menuItems.push({
       key: "test-connection",
-      label: "Test Connection",
+      label: t("mcpManagement.actions.test"),
       icon: <ThunderboltOutlined />,
       disabled: isRechecking,
       onClick: ({ domEvent }) => {
@@ -117,7 +119,7 @@ const MCPServerCard: FC<MCPServerCardProps> = ({
     }
     menuItems.push({
       key: "delete",
-      label: "Delete",
+      label: t("mcpManagement.actions.delete"),
       icon: <DeleteOutlined />,
       danger: true,
       onClick: ({ domEvent }) => {
@@ -170,7 +172,7 @@ const MCPServerCard: FC<MCPServerCardProps> = ({
               type="button"
               onClick={stop}
               onKeyDown={stop}
-              aria-label="Server actions"
+              aria-label={t("mcpManagement.values.serverActions")}
               className="-mr-1 -mt-1 inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-blue-600"
             >
               <MoreOutlined style={{ fontSize: 20 }} />
@@ -206,7 +208,7 @@ const MCPServerCard: FC<MCPServerCardProps> = ({
         <Tag color={isPublic ? "green" : "orange"} className="m-0">
           <span className="inline-flex items-center gap-1">
             <span className={`h-1.5 w-1.5 rounded-full ${isPublic ? "bg-green-500" : "bg-orange-500"}`} />
-            {isPublic ? "Public" : "Internal"}
+            {isPublic ? t("mcpManagement.values.public") : t("mcpManagement.values.internal")}
           </span>
         </Tag>
         {accessGroups.slice(0, 2).map((g) => (
@@ -229,7 +231,7 @@ const MCPServerCard: FC<MCPServerCardProps> = ({
               <Tooltip
                 title={
                   <div>
-                    <div className="font-semibold mb-1">Missing user fields:</div>
+                    <div className="font-semibold mb-1">{t("mcpManagement.values.missingFields")}</div>
                     <ul className="ml-3">
                       {missing.map((m) => (
                         <li key={m}>• {m}</li>
@@ -240,8 +242,7 @@ const MCPServerCard: FC<MCPServerCardProps> = ({
               >
                 <span className="inline-flex items-center gap-1 font-semibold text-red-700">
                   <ExclamationCircleFilled />
-                  {missing.length} user field
-                  {missing.length === 1 ? "" : "s"} missing
+                  {t("mcpManagement.values.missingFieldCount", { count: missing.length })}
                 </span>
               </Tooltip>
               {onOpenFillFields && (
@@ -253,7 +254,7 @@ const MCPServerCard: FC<MCPServerCardProps> = ({
                   }}
                   className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white shadow-xs transition-colors hover:bg-red-700"
                 >
-                  Set
+                  {t("mcpManagement.values.set")}
                 </button>
               )}
             </div>
@@ -283,28 +284,34 @@ const HealthChip: FC<HealthChipProps> = ({
   error,
   dotClass,
 }) => {
+  const { t, i18n } = useTranslation();
+  const translatedStatus = t(`mcpManagement.health.${status}`, { defaultValue: status });
   if (isLoadingHealth || isRechecking) {
     return (
       <Tag className="m-0">
         <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gray-300" />
-          Checking
+          {t("mcpManagement.health.checking")}
         </span>
       </Tag>
     );
   }
   const tooltip = (
     <div className="max-w-xs">
-      <div className="font-semibold mb-1">Health: {status}</div>
-      {lastCheck && <div className="text-xs mb-1">Last check: {new Date(lastCheck).toLocaleString()}</div>}
+      <div className="font-semibold mb-1">{t("mcpManagement.health.label", { status: translatedStatus })}</div>
+      {lastCheck && (
+        <div className="text-xs mb-1">
+          {t("mcpManagement.health.lastCheck", { time: new Date(lastCheck).toLocaleString(i18n.language) })}
+        </div>
+      )}
       {error && (
         <div className="text-xs">
-          <div className="font-medium text-red-300 mb-1">Error</div>
+          <div className="font-medium text-red-300 mb-1">{t("mcpManagement.states.error")}</div>
           <div className="wrap-break-word">{error}</div>
         </div>
       )}
-      {!lastCheck && !error && <div className="text-xs text-gray-400">No health data</div>}
-      {onRecheck && <div className="mt-1 text-xs text-gray-300">Click to recheck</div>}
+      {!lastCheck && !error && <div className="text-xs text-gray-400">{t("mcpManagement.states.noHealth")}</div>}
+      {onRecheck && <div className="mt-1 text-xs text-gray-300">{t("mcpManagement.states.recheck")}</div>}
     </div>
   );
   return (
@@ -322,7 +329,7 @@ const HealthChip: FC<HealthChipProps> = ({
       >
         <span className="inline-flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+          {translatedStatus}
         </span>
       </Tag>
     </Tooltip>
@@ -335,13 +342,14 @@ interface ByokRowProps {
 }
 
 const ByokRow: FC<ByokRowProps> = ({ connected, onConnect }) => {
+  const { t } = useTranslation();
   if (connected) {
     return (
       <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="text-gray-500">BYOK credential</span>
+        <span className="text-gray-500">{t("mcpManagement.values.byokCredential")}</span>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 font-medium text-green-700">
-            <CheckOutlined style={{ fontSize: 10 }} /> Connected
+            <CheckOutlined style={{ fontSize: 10 }} /> {t("mcpManagement.values.connected")}
           </span>
           {onConnect && (
             <button
@@ -352,7 +360,7 @@ const ByokRow: FC<ByokRowProps> = ({ connected, onConnect }) => {
               }}
               className="text-xs text-gray-400 transition-colors hover:text-blue-600"
             >
-              Update
+              {t("mcpManagement.values.update")}
             </button>
           )}
         </div>
@@ -361,7 +369,7 @@ const ByokRow: FC<ByokRowProps> = ({ connected, onConnect }) => {
   }
   return (
     <div className="flex items-center justify-between gap-2 text-xs">
-      <span className="text-gray-500">BYOK credential</span>
+      <span className="text-gray-500">{t("mcpManagement.values.byokCredential")}</span>
       {onConnect ? (
         <button
           type="button"
@@ -371,7 +379,7 @@ const ByokRow: FC<ByokRowProps> = ({ connected, onConnect }) => {
           }}
           className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white shadow-xs transition-colors hover:bg-blue-700"
         >
-          Connect
+          {t("mcpManagement.values.connect")}
         </button>
       ) : (
         <span className="text-gray-400">—</span>

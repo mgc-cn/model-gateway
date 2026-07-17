@@ -5,6 +5,8 @@ import { UserInfo } from "@/components/networking";
 import { PencilAltIcon, TrashIcon, InformationCircleIcon, RefreshIcon } from "@heroicons/react/outline";
 import { CopyOutlined } from "@ant-design/icons";
 import { formatNumberWithCommas, copyToClipboard } from "@/utils/dataUtils";
+import i18n from "@/i18n/i18n";
+import { getLocalizedUserRole } from "@/utils/roles";
 
 interface SelectionOptions {
   selectedUsers: UserInfo[];
@@ -23,10 +25,12 @@ export const columns = (
   handleUserClick: (userId: string, openInEditMode?: boolean) => void,
   selectionOptions?: SelectionOptions,
 ): ColumnDef<UserInfo>[] => {
+  const t = i18n.t.bind(i18n);
+  const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en-US";
   // Backend sortable columns: user_id, user_email, created_at, spend, user_alias, user_role
   const baseColumns: ColumnDef<UserInfo>[] = [
     {
-      header: "User ID",
+      header: t("userManagement.fields.userId"),
       accessorKey: "user_id",
       enableSorting: true,
       cell: ({ row }) => (
@@ -35,11 +39,11 @@ export const columns = (
             <span className="text-xs">{row.original.user_id ? `${row.original.user_id.slice(0, 7)}...` : "-"}</span>
           </Tooltip>
           {row.original.user_id && (
-            <Tooltip title="Copy User ID">
+            <Tooltip title={t("userManagement.actions.copyUserId")}>
               <CopyOutlined
                 onClick={(e) => {
                   e.stopPropagation();
-                  copyToClipboard(row.original.user_id, "User ID copied to clipboard");
+                  copyToClipboard(row.original.user_id, t("userManagement.notifications.userIdCopied"));
                 }}
                 className="cursor-pointer text-gray-500 hover:text-blue-500 text-xs"
               />
@@ -49,48 +53,52 @@ export const columns = (
       ),
     },
     {
-      header: "Email",
+      header: t("userManagement.fields.email"),
       accessorKey: "user_email",
       enableSorting: true,
       cell: ({ row }) => <span className="text-xs">{row.original.user_email || "-"}</span>,
     },
     {
       id: "status",
-      header: "Status",
+      header: t("userManagement.fields.status"),
       enableSorting: false,
       cell: ({ row }) => {
         const isScimInactive =
           (row.original.metadata as Record<string, unknown> | null | undefined)?.scim_active === false;
         if (isScimInactive) {
           return (
-            <Tooltip title="Deactivated via SCIM (external identity provider). The user's virtual keys are blocked.">
+            <Tooltip title={t("userManagement.status.scimInactiveHelp")}>
               <Tag color="red" data-testid={`user-status-${row.original.user_id}`}>
-                Inactive
+                {t("userManagement.status.inactive")}
               </Tag>
             </Tooltip>
           );
         }
         return (
           <Tag color="green" data-testid={`user-status-${row.original.user_id}`}>
-            Active
+            {t("userManagement.status.active")}
           </Tag>
         );
       },
     },
     {
-      header: "Global Proxy Role",
+      header: t("userManagement.fields.globalRole"),
       accessorKey: "user_role",
       enableSorting: true,
-      cell: ({ row }) => <span className="text-xs">{possibleUIRoles?.[row.original.user_role]?.ui_label || "-"}</span>,
+      cell: ({ row }) => (
+        <span className="text-xs">
+          {row.original.user_role ? getLocalizedUserRole(row.original.user_role, possibleUIRoles, t).label : "-"}
+        </span>
+      ),
     },
     {
-      header: "User Alias",
+      header: t("userManagement.fields.alias"),
       accessorKey: "user_alias",
       enableSorting: false,
       cell: ({ row }) => <span className="text-xs">{row.original.user_alias || "-"}</span>,
     },
     {
-      header: "Spend (USD)",
+      header: t("userManagement.fields.spend"),
       accessorKey: "spend",
       enableSorting: true,
       cell: ({ row }) => (
@@ -98,18 +106,20 @@ export const columns = (
       ),
     },
     {
-      header: "Budget (USD)",
+      header: t("userManagement.fields.budget"),
       accessorKey: "max_budget",
       enableSorting: false,
       cell: ({ row }) => (
-        <span className="text-xs">{row.original.max_budget !== null ? row.original.max_budget : "Unlimited"}</span>
+        <span className="text-xs">
+          {row.original.max_budget !== null ? row.original.max_budget : t("userManagement.unlimited")}
+        </span>
       ),
     },
     {
       header: () => (
         <div className="flex items-center gap-2">
-          <span>SSO ID</span>
-          <Tooltip title="SSO ID is the ID of the user in the SSO provider. If the user is not using SSO, this will be null.">
+          <span>{t("userManagement.fields.ssoId")}</span>
+          <Tooltip title={t("userManagement.fields.ssoIdHelp")}>
             <InformationCircleIcon className="w-4 h-4" />
           </Tooltip>
         </div>
@@ -121,50 +131,50 @@ export const columns = (
       ),
     },
     {
-      header: "Virtual Keys",
+      header: t("userManagement.fields.virtualKeys"),
       accessorKey: "key_count",
       enableSorting: false,
       cell: ({ row }) => (
         <Grid numItems={2}>
           {row.original.key_count > 0 ? (
             <Badge size="xs" color="indigo">
-              {row.original.key_count} {row.original.key_count === 1 ? "Key" : "Keys"}
+              {t("userManagement.keyCount", { count: row.original.key_count })}
             </Badge>
           ) : (
             <Badge size="xs" color="gray">
-              No Keys
+              {t("userManagement.noKeys")}
             </Badge>
           )}
         </Grid>
       ),
     },
     {
-      header: "Created At",
+      header: t("userManagement.fields.createdAt"),
       accessorKey: "created_at",
       enableSorting: true,
       cell: ({ row }) => (
         <span className="text-xs">
-          {row.original.created_at ? new Date(row.original.created_at).toLocaleDateString() : "-"}
+          {row.original.created_at ? new Date(row.original.created_at).toLocaleDateString(locale) : "-"}
         </span>
       ),
     },
     {
-      header: "Updated At",
+      header: t("userManagement.fields.updatedAt"),
       accessorKey: "updated_at",
       enableSorting: false,
       cell: ({ row }) => (
         <span className="text-xs">
-          {row.original.updated_at ? new Date(row.original.updated_at).toLocaleDateString() : "-"}
+          {row.original.updated_at ? new Date(row.original.updated_at).toLocaleDateString(locale) : "-"}
         </span>
       ),
     },
     {
       id: "actions",
-      header: "Actions",
+      header: t("userManagement.fields.actions"),
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Tooltip title="Edit user details">
+          <Tooltip title={t("userManagement.actions.edit")}>
             <Icon
               icon={PencilAltIcon}
               size="sm"
@@ -172,7 +182,7 @@ export const columns = (
               className="cursor-pointer hover:text-blue-600"
             />
           </Tooltip>
-          <Tooltip title="Delete user">
+          <Tooltip title={t("userManagement.actions.delete")}>
             <Icon
               icon={TrashIcon}
               size="sm"
@@ -180,7 +190,7 @@ export const columns = (
               className="cursor-pointer hover:text-red-600"
             />
           </Tooltip>
-          <Tooltip title="Reset Password">
+          <Tooltip title={t("userManagement.actions.resetPassword")}>
             <Icon
               icon={RefreshIcon}
               size="sm"

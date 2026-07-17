@@ -4,6 +4,7 @@ import { Card, Flex, Input, Pagination, Spin } from "antd";
 import { KeyIcon, SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ProjectKeysTable } from "./ProjectKeysTable";
+import { useTranslation } from "react-i18next";
 
 interface ProjectKeysSectionProps {
   projectId: string;
@@ -12,6 +13,7 @@ interface ProjectKeysSectionProps {
 const PAGE_SIZE = 5;
 
 export function ProjectKeysSection({ projectId }: ProjectKeysSectionProps) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [keyAlias, setKeyAlias] = useState<string>("");
 
@@ -33,7 +35,7 @@ export function ProjectKeysSection({ projectId }: ProjectKeysSectionProps) {
       title={
         <Flex align="center" gap={8}>
           <KeyIcon size={16} />
-          Keys
+          {t("projectManagement.keys.title")}
         </Flex>
       }
       style={{ height: "100%" }}
@@ -41,7 +43,7 @@ export function ProjectKeysSection({ projectId }: ProjectKeysSectionProps) {
       <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
         <Input
           prefix={<SearchIcon size={14} />}
-          placeholder="Filter by key name..."
+          placeholder={t("projectManagement.keys.filterPlaceholder")}
           style={{ maxWidth: 220 }}
           value={keyAlias}
           onChange={(e) => setKeyAlias(e.target.value)}
@@ -55,7 +57,7 @@ export function ProjectKeysSection({ projectId }: ProjectKeysSectionProps) {
           onChange={setPage}
           size="small"
           showSizeChanger={false}
-          showTotal={(total) => `${total} keys`}
+          showTotal={(total) => t("projectManagement.keys.count", { count: total })}
         />
       </Flex>
       <ProjectKeysTable

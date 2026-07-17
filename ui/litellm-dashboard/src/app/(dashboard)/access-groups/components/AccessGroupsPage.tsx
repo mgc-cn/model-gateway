@@ -24,9 +24,9 @@ import { AccessGroupCreateModal } from "./AccessGroupsModal/AccessGroupCreateMod
 import { AccessGroup } from "./types";
 import useAuthorized from "@/app/(dashboard)/hooks/useAuthorized";
 import { isProxyAdminRole } from "@/utils/roles";
+import { useTranslation } from "react-i18next";
 
 declare module "@tanstack/react-table" {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData, TValue> {
     responsive?: string[];
   }
@@ -102,6 +102,8 @@ function buildAntdColumns(
 }
 
 export function AccessGroupsPage() {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en-US";
   const { token } = theme.useToken();
   const { userRole } = useAuthorized();
   // Admin Viewer follows the read-parity rule: see access groups, no writes.
@@ -162,13 +164,13 @@ export function AccessGroupsPage() {
       {
         id: "name",
         accessorKey: "name",
-        header: () => <span>Name</span>,
+        header: () => <span>{t("accessGroupManagement.fields.name")}</span>,
         enableSorting: true,
         cell: ({ getValue }) => getValue() as string,
       },
       {
         id: "resources",
-        header: () => <span>Resources</span>,
+        header: () => <span>{t("accessGroupManagement.fields.resources")}</span>,
         enableSorting: false,
         cell: ({ row }) => {
           const record = row.original;
@@ -177,7 +179,7 @@ export function AccessGroupsPage() {
           const agentIds = record.agentIds ?? [];
           return (
             <Flex gap={12} align="center">
-              <Tooltip title={`${modelIds?.length} Models`}>
+              <Tooltip title={t("accessGroupManagement.resources.models", { count: modelIds.length })}>
                 <Tag color="blue" style={{ fontSize: 14, padding: "2px 8px", margin: 0 }}>
                   <Flex align="center" gap={6}>
                     <LayersIcon size={14} />
@@ -185,7 +187,7 @@ export function AccessGroupsPage() {
                   </Flex>
                 </Tag>
               </Tooltip>
-              <Tooltip title={`${mcpServerIds?.length} MCP Servers`}>
+              <Tooltip title={t("accessGroupManagement.resources.mcpServers", { count: mcpServerIds.length })}>
                 <Tag color="cyan" style={{ fontSize: 14, padding: "2px 8px", margin: 0 }}>
                   <Flex align="center" gap={6}>
                     <ServerIcon size={14} />
@@ -193,7 +195,7 @@ export function AccessGroupsPage() {
                   </Flex>
                 </Tag>
               </Tooltip>
-              <Tooltip title={`${agentIds?.length} Agents`}>
+              <Tooltip title={t("accessGroupManagement.resources.agents", { count: agentIds.length })}>
                 <Tag color="purple" style={{ fontSize: 14, padding: "2px 8px", margin: 0 }}>
                   <Flex align="center" gap={6}>
                     <BotIcon size={14} />
@@ -208,31 +210,32 @@ export function AccessGroupsPage() {
       {
         id: "createdAt",
         accessorKey: "createdAt",
-        header: () => <span>Created</span>,
+        header: () => <span>{t("accessGroupManagement.fields.created")}</span>,
         enableSorting: true,
         sortingFn: "datetime",
-        cell: ({ getValue }) => new Date(getValue() as string).toLocaleDateString(),
+        cell: ({ getValue }) => new Date(getValue() as string).toLocaleDateString(locale),
         meta: { responsive: ["lg"] },
       },
       {
         id: "updatedAt",
         accessorKey: "updatedAt",
-        header: () => <span>Updated</span>,
+        header: () => <span>{t("accessGroupManagement.fields.updated")}</span>,
         enableSorting: false,
-        cell: ({ getValue }) => new Date(getValue() as string).toLocaleDateString(),
+        cell: ({ getValue }) => new Date(getValue() as string).toLocaleDateString(locale),
         meta: { responsive: ["xl"] },
       },
       ...(canModify
         ? [
             {
               id: "actions",
-              header: () => <span>Actions</span>,
+              header: () => <span>{t("accessGroupManagement.fields.actions")}</span>,
               enableSorting: false,
               cell: ({ row }: { row: Row<AccessGroup> }) => (
                 <Space>
                   <TableIconActionButton
                     variant="Delete"
-                    tooltipText="Delete access group"
+                    tooltipText={t("accessGroupManagement.actions.delete")}
+                    dataTestId="delete-access-group"
                     onClick={() => setGroupToDelete(row.original)}
                   />
                 </Space>
@@ -241,9 +244,7 @@ export function AccessGroupsPage() {
           ]
         : []),
     ],
-    // setSelectedGroup is stable (useState setter)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canModify],
+    [canModify, locale, t],
   );
 
   // ---------- TanStack table instance ----------
@@ -281,13 +282,13 @@ export function AccessGroupsPage() {
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
         <Space direction="vertical" size={0}>
           <Title level={2} style={{ margin: 0 }}>
-            Access Groups
+            {t("accessGroupManagement.title")}
           </Title>
-          <Text type="secondary">Manage resource permissions for your organization</Text>
+          <Text type="secondary">{t("accessGroupManagement.description")}</Text>
         </Space>
         {canModify && (
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCreateModalVisible(true)}>
-            Create Access Group
+            {t("accessGroupManagement.create")}
           </Button>
         )}
       </Flex>
@@ -302,7 +303,7 @@ export function AccessGroupsPage() {
         >
           <Input
             prefix={<SearchIcon size={16} />}
-            placeholder="Search groups by name, ID, or description..."
+            placeholder={t("accessGroupManagement.searchPlaceholder")}
             style={{ maxWidth: 400 }}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -314,7 +315,7 @@ export function AccessGroupsPage() {
             pageSize={pageSize}
             onChange={(page) => setCurrentPage(page)}
             size="small"
-            showTotal={(total) => `${total} groups`}
+            showTotal={(total) => t("accessGroupManagement.groupCount", { count: total })}
             showSizeChanger={false}
           />
         </Flex>
@@ -325,13 +326,13 @@ export function AccessGroupsPage() {
 
       <DeleteResourceModal
         isOpen={!!groupToDelete}
-        title="Delete Access Group"
-        message="Are you sure you want to delete this access group? This action cannot be undone."
-        resourceInformationTitle="Access Group Information"
+        title={t("accessGroupManagement.delete.title")}
+        message={t("accessGroupManagement.delete.message")}
+        resourceInformationTitle={t("accessGroupManagement.delete.resourceTitle")}
         resourceInformation={[
           { label: "ID", value: groupToDelete?.id, code: true },
-          { label: "Name", value: groupToDelete?.name },
-          { label: "Description", value: groupToDelete?.description || "—" },
+          { label: t("accessGroupManagement.fields.name"), value: groupToDelete?.name },
+          { label: t("accessGroupManagement.fields.description"), value: groupToDelete?.description || "—" },
         ]}
         onCancel={() => setGroupToDelete(null)}
         onOk={() => {

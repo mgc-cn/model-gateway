@@ -3,6 +3,7 @@ import { Switch, Tooltip } from "antd";
 import MessageManager from "@/components/molecules/message_manager";
 import { CodeOutlined, InfoCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { Text } from "@tremor/react";
+import i18n from "@/i18n/i18n";
 
 interface CodeInterpreterToolProps {
   accessToken: string;
@@ -39,7 +40,7 @@ const CodeInterpreterTool: React.FC<CodeInterpreterToolProps> = ({
 
   const handleToggle = (checked: boolean) => {
     if (checked && !isOpenAI) {
-      MessageManager.warning("Code Interpreter is only available for OpenAI models");
+      MessageManager.warning(i18n.t("playground.code.openAiOnlyWarning"));
       return;
     }
     onEnabledChange(checked);
@@ -50,8 +51,8 @@ const CodeInterpreterTool: React.FC<CodeInterpreterToolProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CodeOutlined className="text-blue-500" />
-          <Text className="font-medium text-gray-700">Code Interpreter</Text>
-          <Tooltip title="Run Python code to generate files, charts, and analyze data. Container is created automatically.">
+          <Text className="font-medium text-gray-700">{i18n.t("playground.code.title")}</Text>
+          <Tooltip title={i18n.t("playground.code.tooltip")}>
             <InfoCircleOutlined className="text-gray-400 text-xs" />
           </Tooltip>
         </div>
@@ -69,14 +70,14 @@ const CodeInterpreterTool: React.FC<CodeInterpreterToolProps> = ({
           <div className="flex items-start gap-2">
             <ExclamationCircleOutlined className="text-amber-500 mt-0.5" />
             <div className="text-xs text-gray-600">
-              <span>Code Interpreter is currently only supported for OpenAI models. </span>
+              <span>{i18n.t("playground.code.openAiOnly")} </span>
               <a
                 href={GITHUB_FEATURE_REQUEST_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-800 underline"
               >
-                Request support for other providers
+                {i18n.t("playground.code.requestSupport")}
               </a>
             </div>
           </div>

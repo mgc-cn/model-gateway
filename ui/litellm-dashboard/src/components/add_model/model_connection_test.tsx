@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Typography, Button, Divider } from "antd";
 import { WarningOutlined, InfoCircleOutlined, CopyOutlined } from "@ant-design/icons";
 import { testConnectionRequest } from "../networking";
@@ -19,10 +20,12 @@ const ModelConnectionTest: React.FC<ModelConnectionTestProps> = ({
   formValues,
   accessToken,
   testMode,
-  modelName = "this model",
+  modelName,
   onClose,
   onTestComplete,
 }) => {
+  const { t } = useTranslation();
+  const displayModelName = modelName || t("modelsAndEndpoints.addModel.connection.thisModel");
   const [error, setError] = React.useState<Error | string | null>(null);
   const [rawRequest, setRawRequest] = React.useState<any>(null);
   const [rawResponse, setRawResponse] = React.useState<any>(null);
@@ -45,7 +48,7 @@ const ModelConnectionTest: React.FC<ModelConnectionTestProps> = ({
       const result = await prepareModelAddRequest(formValues, accessToken, null);
 
       if (!result) {
-        setError("Failed to prepare model data. Please check your form inputs.");
+        setError(t("modelsAndEndpoints.addModel.connection.prepareFailed"));
         setIsSuccess(false);
         setIsLoading(false);
         return;
@@ -55,11 +58,12 @@ const ModelConnectionTest: React.FC<ModelConnectionTestProps> = ({
 
       const response = await testConnectionRequest(accessToken, litellmParamsObj, modelInfoObj, modelInfoObj?.mode);
       if (response.status === "success") {
-        NotificationsManager.success("Connection test successful!");
+        NotificationsManager.success(t("modelsAndEndpoints.addModel.connection.successNotification"));
         setError(null);
         setIsSuccess(true);
       } else {
-        const errorMessage = response.result?.error || response.message || "Unknown error";
+        const errorMessage =
+          response.result?.error || response.message || t("modelsAndEndpoints.addModel.connection.unknownError");
         setError(errorMessage);
         setRawRequest(litellmParamsObj);
         setRawResponse(response.result?.raw_request_typed_dict);
@@ -86,7 +90,7 @@ const ModelConnectionTest: React.FC<ModelConnectionTestProps> = ({
   }, []); // Empty dependency array means this runs once on mount
 
   const getCleanErrorMessage = (errorMsg: string) => {
-    if (!errorMsg) return "Unknown error";
+    if (!errorMsg) return t("modelsAndEndpoints.addModel.connection.unknownError");
 
     const mainError = errorMsg.split("stack trace:")[0].trim();
 
@@ -100,7 +104,7 @@ const ModelConnectionTest: React.FC<ModelConnectionTestProps> = ({
       ? getCleanErrorMessage(error)
       : error?.message
         ? getCleanErrorMessage(error.message)
-        : "Unknown error";
+        : t("modelsAndEndpoints.addModel.connection.unknownError");
 
   const formatCurlCommand = (
     apiBase: string,
@@ -150,7 +154,9 @@ ${formattedBody}
               }}
             />
           </div>
-          <Text style={{ fontSize: "16px" }}>Testing connection to {modelName}...</Text>
+          <Text style={{ fontSize: "16px" }}>
+            {t("modelsAndEndpoints.addModel.connection.testing", { model: displayModelName })}
+          </Text>
           <style jsx>{`
             @keyframes spin {
               0% {
@@ -182,7 +188,7 @@ ${formattedBody}
             type="success"
             style={{ fontSize: "18px", fontWeight: 500, marginLeft: "10px" }}
           >
-            Connection to {modelName} successful!
+            {t("modelsAndEndpoints.addModel.connection.success", { model: displayModelName })}
           </Text>
         </div>
       ) : (
@@ -191,7 +197,7 @@ ${formattedBody}
             <div style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
               <WarningOutlined style={{ color: "#ff4d4f", fontSize: "24px", marginRight: "12px" }} />
               <Text data-testid="connection-failure-msg" type="danger" style={{ fontSize: "18px", fontWeight: 500 }}>
-                Connection to {modelName} failed
+                {t("modelsAndEndpoints.addModel.connection.failed", { model: displayModelName })}
               </Text>
             </div>
 
@@ -206,7 +212,7 @@ ${formattedBody}
               }}
             >
               <Text strong style={{ display: "block", marginBottom: "8px" }}>
-                Error:{" "}
+                {t("modelsAndEndpoints.addModel.connection.error")}{" "}
               </Text>
               <Text type="danger" style={{ fontSize: "14px", lineHeight: "1.5" }}>
                 {errorMessage}
@@ -219,7 +225,9 @@ ${formattedBody}
                     onClick={() => setShowDetails(!showDetails)}
                     style={{ paddingLeft: 0, height: "auto" }}
                   >
-                    {showDetails ? "Hide Details" : "Show Details"}
+                    {showDetails
+                      ? t("modelsAndEndpoints.addModel.connection.hideDetails")
+                      : t("modelsAndEndpoints.addModel.connection.showDetails")}
                   </Button>
                 </div>
               )}
@@ -228,7 +236,7 @@ ${formattedBody}
             {showDetails && (
               <div style={{ marginBottom: "20px" }}>
                 <Text strong style={{ display: "block", marginBottom: "8px", fontSize: "15px" }}>
-                  Troubleshooting Details
+                  {t("modelsAndEndpoints.addModel.connection.troubleshooting")}
                 </Text>
                 <pre
                   style={{
@@ -249,7 +257,7 @@ ${formattedBody}
 
             <div>
               <Text strong style={{ display: "block", marginBottom: "8px", fontSize: "15px" }}>
-                API Request
+                {t("modelsAndEndpoints.addModel.connection.apiRequest")}
               </Text>
               <pre
                 style={{
@@ -263,17 +271,17 @@ ${formattedBody}
                   lineHeight: "1.5",
                 }}
               >
-                {curlCommand || "No request data available"}
+                {curlCommand || t("modelsAndEndpoints.addModel.connection.noRequestData")}
               </pre>
               <Button
                 style={{ marginTop: "8px" }}
                 icon={<CopyOutlined />}
                 onClick={() => {
                   navigator.clipboard.writeText(curlCommand || "");
-                  NotificationsManager.success("Copied to clipboard");
+                  NotificationsManager.success(t("modelsAndEndpoints.addModel.connection.copied"));
                 }}
               >
-                Copy to Clipboard
+                {t("modelsAndEndpoints.addModel.connection.copy")}
               </Button>
             </div>
           </div>
@@ -282,7 +290,7 @@ ${formattedBody}
       <Divider style={{ margin: "24px 0 16px" }} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Button type="link" href="https://docs.litellm.ai/docs/providers" target="_blank" icon={<InfoCircleOutlined />}>
-          View Documentation
+          {t("modelsAndEndpoints.addModel.connection.documentation")}
         </Button>
       </div>
     </div>

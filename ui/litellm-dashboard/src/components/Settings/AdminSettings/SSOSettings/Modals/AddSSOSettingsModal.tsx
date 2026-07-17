@@ -7,6 +7,7 @@ import React from "react";
 import BaseSSOSettingsForm from "./BaseSSOSettingsForm";
 import { useEditSSOSettings } from "@/app/(dashboard)/hooks/sso/useEditSSOSettings";
 import { processSSOSettingsPayload } from "../utils";
+import { useTranslation } from "react-i18next";
 
 interface AddSSOSettingsModalProps {
   isVisible: boolean;
@@ -15,6 +16,7 @@ interface AddSSOSettingsModalProps {
 }
 
 const AddSSOSettingsModal: React.FC<AddSSOSettingsModalProps> = ({ isVisible, onCancel, onSuccess }) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const { mutateAsync, isPending } = useEditSSOSettings();
 
@@ -24,11 +26,13 @@ const AddSSOSettingsModal: React.FC<AddSSOSettingsModalProps> = ({ isVisible, on
 
     await mutateAsync(payload, {
       onSuccess: () => {
-        NotificationsManager.success("SSO settings added successfully");
+        NotificationsManager.success(t("adminSettings.sso.notifications.added"));
         onSuccess();
       },
       onError: (error) => {
-        NotificationsManager.fromBackend("Failed to save SSO settings: " + parseErrorMessage(error));
+        NotificationsManager.fromBackend(
+          t("adminSettings.sso.notifications.saveFailed", { error: String(parseErrorMessage(error)) }),
+        );
       },
     });
   };
@@ -40,16 +44,16 @@ const AddSSOSettingsModal: React.FC<AddSSOSettingsModalProps> = ({ isVisible, on
 
   return (
     <Modal
-      title="Add SSO"
+      title={t("adminSettings.sso.add")}
       open={isVisible}
       width={800}
       footer={
         <Space>
           <Button onClick={handleCancel} disabled={isPending}>
-            Cancel
+            {t("adminSettings.actions.cancel")}
           </Button>
           <Button loading={isPending} onClick={() => form.submit()}>
-            {isPending ? "Adding..." : "Add SSO"}
+            {isPending ? t("adminSettings.sso.adding") : t("adminSettings.sso.add")}
           </Button>
         </Space>
       }

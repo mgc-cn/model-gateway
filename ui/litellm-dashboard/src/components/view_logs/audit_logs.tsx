@@ -4,11 +4,11 @@ import { Table, Tag, Input, Select, Button, Pagination, Spin } from "antd";
 import { ReloadOutlined, LoadingOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { resolveLogoSrc } from "@/lib/assetPaths";
-import moment from "moment";
 import { uiAuditLogsCall } from "../networking";
 import { AuditLogEntry } from "./columns";
 import { AuditLogDrawer } from "./AuditLogDrawer/AuditLogDrawer";
 import DefaultProxyAdminTag from "../common_components/DefaultProxyAdminTag";
+import { useTranslation } from "react-i18next";
 
 const { Search } = Input;
 
@@ -42,6 +42,7 @@ const ACTION_COLOR: Record<string, string> = {
 const PAGE_SIZE = 50;
 
 export default function AuditLogs({ userID, userRole, token, accessToken, isActive, premiumUser }: AuditLogsProps) {
+  const { t, i18n } = useTranslation();
   const [page, setPage] = useState(1);
 
   // Filter state
@@ -91,49 +92,56 @@ export default function AuditLogs({ userID, userRole, token, accessToken, isActi
 
   const columns: ColumnsType<AuditLogEntry> = [
     {
-      title: "Timestamp",
+      title: t("observability.logs.audit.timestamp"),
       dataIndex: "updated_at",
       key: "updated_at",
       width: 200,
       render: (val: string) => (
-        <span className="font-mono text-xs whitespace-nowrap">
-          {moment.utc(val).local().format("MMM D, YYYY HH:mm:ss")}
-        </span>
+        <span className="font-mono text-xs whitespace-nowrap">{new Date(val).toLocaleString(i18n.language)}</span>
       ),
     },
     {
-      title: "Action",
+      title: t("observability.logs.audit.action"),
       dataIndex: "action",
       key: "action",
       width: 100,
       render: (val: string) => (
         <Tag color={ACTION_COLOR[val] ?? "default"} className="capitalize">
-          {val}
+          {t(`observability.logs.audit.${val as "created" | "updated" | "deleted" | "rotated"}`)}
         </Tag>
       ),
     },
     {
-      title: "Table",
+      title: t("observability.logs.audit.table"),
       dataIndex: "table_name",
       key: "table_name",
       width: 130,
-      render: (val: string) => TABLE_NAME_DISPLAY[val] ?? val,
+      render: (val: string) => {
+        const keyMap: Record<string, "keys" | "teams" | "users" | "organizations" | "models"> = {
+          LiteLLM_VerificationToken: "keys",
+          LiteLLM_TeamTable: "teams",
+          LiteLLM_UserTable: "users",
+          LiteLLM_OrganizationTable: "organizations",
+          LiteLLM_ProxyModelTable: "models",
+        };
+        return keyMap[val] ? t(`observability.logs.audit.${keyMap[val]}`) : TABLE_NAME_DISPLAY[val] ?? val;
+      },
     },
     {
-      title: "Object ID",
+      title: t("observability.logs.audit.objectId"),
       dataIndex: "object_id",
       key: "object_id",
       render: (val: string) => <span className="font-mono text-xs">{val}</span>,
     },
     {
-      title: "Changed By",
+      title: t("observability.logs.audit.changedBy"),
       dataIndex: "changed_by",
       key: "changed_by",
       width: 200,
       render: (val: string) => <DefaultProxyAdminTag userId={val} />,
     },
     {
-      title: "API Key (Hash)",
+      title: t("observability.logs.audit.apiKeyHash"),
       dataIndex: "changed_by_api_key",
       key: "changed_by_api_key",
       width: 140,
@@ -144,12 +152,10 @@ export default function AuditLogs({ userID, userRole, token, accessToken, isActi
   if (!premiumUser) {
     return (
       <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <h1 style={{ display: "block", marginBottom: "10px" }}>✨ Enterprise Feature.</h1>
-        <p style={{ display: "block", marginBottom: "10px" }}>
-          This is a LiteLLM Enterprise feature, and requires a valid key to use.
-        </p>
+        <h1 style={{ display: "block", marginBottom: "10px" }}>{t("observability.logs.audit.enterpriseTitle")}</h1>
+        <p style={{ display: "block", marginBottom: "10px" }}>{t("observability.logs.audit.enterpriseDescription")}</p>
         <p style={{ display: "block", marginBottom: "20px", fontStyle: "italic" }}>
-          Here&apos;s a preview of what Audit Logs offer:
+          {t("observability.logs.audit.preview")}
         </p>
         <img
           src={resolveLogoSrc(auditLogsPreviewImg)}
@@ -178,13 +184,13 @@ export default function AuditLogs({ userID, userRole, token, accessToken, isActi
         {/* Header */}
         <div className="border-b px-6 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-semibold">Audit Logs</h1>
+            <h1 className="text-xl font-semibold">{t("observability.logs.tabs.audit")}</h1>
           </div>
 
           {/* Filters + pagination on same row */}
           <div className="flex flex-wrap items-center gap-3">
             <Search
-              placeholder="Object ID"
+              placeholder={t("observability.logs.audit.objectId")}
               allowClear
               style={{ width: 200 }}
               onSearch={(val) => {
@@ -199,7 +205,7 @@ export default function AuditLogs({ userID, userRole, token, accessToken, isActi
               }}
             />
             <Search
-              placeholder="Changed By"
+              placeholder={t("observability.logs.audit.changedBy")}
               allowClear
               style={{ width: 180 }}
               onSearch={(val) => {
@@ -214,7 +220,7 @@ export default function AuditLogs({ userID, userRole, token, accessToken, isActi
               }}
             />
             <Search
-              placeholder="Team ID"
+              placeholder={t("observability.logs.columns.team")}
               allowClear
               style={{ width: 180 }}
               onSearch={(val) => {
@@ -229,7 +235,7 @@ export default function AuditLogs({ userID, userRole, token, accessToken, isActi
               }}
             />
             <Search
-              placeholder="Key Hash"
+              placeholder={t("observability.logs.columns.keyHash")}
               allowClear
               style={{ width: 180 }}
               onSearch={(val) => {
@@ -244,14 +250,14 @@ export default function AuditLogs({ userID, userRole, token, accessToken, isActi
               }}
             />
             <Select
-              placeholder="All Actions"
+              placeholder={t("observability.logs.audit.allActions")}
               allowClear
               style={{ width: 140 }}
               options={[
-                { label: "Created", value: "created" },
-                { label: "Updated", value: "updated" },
-                { label: "Deleted", value: "deleted" },
-                { label: "Rotated", value: "rotated" },
+                { label: t("observability.logs.audit.created"), value: "created" },
+                { label: t("observability.logs.audit.updated"), value: "updated" },
+                { label: t("observability.logs.audit.deleted"), value: "deleted" },
+                { label: t("observability.logs.audit.rotated"), value: "rotated" },
               ]}
               onChange={(val) => {
                 setAction(val);
@@ -259,15 +265,15 @@ export default function AuditLogs({ userID, userRole, token, accessToken, isActi
               }}
             />
             <Select
-              placeholder="All Tables"
+              placeholder={t("observability.logs.audit.allTables")}
               allowClear
               style={{ width: 150 }}
               options={[
-                { label: "Keys", value: "LiteLLM_VerificationToken" },
-                { label: "Teams", value: "LiteLLM_TeamTable" },
-                { label: "Users", value: "LiteLLM_UserTable" },
-                { label: "Organizations", value: "LiteLLM_OrganizationTable" },
-                { label: "Models", value: "LiteLLM_ProxyModelTable" },
+                { label: t("observability.logs.audit.keys"), value: "LiteLLM_VerificationToken" },
+                { label: t("observability.logs.audit.teams"), value: "LiteLLM_TeamTable" },
+                { label: t("observability.logs.audit.users"), value: "LiteLLM_UserTable" },
+                { label: t("observability.logs.audit.organizations"), value: "LiteLLM_OrganizationTable" },
+                { label: t("observability.logs.audit.models"), value: "LiteLLM_ProxyModelTable" },
               ]}
               onChange={(val) => {
                 setTableName(val);
@@ -286,7 +292,7 @@ export default function AuditLogs({ userID, userRole, token, accessToken, isActi
                 current={page}
                 pageSize={PAGE_SIZE}
                 total={total}
-                showTotal={(t) => `${t} total`}
+                showTotal={(count) => t("observability.logs.audit.total", { count })}
                 showSizeChanger={false}
                 size="small"
                 onChange={(p) => setPage(p)}

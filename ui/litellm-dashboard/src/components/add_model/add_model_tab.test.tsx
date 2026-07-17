@@ -8,6 +8,7 @@ import type { Team } from "../key_team_helpers/key_list";
 import type { CredentialItem } from "../networking";
 import { Providers } from "../provider_info_helpers";
 import AddModelTab from "./add_model_tab";
+import i18n from "@/i18n/i18n";
 
 vi.mock("../molecules/models/ProviderLogo", () => ({
   ProviderLogo: ({ provider, className }: { provider: string; className?: string }) => (
@@ -149,6 +150,21 @@ const createTestProps = () => {
 };
 
 describe("Add Model Tab", () => {
+  it("localizes the add-model mode tabs in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+    const props = createTestProps();
+    const queryClient = createQueryClient();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AddModelTab {...props} />
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByRole("tab", { name: "添加模型" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "添加自动路由" })).toBeInTheDocument();
+  });
+
   it("should render", async () => {
     const props = createTestProps();
     const queryClient = createQueryClient();

@@ -4,6 +4,7 @@ import { TrashIcon, PencilAltIcon, CheckIcon, XIcon } from "@heroicons/react/out
 import { SimpleTable } from "@/components/common_components/simple_table";
 import { DiscountConfig } from "./types";
 import { getProviderDisplayInfo, handleImageError } from "./provider_display_helpers";
+import { useTranslation } from "react-i18next";
 
 interface ProviderDiscountTableProps {
   discountConfig: DiscountConfig;
@@ -21,6 +22,7 @@ const ProviderDiscountTable: React.FC<ProviderDiscountTableProps> = ({
   onDiscountChange,
   onRemoveProvider,
 }) => {
+  const { t } = useTranslation();
   const [editingProvider, setEditingProvider] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
 
@@ -65,7 +67,7 @@ const ProviderDiscountTable: React.FC<ProviderDiscountTableProps> = ({
       data={data}
       columns={[
         {
-          header: "Provider",
+          header: t("costTracking.fields.provider"),
           cell: (row) => {
             const { displayName, logo } = getProviderDisplayInfo(row.provider);
             return (
@@ -84,7 +86,7 @@ const ProviderDiscountTable: React.FC<ProviderDiscountTableProps> = ({
           },
         },
         {
-          header: "Discount Percentage",
+          header: t("costTracking.fields.discountPercentage"),
           cell: (row) => (
             <div className="flex items-center gap-2">
               {editingProvider === row.provider ? (
@@ -127,7 +129,7 @@ const ProviderDiscountTable: React.FC<ProviderDiscountTableProps> = ({
           width: "250px",
         },
         {
-          header: "Actions",
+          header: t("costTracking.fields.actions"),
           cell: (row) => {
             const { displayName } = getProviderDisplayInfo(row.provider);
             return (
@@ -143,7 +145,7 @@ const ProviderDiscountTable: React.FC<ProviderDiscountTableProps> = ({
         },
       ]}
       getRowKey={(row) => row.provider}
-      emptyMessage="No provider discounts configured"
+      emptyMessage={t("costTracking.discounts.empty")}
     />
   );
 };

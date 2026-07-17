@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1.7
-
 # Base image for building
 ARG LITELLM_BUILD_IMAGE=cgr.dev/chainguard/wolfi-base@sha256:42df77a9974d6ec8b17a5ee8bc23b532600a44d705acef2409e0933c1251b45f
 
@@ -7,7 +5,7 @@ ARG LITELLM_BUILD_IMAGE=cgr.dev/chainguard/wolfi-base@sha256:42df77a9974d6ec8b17
 ARG LITELLM_RUNTIME_IMAGE=cgr.dev/chainguard/wolfi-base@sha256:42df77a9974d6ec8b17a5ee8bc23b532600a44d705acef2409e0933c1251b45f
 ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.11.7@sha256:240fb85ab0f263ef12f492d8476aa3a2e4e1e333f7d67fbdd923d00a506a516a
 # Pinned by digest like the other base images; bump explicitly on Node upgrades.
-ARG UI_BUILD_IMAGE=node:20.18-alpine3.20@sha256:3488b10bf958af7125a176419d2d8a9937d895bf124012aae811651988d2ffe6
+ARG UI_BUILD_IMAGE=node:20.20-alpine3.23@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
 
 FROM $UV_IMAGE AS uvbin
 
@@ -16,7 +14,9 @@ FROM $UV_IMAGE AS uvbin
 # instead of once per target arch under QEMU.
 FROM --platform=$BUILDPLATFORM $UI_BUILD_IMAGE AS ui-builder
 
+ARG NPM_REGISTRY=https://registry.npmmirror.com
 ENV NEXT_TELEMETRY_DISABLED=1 \
+    npm_config_registry=${NPM_REGISTRY} \
     npm_config_fund=false \
     npm_config_audit=false
 
@@ -114,6 +114,7 @@ COPY --from=builder /app/litellm/proxy/prisma_migration.py /app/litellm/proxy/pr
 # working directory on sys.path; litellm/proxy/hooks resolves
 # enterprise.enterprise_hooks from it)
 COPY --from=builder /app/enterprise /app/enterprise
+COPY deploy/video-workspace-config.yaml /app/config.yaml
 # Prisma binaries live in $HOME/.cache (default prisma-python location),
 # which is /root/.cache here. Copy only the Prisma subdirs — copying the
 # whole /root/.cache drags in the uv build cache (~660 MB, includes a
@@ -125,7 +126,7 @@ COPY --from=builder /root/.cache/prisma-python /root/.cache/prisma-python
 RUN find /app/.venv -type f -path "*/tornado/test/*" -delete && \
     find /app/.venv -type d -path "*/tornado/test" -delete
 
-EXPOSE 4000/tcp
+EXPOSE 4333/tcp
 
 ENTRYPOINT ["docker/prod_entrypoint.sh"]
 CMD ["--port", "4000"]

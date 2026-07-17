@@ -33,6 +33,7 @@ import {
 } from "./constants";
 import { ToolsSection } from "../ToolsSection";
 import { PrettyMessagesView } from "./PrettyMessagesView";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -52,6 +53,7 @@ export interface LogDetailContentProps {
  * be reused for both single-log and session-mode views.
  */
 export function LogDetailContent({ logEntry, isLoadingDetails = false, accessToken }: LogDetailContentProps) {
+  const { t } = useTranslation();
   const metadata = logEntry.metadata || {};
   const hasError = metadata.status === "failure";
   const errorInfo = hasError ? metadata.error_information : null;
@@ -83,7 +85,7 @@ export function LogDetailContent({ logEntry, isLoadingDetails = false, accessTok
     if (hasError && errorInfo) {
       return {
         error: {
-          message: errorInfo.error_message || "An error occurred",
+          message: errorInfo.error_message || t("observability.logs.detail.errorFallback"),
           type: errorInfo.error_class || "error",
           code: errorInfo.error_code || "unknown",
           param: null,
@@ -100,7 +102,7 @@ export function LogDetailContent({ logEntry, isLoadingDetails = false, accessTok
         <Alert
           type="error"
           showIcon
-          message="Request Failed"
+          message={t("observability.logs.detail.requestFailed")}
           description={<ErrorDescription errorInfo={errorInfo} />}
           className="mb-6"
         />
@@ -113,22 +115,31 @@ export function LogDetailContent({ logEntry, isLoadingDetails = false, accessTok
 
       {/* Request Details */}
       <div className="bg-white rounded-lg shadow-sm w-full max-w-full overflow-hidden mb-6">
-        <Card title="Request Details" size="small" bordered={false} style={{ marginBottom: 0 }}>
+        <Card
+          title={t("observability.logs.detail.requestDetails")}
+          size="small"
+          bordered={false}
+          style={{ marginBottom: 0 }}
+        >
           <Descriptions column={2} size="small">
-            <Descriptions.Item label="Model">{logEntry.model}</Descriptions.Item>
-            <Descriptions.Item label="Provider">{logEntry.custom_llm_provider || "-"}</Descriptions.Item>
-            <Descriptions.Item label="Call Type">{logEntry.call_type}</Descriptions.Item>
-            <Descriptions.Item label="Model ID">
+            <Descriptions.Item label={t("observability.logs.columns.model")}>{logEntry.model}</Descriptions.Item>
+            <Descriptions.Item label={t("observability.logs.detail.provider")}>
+              {logEntry.custom_llm_provider || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label={t("observability.logs.detail.callType")}>{logEntry.call_type}</Descriptions.Item>
+            <Descriptions.Item label={t("observability.logs.detail.modelId")}>
               <TruncatedValue value={logEntry.model_id} />
             </Descriptions.Item>
-            <Descriptions.Item label="API Base">
+            <Descriptions.Item label={t("observability.logs.detail.apiBase")}>
               <TruncatedValue value={logEntry.api_base} maxWidth={API_BASE_MAX_WIDTH} />
             </Descriptions.Item>
             {logEntry.requester_ip_address && (
-              <Descriptions.Item label="IP Address">{logEntry.requester_ip_address}</Descriptions.Item>
+              <Descriptions.Item label={t("observability.logs.detail.ipAddress")}>
+                {logEntry.requester_ip_address}
+              </Descriptions.Item>
             )}
             {hasGuardrailData && (
-              <Descriptions.Item label="Guardrail">
+              <Descriptions.Item label={t("observability.logs.detail.guardrail")}>
                 <GuardrailLabel label={primaryGuardrailLabel} maskedCount={totalMaskedEntities} />
               </Descriptions.Item>
             )}
@@ -165,7 +176,7 @@ export function LogDetailContent({ logEntry, isLoadingDetails = false, accessTok
       {isLoadingDetails ? (
         <div className="bg-white rounded-lg shadow-sm w-full max-w-full overflow-hidden mb-6 p-8 text-center">
           <Spin size="default" />
-          <div style={{ marginTop: 8, color: "#999" }}>Loading request &amp; response data...</div>
+          <div style={{ marginTop: 8, color: "#999" }}>{t("observability.logs.detail.loadingData")}</div>
         </div>
       ) : (
         <RequestResponseSection
@@ -279,6 +290,7 @@ function getUncachedInputTextTokens(metadata: Record<string, any>): number | und
 }
 
 function MetricsSection({ logEntry, metadata }: { logEntry: LogEntry; metadata: Record<string, any> }) {
+  const { t } = useTranslation();
   const completionStartTime = logEntry.completionStartTime;
   const ttftMs =
     completionStartTime && completionStartTime !== logEntry.endTime
@@ -300,17 +312,19 @@ function MetricsSection({ logEntry, metadata }: { logEntry: LogEntry; metadata: 
 
   return (
     <div className="bg-white rounded-lg shadow-sm w-full max-w-full overflow-hidden mb-6">
-      <Card title="Metrics" size="small" style={{ marginBottom: 0 }}>
+      <Card title={t("observability.logs.detail.metrics")} size="small" style={{ marginBottom: 0 }}>
         <Descriptions column={2} size="small">
           {showAnthropicMessagesInputOutput ? (
             <>
-              <Descriptions.Item label="Input Tokens">{formatNumberWithCommas(uncachedInputTokens)}</Descriptions.Item>
-              <Descriptions.Item label="Output Tokens">
+              <Descriptions.Item label={t("observability.logs.detail.inputTokens")}>
+                {formatNumberWithCommas(uncachedInputTokens)}
+              </Descriptions.Item>
+              <Descriptions.Item label={t("observability.logs.detail.outputTokens")}>
                 {formatNumberWithCommas(logEntry.completion_tokens)}
               </Descriptions.Item>
             </>
           ) : (
-            <Descriptions.Item label="Tokens">
+            <Descriptions.Item label={t("observability.logs.detail.tokens")}>
               <TokenFlow
                 prompt={logEntry.prompt_tokens}
                 completion={logEntry.completion_tokens}
@@ -318,26 +332,30 @@ function MetricsSection({ logEntry, metadata }: { logEntry: LogEntry; metadata: 
               />
             </Descriptions.Item>
           )}
-          <Descriptions.Item label="Cost">${formatNumberWithCommas(logEntry.spend || 0, 8)}</Descriptions.Item>
-          <Descriptions.Item label="Duration">
+          <Descriptions.Item label={t("observability.logs.detail.cost")}>
+            ${formatNumberWithCommas(logEntry.spend || 0, 8)}
+          </Descriptions.Item>
+          <Descriptions.Item label={t("observability.logs.detail.duration")}>
             {logEntry.request_duration_ms != null ? (logEntry.request_duration_ms / 1000).toFixed(3) : "-"} s
           </Descriptions.Item>
           {ttftMs != null && ttftMs > 0 && (
-            <Descriptions.Item label="Time to First Token">{(ttftMs / 1000).toFixed(3)} s</Descriptions.Item>
+            <Descriptions.Item label={t("observability.logs.detail.timeToFirstToken")}>
+              {(ttftMs / 1000).toFixed(3)} s
+            </Descriptions.Item>
           )}
 
           {hasCacheActivity && (
             <>
-              <Descriptions.Item label="Cache Hit">
+              <Descriptions.Item label={t("observability.logs.detail.cacheHit")}>
                 <Tag color={cacheHitColor}>{cacheHitValue}</Tag>
               </Descriptions.Item>
               {metadata?.additional_usage_values?.cache_read_input_tokens > 0 && (
-                <Descriptions.Item label="Cache Read Tokens">
+                <Descriptions.Item label={t("observability.logs.detail.cacheReadTokens")}>
                   {formatNumberWithCommas(metadata.additional_usage_values.cache_read_input_tokens)}
                 </Descriptions.Item>
               )}
               {metadata?.additional_usage_values?.cache_creation_input_tokens > 0 && (
-                <Descriptions.Item label="Cache Creation Tokens">
+                <Descriptions.Item label={t("observability.logs.detail.cacheCreationTokens")}>
                   {formatNumberWithCommas(metadata.additional_usage_values.cache_creation_input_tokens)}
                 </Descriptions.Item>
               )}
@@ -345,12 +363,12 @@ function MetricsSection({ logEntry, metadata }: { logEntry: LogEntry; metadata: 
           )}
 
           {metadata?.litellm_overhead_time_ms !== undefined && metadata.litellm_overhead_time_ms !== null && (
-            <Descriptions.Item label="LiteLLM Overhead">
+            <Descriptions.Item label={t("observability.logs.detail.overhead")}>
               {metadata.litellm_overhead_time_ms.toFixed(2)} ms
             </Descriptions.Item>
           )}
 
-          <Descriptions.Item label="Retries">
+          <Descriptions.Item label={t("observability.logs.detail.retries")}>
             {metadata?.attempted_retries !== undefined && metadata?.attempted_retries !== null ? (
               metadata.attempted_retries > 0 ? (
                 <>
@@ -360,17 +378,17 @@ function MetricsSection({ logEntry, metadata }: { logEntry: LogEntry; metadata: 
                     : ""}
                 </>
               ) : (
-                <Tag color="green">None</Tag>
+                <Tag color="green">{t("observability.logs.detail.none")}</Tag>
               )
             ) : (
               "-"
             )}
           </Descriptions.Item>
 
-          <Descriptions.Item label="Start Time">
+          <Descriptions.Item label={t("observability.logs.detail.startTime")}>
             {moment(logEntry.startTime).format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")}
           </Descriptions.Item>
-          <Descriptions.Item label="End Time">
+          <Descriptions.Item label={t("observability.logs.detail.endTime")}>
             {moment(logEntry.endTime).format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")}
           </Descriptions.Item>
         </Descriptions>
@@ -394,6 +412,7 @@ function RequestResponseSection({
   getFormattedResponse,
   logEntry,
 }: RequestResponseSectionProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<typeof TAB_REQUEST | typeof TAB_RESPONSE>(TAB_REQUEST);
   const [viewMode, setViewMode] = useState<"pretty" | "json">("pretty");
 
@@ -438,10 +457,10 @@ function RequestResponseSection({
                 }}
               >
                 <h3 className="text-lg font-medium text-gray-900" style={{ margin: 0 }}>
-                  Request & Response
+                  {t("observability.logs.detail.requestResponse")}
                 </h3>
                 <Radio.Group size="small" value={viewMode} onChange={(e) => setViewMode(e.target.value)}>
-                  <Radio.Button value="pretty">Pretty</Radio.Button>
+                  <Radio.Button value="pretty">{t("observability.logs.detail.pretty")}</Radio.Button>
                   <Radio.Button value="json">JSON</Radio.Button>
                 </Radio.Group>
               </div>
@@ -467,7 +486,7 @@ function RequestResponseSection({
                       <Text
                         copyable={{
                           text: getCopyText(),
-                          tooltips: ["Copy JSON", "Copied!"],
+                          tooltips: [t("observability.logs.detail.copyJson"), t("observability.logs.detail.copied")],
                         }}
                         disabled={activeTab === TAB_RESPONSE && !hasResponse && !hasError}
                       />
@@ -475,7 +494,7 @@ function RequestResponseSection({
                     items={[
                       {
                         key: TAB_REQUEST,
-                        label: "Request",
+                        label: t("observability.logs.detail.request"),
                         children: (
                           <div style={{ paddingTop: SPACING_XLARGE, paddingBottom: SPACING_XLARGE }}>
                             <JsonViewer data={getRawRequest()} mode="formatted" />
@@ -484,14 +503,14 @@ function RequestResponseSection({
                       },
                       {
                         key: TAB_RESPONSE,
-                        label: "Response",
+                        label: t("observability.logs.detail.response"),
                         children: (
                           <div style={{ paddingTop: SPACING_XLARGE, paddingBottom: SPACING_XLARGE }}>
                             {hasResponse || hasError ? (
                               <JsonViewer data={getFormattedResponse()} mode="formatted" />
                             ) : (
                               <div style={{ textAlign: "center", padding: 20, color: "#999", fontStyle: "italic" }}>
-                                Response data not available
+                                {t("observability.logs.detail.responseUnavailable")}
                               </div>
                             )}
                           </div>
@@ -547,6 +566,7 @@ export function GuardrailJumpLink({ guardrailEntries }: { guardrailEntries: any[
 }
 
 function MetadataSection({ metadata }: { metadata: Record<string, any> }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-white rounded-lg shadow-sm w-full max-w-full overflow-hidden mb-6">
       <Collapse
@@ -555,14 +575,14 @@ function MetadataSection({ metadata }: { metadata: Record<string, any> }) {
         items={[
           {
             key: "1",
-            label: <h3 className="text-lg font-medium text-gray-900">Metadata</h3>,
+            label: <h3 className="text-lg font-medium text-gray-900">{t("observability.logs.detail.metadata")}</h3>,
             children: (
               <div>
                 <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
                   <Text
                     copyable={{
                       text: JSON.stringify(metadata, null, 2),
-                      tooltips: ["Copy Metadata", "Copied!"],
+                      tooltips: [t("observability.logs.detail.copyMetadata"), t("observability.logs.detail.copied")],
                     }}
                   />
                 </div>

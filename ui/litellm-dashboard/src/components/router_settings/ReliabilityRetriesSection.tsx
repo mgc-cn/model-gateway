@@ -1,5 +1,6 @@
 import React from "react";
 import { Input } from "antd";
+import { useTranslation } from "react-i18next";
 
 interface ReliabilityRetriesSectionProps {
   routerSettings: { [key: string]: any };
@@ -10,11 +11,14 @@ const ReliabilityRetriesSection: React.FC<ReliabilityRetriesSectionProps> = ({
   routerSettings,
   routerFieldsMetadata,
 }) => {
+  const { t, i18n } = useTranslation();
+  const isChinese = (i18n.resolvedLanguage || i18n.language).startsWith("zh");
+
   return (
     <div className="space-y-6">
       <div className="max-w-3xl">
-        <h3 className="text-sm font-medium text-gray-900">Reliability & Retries</h3>
-        <p className="text-xs text-gray-500 mt-1">Configure retry logic and failure handling</p>
+        <h3 className="text-sm font-medium text-gray-900">{t("routerSettings.sections.reliability.title")}</h3>
+        <p className="text-xs text-gray-500 mt-1">{t("routerSettings.sections.reliability.description")}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
@@ -34,10 +38,16 @@ const ReliabilityRetriesSection: React.FC<ReliabilityRetriesSectionProps> = ({
             <div key={param} className="space-y-2">
               <label className="block">
                 <span className="text-xs font-medium text-gray-700 uppercase tracking-wide">
-                  {routerFieldsMetadata[param]?.ui_field_name || param}
+                  {isChinese
+                    ? t(`routerSettings.fields.${param}.label`, { defaultValue: param })
+                    : routerFieldsMetadata[param]?.ui_field_name || param}
                 </span>
                 <p className="text-xs text-gray-500 mt-0.5 mb-2">
-                  {routerFieldsMetadata[param]?.field_description || ""}
+                  {isChinese
+                    ? t(`routerSettings.fields.${param}.description`, {
+                        defaultValue: routerFieldsMetadata[param]?.field_description || "",
+                      })
+                    : routerFieldsMetadata[param]?.field_description || ""}
                 </p>
                 <Input
                   name={param}

@@ -2,6 +2,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import HealthCheckComponent from "./HealthCheckComponent";
+import i18n from "@/i18n/i18n";
 
 const mockIndividualModelHealthCheckCall = vi.fn();
 const mockLatestHealthChecksCall = vi.fn();
@@ -14,7 +15,8 @@ vi.mock("../networking", () => ({
 describe("HealthCheckComponent", () => {
   const getDisplayModelName = (model: { model_name?: string }) => model.model_name ?? "";
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
     vi.clearAllMocks();
     mockLatestHealthChecksCall.mockResolvedValue({ latest_health_checks: {} });
     mockIndividualModelHealthCheckCall.mockResolvedValue({
@@ -23,6 +25,39 @@ describe("HealthCheckComponent", () => {
       healthy_endpoints: [],
       unhealthy_endpoints: [],
     });
+  });
+
+  it("localizes health status controls and table columns in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+    const modelData = {
+      data: [
+        {
+          model_name: "gpt-4",
+          model_info: { id: "deployment-zh" },
+          litellm_model_name: "gpt-4",
+        },
+      ],
+    };
+
+    await act(async () => {
+      render(
+        <HealthCheckComponent
+          accessToken="token"
+          modelData={modelData}
+          all_models_on_proxy={["deployment-zh"]}
+          getDisplayModelName={getDisplayModelName}
+        />,
+      );
+    });
+
+    expect(screen.getByText("模型健康状态")).toBeInTheDocument();
+    expect(screen.getByText("对单个模型运行健康检查，确认模型端点可以正常工作")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "运行全部检查" })).toBeInTheDocument();
+    expect(screen.getByText("模型 ID")).toBeInTheDocument();
+    expect(screen.getByText("模型名称")).toBeInTheDocument();
+    expect(screen.getByText("健康状态")).toBeInTheDocument();
+    expect(screen.getByText("无错误")).toBeInTheDocument();
+    expect(screen.getByText("未检查")).toBeInTheDocument();
   });
 
   it("should render the health check section", async () => {

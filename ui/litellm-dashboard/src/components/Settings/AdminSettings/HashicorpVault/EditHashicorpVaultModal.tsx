@@ -7,31 +7,28 @@ import NotificationManager from "@/components/molecules/notifications_manager";
 import { Button, Divider, Form, Input, Modal, Space, Typography } from "antd";
 import React, { useEffect } from "react";
 import { SENSITIVE_FIELDS, FIELD_LABELS } from "./constants";
+import { useTranslation } from "react-i18next";
 
 interface FieldGroup {
-  title: string;
-  subtitle?: string;
+  key: string;
   fields: string[];
 }
 
 const FIELD_GROUPS: FieldGroup[] = [
   {
-    title: "Connection",
+    key: "connection",
     fields: ["vault_addr", "vault_namespace", "vault_mount_name", "vault_path_prefix"],
   },
   {
-    title: "Token Authentication",
-    subtitle: "Use a Vault token to authenticate. Only one auth method is required.",
+    key: "token",
     fields: ["vault_token"],
   },
   {
-    title: "AppRole Authentication",
-    subtitle: "Use AppRole credentials to authenticate. Only one auth method is required.",
+    key: "approle",
     fields: ["approle_role_id", "approle_secret_id", "approle_mount_path"],
   },
   {
-    title: "TLS",
-    subtitle: "Optional client certificate for mTLS.",
+    key: "tls",
     fields: ["client_cert", "client_key", "vault_cert_role"],
   },
 ];
@@ -43,6 +40,7 @@ interface EditHashicorpVaultModalProps {
 }
 
 const EditHashicorpVaultModal: React.FC<EditHashicorpVaultModalProps> = ({ isVisible, onCancel, onSuccess }) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const { accessToken } = useAuthorized();
   const { data } = useHashicorpVaultConfig();
@@ -81,7 +79,7 @@ const EditHashicorpVaultModal: React.FC<EditHashicorpVaultModalProps> = ({ isVis
 
     mutate(config, {
       onSuccess: () => {
-        NotificationManager.success("Hashicorp Vault configuration updated successfully");
+        NotificationManager.success(t("adminSettings.vault.updated"));
         onSuccess();
       },
       onError: (err) => {
@@ -101,16 +99,23 @@ const EditHashicorpVaultModal: React.FC<EditHashicorpVaultModalProps> = ({ isVis
 
     const rules =
       fieldName === "vault_addr"
-        ? [{ pattern: /^https?:\/\/.+/, message: "Must start with http:// or https://" }]
+        ? [{ pattern: /^https?:\/\/.+/, message: t("adminSettings.vault.urlProtocol") }]
         : undefined;
 
     const isSensitive = SENSITIVE_FIELDS.has(fieldName);
     const existingValue = rawValues[fieldName];
     const hasExistingValue = isSensitive && existingValue != null && existingValue !== "";
-    const placeholder = hasExistingValue ? `Leave blank to keep existing (${existingValue})` : fieldSchema?.description;
+    const placeholder = hasExistingValue
+      ? t("adminSettings.vault.keepExisting", { value: existingValue })
+      : t(`adminSettings.vault.fieldHelp.${fieldName}`, { defaultValue: fieldSchema?.description });
 
     return (
-      <Form.Item key={fieldName} name={fieldName} label={FIELD_LABELS[fieldName] ?? fieldName} rules={rules}>
+      <Form.Item
+        key={fieldName}
+        name={fieldName}
+        label={t(`adminSettings.vault.fields.${fieldName}`, { defaultValue: FIELD_LABELS[fieldName] ?? fieldName })}
+        rules={rules}
+      >
         {isSensitive ? <Input.Password placeholder={placeholder} /> : <Input placeholder={fieldSchema?.description} />}
       </Form.Item>
     );
@@ -118,16 +123,16 @@ const EditHashicorpVaultModal: React.FC<EditHashicorpVaultModalProps> = ({ isVis
 
   return (
     <Modal
-      title="Edit Hashicorp Vault Configuration"
+      title={t("adminSettings.vault.editTitle")}
       open={isVisible}
       width={700}
       footer={
         <Space>
           <Button onClick={handleCancel} disabled={isPending}>
-            Cancel
+            {t("adminSettings.actions.cancel")}
           </Button>
           <Button type="primary" loading={isPending} onClick={() => form.submit()}>
-            {isPending ? "Saving..." : "Save"}
+            {isPending ? t("adminSettings.actions.saving") : t("adminSettings.actions.save")}
           </Button>
         </Space>
       }
@@ -135,14 +140,14 @@ const EditHashicorpVaultModal: React.FC<EditHashicorpVaultModalProps> = ({ isVis
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         {FIELD_GROUPS.map((group, index) => (
-          <div key={group.title}>
+          <div key={group.key}>
             {index > 0 && <Divider />}
             <Typography.Title level={5} style={{ marginBottom: 4 }}>
-              {group.title}
+              {t(`adminSettings.vault.groups.${group.key}.title`)}
             </Typography.Title>
-            {group.subtitle && (
+            {group.key !== "connection" && (
               <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
-                {group.subtitle}
+                {t(`adminSettings.vault.groups.${group.key}.description`)}
               </Typography.Paragraph>
             )}
             {group.fields.map(renderField)}

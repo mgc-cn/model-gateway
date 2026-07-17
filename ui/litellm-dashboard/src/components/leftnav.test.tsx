@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "../../tests/test-utils";
+import i18n from "@/i18n/i18n";
 import Sidebar from "./leftnav";
 
 vi.mock("../utils/roles", () => {
@@ -116,6 +117,19 @@ describe("Sidebar (leftnav)", () => {
       expect(screen.getByText("Search Tools")).toBeInTheDocument();
     });
   });
+
+  it("renders the localized Admin Settings label inside its badge", async () => {
+    await act(async () => {
+      await i18n.changeLanguage("zh-CN");
+    });
+    renderWithProviders(<Sidebar {...defaultProps} />);
+
+    fireEvent.click(screen.getByRole("menuitem", { name: /设置/ }));
+
+    const adminSettingsLabel = await screen.findByText("管理设置");
+    expect(adminSettingsLabel.closest(".ant-badge")).not.toBeNull();
+  });
+
   it("has no duplicate keys among all menu items and their children", () => {
     // Helper to recursively extract all keys from Ant Design Menu items
     function getAllKeysFromMenu(wrapper: HTMLElement): string[] {

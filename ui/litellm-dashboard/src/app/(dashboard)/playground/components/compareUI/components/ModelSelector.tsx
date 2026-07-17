@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Select } from "antd";
 import { TextInput } from "@tremor/react";
+import i18n from "@/i18n/i18n";
 interface ModelSelectorProps {
   value: string;
   onChange: (value: string) => void;
@@ -55,7 +56,7 @@ export function ModelSelector({ value, onChange, models, loading, disabled }: Mo
         onChange={handleSelectChange}
         disabled={disabled}
         loading={loading}
-        placeholder={loading ? "Loading models..." : "Select a model"}
+        placeholder={loading ? i18n.t("playground.compare.loadingModels") : i18n.t("playground.compare.selectModel")}
         className="w-full rounded-md"
         showSearch
         optionFilterProp="children"
@@ -65,12 +66,12 @@ export function ModelSelector({ value, onChange, models, loading, disabled }: Mo
             {model}
           </Select.Option>
         ))}
-        <Select.Option value="__custom__">+ Add custom model</Select.Option>
+        <Select.Option value="__custom__">{i18n.t("playground.compare.addCustomModel")}</Select.Option>
       </Select>
       {isAddingCustom && (
         <TextInput
           className="mt-2"
-          placeholder="Custom Model Name (Enter to add)"
+          placeholder={i18n.t("playground.compare.customModelPlaceholder")}
           value={customValue}
           onValueChange={setCustomValue}
           onKeyDown={(event) => {

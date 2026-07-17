@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Select } from "antd";
+import { useTranslation } from "react-i18next";
 
 export const INPUT_POLICY_OPTIONS = [
   { value: "untrusted", label: "untrusted", color: "#92400e", bg: "#fef3c7", border: "#fcd34d" },
@@ -39,6 +40,7 @@ export const PolicySelect: React.FC<PolicySelectProps> = ({
   minWidth = 110,
   stopPropagation = true,
 }) => {
+  const { t } = useTranslation();
   const options = policyType === "output" ? OUTPUT_POLICY_OPTIONS : INPUT_POLICY_OPTIONS;
   const style = policyStyle(value);
   return (
@@ -82,7 +84,7 @@ export const PolicySelect: React.FC<PolicySelectProps> = ({
                 flexShrink: 0,
               }}
             />
-            {o.label}
+            {t(`toolManagement.policies.${o.value === "blocked" ? "blockedPolicy" : o.value}`)}
           </span>
         ),
       }))}

@@ -3,6 +3,7 @@ import { Form, Input, Select, Collapse } from "antd";
 import { AgentCreateInfo, AgentCredentialFieldMetadata } from "../networking";
 import { AGENT_FORM_CONFIG } from "./agent_config";
 import CostConfigFields from "./cost_config_fields";
+import { useTranslation } from "react-i18next";
 
 const { Panel } = Collapse;
 
@@ -16,19 +17,25 @@ interface DynamicAgentFormFieldsProps {
  * credential fields defined by the agent type metadata.
  */
 const DynamicAgentFormFields: React.FC<DynamicAgentFormFieldsProps> = ({ agentTypeInfo }) => {
+  const { t } = useTranslation();
+
   return (
     <>
       <Form.Item
-        label="Agent Name"
+        label={t("agentManagement.form.agentName")}
         name="agent_name"
-        rules={[{ required: true, message: "Please enter a unique agent name" }]}
-        tooltip="Unique identifier for the agent"
+        rules={[{ required: true, message: t("agentManagement.form.agentNameRequired") }]}
+        tooltip={t("agentManagement.form.agentNameTooltip")}
       >
-        <Input placeholder="e.g., my-langgraph-agent" />
+        <Input placeholder={t("agentManagement.form.dynamicAgentNamePlaceholder")} />
       </Form.Item>
 
-      <Form.Item label="Description" name="description" tooltip="Brief description of what this agent does">
-        <Input.TextArea rows={2} placeholder="Describe what this agent does..." />
+      <Form.Item
+        label={t("agentManagement.form.description")}
+        name="description"
+        tooltip={t("agentManagement.form.descriptionTooltip")}
+      >
+        <Input.TextArea rows={2} placeholder={t("agentManagement.form.descriptionPlaceholder")} />
       </Form.Item>
 
       {agentTypeInfo.credential_fields.map((field: AgentCredentialFieldMetadata) => (
@@ -36,7 +43,11 @@ const DynamicAgentFormFields: React.FC<DynamicAgentFormFieldsProps> = ({ agentTy
           key={field.key}
           label={field.label}
           name={field.key}
-          rules={field.required ? [{ required: true, message: `Please enter ${field.label}` }] : undefined}
+          rules={
+            field.required
+              ? [{ required: true, message: t("agentManagement.form.requiredField", { label: field.label }) }]
+              : undefined
+          }
           tooltip={field.tooltip}
           initialValue={field.default_value}
         >
@@ -59,7 +70,7 @@ const DynamicAgentFormFields: React.FC<DynamicAgentFormFieldsProps> = ({ agentTy
       ))}
 
       <Collapse style={{ marginBottom: 16 }}>
-        <Panel header={AGENT_FORM_CONFIG.cost.title} key={AGENT_FORM_CONFIG.cost.key}>
+        <Panel header={t("agentManagement.form.sections.cost")} key={AGENT_FORM_CONFIG.cost.key}>
           <CostConfigFields />
         </Panel>
       </Collapse>

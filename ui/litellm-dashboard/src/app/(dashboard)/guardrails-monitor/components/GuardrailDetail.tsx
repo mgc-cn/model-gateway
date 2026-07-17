@@ -7,6 +7,7 @@ import { EvaluationSettingsModal } from "./EvaluationSettingsModal";
 import { LogViewer } from "@/components/GuardrailsMonitor/LogViewer";
 import { MetricCard } from "@/components/GuardrailsMonitor/MetricCard";
 import type { LogEntry } from "@/components/GuardrailsMonitor/mockData";
+import { useTranslation } from "react-i18next";
 
 interface GuardrailDetailProps {
   guardrailId: string;
@@ -23,6 +24,7 @@ const statusColors: Record<string, { bg: string; text: string; dot: string }> = 
 };
 
 export function GuardrailDetail({ guardrailId, onBack, accessToken = null, startDate, endDate }: GuardrailDetailProps) {
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("overview");
   const [evaluationModalOpen, setEvaluationModalOpen] = useState(false);
   const [logsPage, setLogsPage] = useState(1);
@@ -100,9 +102,9 @@ export function GuardrailDetail({ guardrailId, onBack, accessToken = null, start
     return (
       <div>
         <Button type="link" icon={<ArrowLeftOutlined />} onClick={onBack} className="pl-0 mb-4">
-          Back to Overview
+          {t("observability.guardrailsMonitor.back")}
         </Button>
-        <p className="text-red-600">Failed to load guardrail details.</p>
+        <p className="text-red-600">{t("observability.guardrailsMonitor.detailLoadFailed")}</p>
       </div>
     );
   }
@@ -111,7 +113,7 @@ export function GuardrailDetail({ guardrailId, onBack, accessToken = null, start
     <div>
       <div className="mb-6">
         <Button type="link" icon={<ArrowLeftOutlined />} onClick={onBack} className="pl-0 mb-4">
-          Back to Overview
+          {t("observability.guardrailsMonitor.back")}
         </Button>
 
         <div className="flex items-start justify-between">
@@ -123,7 +125,7 @@ export function GuardrailDetail({ guardrailId, onBack, accessToken = null, start
                 className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium rounded-full ${statusStyle.bg} ${statusStyle.text}`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`} />
-                {data.status.charAt(0).toUpperCase() + data.status.slice(1)}
+                {t(`observability.guardrailsMonitor.${data.status as "healthy" | "warning" | "critical"}`)}
               </span>
             </div>
             <p className="text-sm text-gray-500 ml-8">{data.description}</p>
@@ -136,7 +138,7 @@ export function GuardrailDetail({ guardrailId, onBack, accessToken = null, start
               type="default"
               icon={<SettingOutlined />}
               onClick={() => setEvaluationModalOpen(true)}
-              title="Evaluation settings"
+              title={t("observability.guardrailsMonitor.evaluationSettings")}
             />
           </div>
         </div>
@@ -146,8 +148,8 @@ export function GuardrailDetail({ guardrailId, onBack, accessToken = null, start
         activeKey={activeTab}
         onChange={setActiveTab}
         items={[
-          { key: "overview", label: "Overview" },
-          { key: "logs", label: "Logs" },
+          { key: "overview", label: t("observability.guardrailsMonitor.overview") },
+          { key: "logs", label: t("observability.guardrailsMonitor.logs") },
         ]}
       />
 
@@ -155,22 +157,27 @@ export function GuardrailDetail({ guardrailId, onBack, accessToken = null, start
         <div className="space-y-6 mt-4">
           <Row gutter={[16, 16]}>
             <Col xs={12} md={8}>
-              <MetricCard label="Requests Evaluated" value={data.requestsEvaluated.toLocaleString()} />
+              <MetricCard
+                label={t("observability.guardrailsMonitor.requestsEvaluated")}
+                value={data.requestsEvaluated.toLocaleString(i18n.language)}
+              />
             </Col>
             <Col xs={12} md={8}>
               <MetricCard
-                label="Fail Rate"
+                label={t("observability.guardrailsMonitor.failRate")}
                 value={`${data.failRate}%`}
                 valueColor={
                   data.failRate > 15 ? "text-red-600" : data.failRate > 5 ? "text-amber-600" : "text-green-600"
                 }
-                subtitle={`${Math.round((data.requestsEvaluated * data.failRate) / 100).toLocaleString()} blocked`}
+                subtitle={t("observability.guardrailsMonitor.blockedCount", {
+                  count: Math.round((data.requestsEvaluated * data.failRate) / 100).toLocaleString(i18n.language),
+                })}
                 icon={data.failRate > 15 ? <WarningOutlined className="text-red-400" /> : undefined}
               />
             </Col>
             <Col xs={12} md={8}>
               <MetricCard
-                label="Avg. latency added"
+                label={t("observability.guardrailsMonitor.averageLatency")}
                 value={data.avgLatency != null ? `${Math.round(data.avgLatency)}ms` : "—"}
                 valueColor={
                   data.avgLatency != null
@@ -181,7 +188,11 @@ export function GuardrailDetail({ guardrailId, onBack, accessToken = null, start
                         : "text-green-600"
                     : "text-gray-500"
                 }
-                subtitle={data.avgLatency != null ? "Per request (avg)" : "No data"}
+                subtitle={
+                  data.avgLatency != null
+                    ? t("observability.guardrailsMonitor.perRequestAverage")
+                    : t("observability.guardrailsMonitor.noData")
+                }
               />
             </Col>
           </Row>

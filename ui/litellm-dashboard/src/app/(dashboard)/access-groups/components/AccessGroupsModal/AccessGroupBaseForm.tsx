@@ -4,6 +4,7 @@ import { ModelSelect } from "@/components/ModelSelect/ModelSelect";
 import type { FormInstance } from "antd";
 import { Form, Input, Select, Space, Tabs } from "antd";
 import { BotIcon, InfoIcon, LayersIcon, ServerIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const { TextArea } = Input;
 
@@ -21,6 +22,7 @@ interface AccessGroupBaseFormProps {
 }
 
 export function AccessGroupBaseForm({ form, isNameDisabled = false }: AccessGroupBaseFormProps) {
+  const { t } = useTranslation();
   const { data: agentsData } = useAgents();
   const { data: mcpServersData } = useMCPServers();
 
@@ -32,25 +34,25 @@ export function AccessGroupBaseForm({ form, isNameDisabled = false }: AccessGrou
       label: (
         <Space align="center" size={4}>
           <InfoIcon size={16} />
-          General Info
+          {t("accessGroupManagement.form.generalInfo")}
         </Space>
       ),
       children: (
         <div style={{ paddingTop: 16 }}>
           <Form.Item
             name="name"
-            label="Group Name"
+            label={t("accessGroupManagement.form.groupName")}
             rules={[
               {
                 required: true,
-                message: "Please enter the access group name",
+                message: t("accessGroupManagement.form.nameRequired"),
               },
             ]}
           >
-            <Input placeholder="e.g. Engineering Team" disabled={isNameDisabled} />
+            <Input placeholder={t("accessGroupManagement.form.namePlaceholder")} disabled={isNameDisabled} />
           </Form.Item>
-          <Form.Item name="description" label="Description">
-            <TextArea rows={4} placeholder="Describe the purpose of this access group..." />
+          <Form.Item name="description" label={t("accessGroupManagement.fields.description")}>
+            <TextArea rows={4} placeholder={t("accessGroupManagement.form.descriptionPlaceholder")} />
           </Form.Item>
         </div>
       ),
@@ -60,12 +62,12 @@ export function AccessGroupBaseForm({ form, isNameDisabled = false }: AccessGrou
       label: (
         <Space align="center" size={4}>
           <LayersIcon size={16} />
-          Models
+          {t("accessGroupManagement.tabs.models")}
         </Space>
       ),
       children: (
         <div style={{ paddingTop: 16 }}>
-          <Form.Item name="modelIds" label="Allowed Models">
+          <Form.Item name="modelIds" label={t("accessGroupManagement.form.allowedModels")}>
             <ModelSelect
               context="global"
               value={form.getFieldValue("modelIds") ?? []}
@@ -81,15 +83,15 @@ export function AccessGroupBaseForm({ form, isNameDisabled = false }: AccessGrou
       label: (
         <Space align="center" size={4}>
           <ServerIcon size={16} />
-          MCP Servers
+          {t("accessGroupManagement.tabs.mcpServers")}
         </Space>
       ),
       children: (
         <div style={{ paddingTop: 16 }}>
-          <Form.Item name="mcpServerIds" label="Allowed MCP Servers">
+          <Form.Item name="mcpServerIds" label={t("accessGroupManagement.form.allowedMcpServers")}>
             <Select
               mode="multiple"
-              placeholder="Select MCP servers"
+              placeholder={t("accessGroupManagement.form.selectMcpServers")}
               style={{ width: "100%" }}
               optionFilterProp="label"
               allowClear
@@ -107,15 +109,15 @@ export function AccessGroupBaseForm({ form, isNameDisabled = false }: AccessGrou
       label: (
         <Space align="center" size={4}>
           <BotIcon size={16} />
-          Agents
+          {t("accessGroupManagement.tabs.agents")}
         </Space>
       ),
       children: (
         <div style={{ paddingTop: 16 }}>
-          <Form.Item name="agentIds" label="Allowed Agents">
+          <Form.Item name="agentIds" label={t("accessGroupManagement.form.allowedAgents")}>
             <Select
               mode="multiple"
-              placeholder="Select agents"
+              placeholder={t("accessGroupManagement.form.selectAgents")}
               style={{ width: "100%" }}
               optionFilterProp="label"
               allowClear

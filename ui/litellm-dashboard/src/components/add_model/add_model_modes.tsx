@@ -1,16 +1,24 @@
 // Define the available test modes
 export const TEST_MODES = [
-  { value: "chat", label: "Chat - /chat/completions" },
-  { value: "completion", label: "Completion - /completions" },
-  { value: "embedding", label: "Embedding - /embeddings" },
-  { value: "audio_speech", label: "Audio Speech - /audio/speech" },
-  { value: "audio_transcription", label: "Audio Transcription - /audio/transcriptions" },
-  { value: "image_generation", label: "Image Generation - /images/generations" },
-  { value: "video_generation", label: "Video Generation - /videos" },
-  { value: "rerank", label: "Rerank - /rerank" },
-  { value: "realtime", label: "Realtime - /realtime" },
-  { value: "batch", label: "Batch - /batch" },
-  { value: "ocr", label: "OCR - /ocr" },
+  { value: "chat", label: "Chat - /chat/completions", translationKey: "chat" },
+  { value: "completion", label: "Completion - /completions", translationKey: "completion" },
+  { value: "embedding", label: "Embedding - /embeddings", translationKey: "embedding" },
+  { value: "audio_speech", label: "Audio Speech - /audio/speech", translationKey: "audioSpeech" },
+  {
+    value: "audio_transcription",
+    label: "Audio Transcription - /audio/transcriptions",
+    translationKey: "audioTranscription",
+  },
+  {
+    value: "image_generation",
+    label: "Image Generation - /images/generations",
+    translationKey: "imageGeneration",
+  },
+  { value: "video_generation", label: "Video Generation - /videos", translationKey: "videoGeneration" },
+  { value: "rerank", label: "Rerank - /rerank", translationKey: "rerank" },
+  { value: "realtime", label: "Realtime - /realtime", translationKey: "realtime" },
+  { value: "batch", label: "Batch - /batch", translationKey: "batch" },
+  { value: "ocr", label: "OCR - /ocr", translationKey: "ocr" },
 ];
 
 // Define the available auto router routing strategies

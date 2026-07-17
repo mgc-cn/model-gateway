@@ -3,14 +3,16 @@ import { Badge, Text } from "@tremor/react";
 import { Tooltip } from "antd";
 import { CopyOutlined, LinkOutlined } from "@ant-design/icons";
 import { Plugin } from "./claude_code_plugins/types";
+import type { TFunction } from "i18next";
 
 export const skillHubColumns = (
   showModal: (skill: Plugin) => void,
   copyToClipboard: (text: string) => void,
+  t: TFunction,
   publicPage: boolean = false,
 ): ColumnDef<Plugin>[] => [
   {
-    header: "Skill Name",
+    header: t("skills.hub.columns.name"),
     accessorKey: "name",
     enableSorting: true,
     sortingFn: "alphanumeric",
@@ -26,7 +28,7 @@ export const skillHubColumns = (
             >
               {skill.name}
             </button>
-            <Tooltip title="Copy skill name">
+            <Tooltip title={t("skills.hub.copyName")}>
               <CopyOutlined
                 onClick={() => copyToClipboard(skill.name)}
                 className="cursor-pointer text-gray-500 hover:text-blue-500 text-xs"
@@ -41,13 +43,13 @@ export const skillHubColumns = (
     },
   },
   {
-    header: "Description",
+    header: t("skills.hub.columns.description"),
     accessorKey: "description",
     enableSorting: false,
     cell: ({ row }) => <Text className="text-xs line-clamp-2">{row.original.description || "-"}</Text>,
   },
   {
-    header: "Category",
+    header: t("skills.hub.columns.category"),
     accessorKey: "category",
     enableSorting: true,
     cell: ({ row }) => {
@@ -61,13 +63,13 @@ export const skillHubColumns = (
     },
   },
   {
-    header: "Domain",
+    header: t("skills.hub.columns.domain"),
     accessorKey: "domain",
     enableSorting: true,
     cell: ({ row }) => <Text className="text-xs">{row.original.domain || "-"}</Text>,
   },
   {
-    header: "Source",
+    header: t("skills.hub.columns.source"),
     accessorKey: "source",
     enableSorting: false,
     cell: ({ row }) => {
@@ -100,12 +102,12 @@ export const skillHubColumns = (
     },
   },
   {
-    header: "Status",
+    header: t("skills.hub.columns.status"),
     accessorKey: "enabled",
     enableSorting: true,
     cell: ({ row }) => (
       <Badge color={row.original.enabled ? "green" : "gray"} size="xs">
-        {row.original.enabled ? "Public" : "Draft"}
+        {row.original.enabled ? t("skills.hub.public") : t("skills.hub.draft")}
       </Badge>
     ),
   },

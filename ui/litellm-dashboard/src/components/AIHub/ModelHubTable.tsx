@@ -33,6 +33,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { useUISettings } from "@/app/(dashboard)/hooks/uiSettings/useUISettings";
 import { checkTokenValidity } from "@/utils/jwtUtils";
 import { getCookie } from "@/utils/cookieUtils";
+import { useTranslation } from "react-i18next";
 
 interface ModelHubTableProps {
   accessToken: string | null;
@@ -91,6 +92,7 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
   const [isMakeSkillPublicModalVisible, setIsMakeSkillPublicModalVisible] = useState(false);
   const router = useRouter();
   const { data: uiSettings, isLoading: isUISettingsLoading } = useUISettings();
+  const { t } = useTranslation();
 
   // Check authentication requirement for public AI Hub
   useEffect(() => {
@@ -298,17 +300,21 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    NotificationsManager.success("Copied to clipboard!");
+    NotificationsManager.success(t("modelCenter.copied"));
   };
 
   const formatCapabilityName = (key: string) => {
     // Remove 'supports_' prefix and convert snake_case to Title Case
-    return key
+    const fallback = key
       .replace(/^supports_/, "")
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+    return t(`modelCenter.features.${key.replace(/^supports_/, "")}`, { defaultValue: fallback });
   };
+
+  const formatModeName = (mode: string) =>
+    t(`modelCenter.modes.${mode.toLowerCase().replaceAll("-", "_")}`, { defaultValue: mode });
 
   const getModelCapabilities = (model: ModelGroupInfo) => {
     // Find all properties that start with 'supports_' and are true
@@ -388,23 +394,21 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
           {/* Header with Title, Description and URL */}
           <div className="flex justify-between items-center mb-6">
             <div className="flex flex-col items-start">
-              <Title className="text-center">AI Hub</Title>
+              <Title className="text-center">{t("modelCenter.title")}</Title>
               {isAdminRole(userRole || "") ? (
-                <p className="text-sm text-gray-600">
-                  Make models, agents, and MCP servers public for developers to know what&apos;s available.
-                </p>
+                <p className="text-sm text-gray-600">{t("modelCenter.adminDescription")}</p>
               ) : (
-                <p className="text-sm text-gray-600">A list of all public model names personally available to you.</p>
+                <p className="text-sm text-gray-600">{t("modelCenter.userDescription")}</p>
               )}
             </div>
             <div className="flex items-center space-x-4">
-              <Text>Model Hub URL:</Text>
+              <Text>{t("modelCenter.modelHubUrl")}</Text>
               <div className="flex items-center bg-gray-200 px-2 py-1 rounded-sm">
                 <Text className="mr-2">{`${getProxyBaseUrl()}/ui/model_hub_table`}</Text>
                 <button
                   onClick={() => copyToClipboard(`${getProxyBaseUrl()}/ui/model_hub_table`)}
                   className="p-1 hover:bg-gray-300 rounded-sm transition-colors"
-                  title="Copy URL"
+                  title={t("modelCenter.copyUrl")}
                 >
                   <Copy size={16} className="text-gray-600" />
                 </button>
@@ -422,10 +426,10 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
           {/* Tab System for Model Hub, Agent Hub, MCP Hub, and Plugin Marketplace */}
           <TabGroup>
             <TabList className="mb-4">
-              <Tab>Model Hub</Tab>
-              <Tab>Agent Hub</Tab>
-              <Tab>MCP Hub</Tab>
-              <Tab>Skill Hub</Tab>
+              <Tab>{t("modelCenter.tabs.models")}</Tab>
+              <Tab>{t("modelCenter.tabs.agents")}</Tab>
+              <Tab>{t("modelCenter.tabs.mcp")}</Tab>
+              <Tab>{t("skills.hub.tab")}</Tab>
             </TabList>
 
             <TabPanels>
@@ -436,7 +440,7 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
                   {/* Header with Make Public Button */}
                   {publicPage == false && canModify && (
                     <div className="flex justify-end mb-4">
-                      <Button onClick={() => handleMakePublicPage()}>Select Models to Make Public</Button>
+                      <Button onClick={() => handleMakePublicPage()}>{t("modelCenter.selectModels")}</Button>
                     </div>
                   )}
 
@@ -445,7 +449,7 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
 
                   {/* Model Table */}
                   <ModelDataTable
-                    columns={modelHubColumns(showModal, copyToClipboard, publicPage)}
+                    columns={modelHubColumns(showModal, copyToClipboard, publicPage, t)}
                     data={filteredData}
                     isLoading={loading}
                     defaultSorting={[{ id: "model_group", desc: false }]}
@@ -454,7 +458,7 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
 
                 <div className="mt-4 text-center space-y-2">
                   <Text className="text-sm text-gray-600">
-                    Showing {filteredData.length} of {modelHubData?.length || 0} models
+                    {t("modelCenter.showingModels", { shown: filteredData.length, total: modelHubData?.length || 0 })}
                   </Text>
                 </div>
               </TabPanel>
@@ -465,13 +469,13 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
                   {/* Header with Make Public Button */}
                   {publicPage == false && canModify && (
                     <div className="flex justify-end mb-4">
-                      <Button onClick={() => handleMakeAgentPublicPage()}>Select Agents to Make Public</Button>
+                      <Button onClick={() => handleMakeAgentPublicPage()}>{t("modelCenter.selectAgents")}</Button>
                     </div>
                   )}
 
                   {/* Agent Table */}
                   <ModelDataTable
-                    columns={getAgentHubTableColumns(showAgentModal, copyToClipboard, publicPage)}
+                    columns={getAgentHubTableColumns(showAgentModal, copyToClipboard, t, publicPage)}
                     data={agentHubData || []}
                     isLoading={agentLoading}
                     defaultSorting={[{ id: "name", desc: false }]}
@@ -480,7 +484,7 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
 
                 <div className="mt-4 text-center space-y-2">
                   <Text className="text-sm text-gray-600">
-                    Showing {agentHubData?.length || 0} agent{agentHubData?.length !== 1 ? "s" : ""}
+                    {t("modelCenter.showingAgents", { count: agentHubData?.length || 0 })}
                   </Text>
                 </div>
               </TabPanel>
@@ -491,13 +495,13 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
                   {/* Header with Make Public Button */}
                   {publicPage == false && canModify && (
                     <div className="flex justify-end mb-4">
-                      <Button onClick={() => handleMakeMcpPublicPage()}>Select MCP Servers to Make Public</Button>
+                      <Button onClick={() => handleMakeMcpPublicPage()}>{t("modelCenter.selectMcp")}</Button>
                     </div>
                   )}
 
                   {/* MCP Server Table */}
                   <ModelDataTable
-                    columns={mcpHubColumns(showMcpModal, copyToClipboard, publicPage)}
+                    columns={mcpHubColumns(showMcpModal, copyToClipboard, t, publicPage)}
                     data={mcpHubData || []}
                     isLoading={mcpLoading}
                     defaultSorting={[{ id: "server_name", desc: false }]}
@@ -506,7 +510,7 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
 
                 <div className="mt-4 text-center space-y-2">
                   <Text className="text-sm text-gray-600">
-                    Showing {mcpHubData?.length || 0} MCP server{mcpHubData?.length !== 1 ? "s" : ""}
+                    {t("modelCenter.showingMcp", { count: mcpHubData?.length || 0 })}
                   </Text>
                 </div>
               </TabPanel>
@@ -515,7 +519,9 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
               <TabPanel>
                 {publicPage == false && canModify && (
                   <div className="flex justify-end mb-4">
-                    <Button onClick={() => setIsMakeSkillPublicModalVisible(true)}>Select Skills to Make Public</Button>
+                    <Button onClick={() => setIsMakeSkillPublicModalVisible(true)}>
+                      {t("skills.publish.selectTitle")}
+                    </Button>
                   </div>
                 )}
                 <SkillHubDashboard
@@ -535,14 +541,14 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
         </div>
       ) : (
         <Card className="mx-auto max-w-xl mt-10">
-          <Text className="text-xl text-center mb-2 text-black">Public Model Hub not enabled.</Text>
-          <p className="text-base text-center text-slate-800">Ask your proxy admin to enable this on their Admin UI.</p>
+          <Text className="text-xl text-center mb-2 text-black">{t("modelCenter.disabled")}</Text>
+          <p className="text-base text-center text-slate-800">{t("modelCenter.askAdmin")}</p>
         </Card>
       )}
 
       {/* Public Page Modal */}
       <Modal
-        title="Public Model Hub"
+        title={t("modelCenter.publicHub")}
         width={600}
         open={isPublicPageModalVisible}
         footer={null}
@@ -551,20 +557,20 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
       >
         <div className="pt-5 pb-5">
           <div className="flex justify-between mb-4">
-            <Text className="text-base mr-2">Shareable Link:</Text>
+            <Text className="text-base mr-2">{t("modelCenter.shareableLink")}</Text>
             <Text className="max-w-sm ml-2 bg-gray-200 pr-2 pl-2 pt-1 pb-1 text-center rounded-sm">
               {`${getProxyBaseUrl()}/ui/model_hub_table`}
             </Text>
           </div>
           <div className="flex justify-end">
-            <Button onClick={goToPublicModelPage}>See Page</Button>
+            <Button onClick={goToPublicModelPage}>{t("modelCenter.seePage")}</Button>
           </div>
         </div>
       </Modal>
 
       {/* Model Details Modal */}
       <Modal
-        title={selectedModel?.model_group || "Model Details"}
+        title={selectedModel?.model_group || t("modelCenter.details.modelDetails")}
         width={1000}
         open={isModalVisible}
         footer={null}
@@ -575,18 +581,20 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
           <div className="space-y-6">
             {/* Model Overview */}
             <div>
-              <Text className="text-lg font-semibold mb-4">Model Overview</Text>
+              <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.modelOverview")}</Text>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <Text className="font-medium">Model Group:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.modelGroup")}</Text>
                   <Text>{selectedModel.model_group}</Text>
                 </div>
                 <div>
-                  <Text className="font-medium">Mode:</Text>
-                  <Text>{selectedModel.mode || "Not specified"}</Text>
+                  <Text className="font-medium">{t("modelCenter.details.mode")}</Text>
+                  <Text>
+                    {selectedModel.mode ? formatModeName(selectedModel.mode) : t("modelCenter.details.notSpecified")}
+                  </Text>
                 </div>
                 <div>
-                  <Text className="font-medium">Providers:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.providers")}</Text>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {selectedModel.providers.map((provider) => (
                       <Badge key={provider} color="blue">
@@ -600,30 +608,34 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
 
             {/* Token and Cost Information */}
             <div>
-              <Text className="text-lg font-semibold mb-4">Token & Cost Information</Text>
+              <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.tokenCost")}</Text>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Text className="font-medium">Max Input Tokens:</Text>
-                  <Text>{selectedModel.max_input_tokens?.toLocaleString() || "Not specified"}</Text>
-                </div>
-                <div>
-                  <Text className="font-medium">Max Output Tokens:</Text>
-                  <Text>{selectedModel.max_output_tokens?.toLocaleString() || "Not specified"}</Text>
-                </div>
-                <div>
-                  <Text className="font-medium">Input Cost per 1M Tokens:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.maxInput")}</Text>
                   <Text>
-                    {selectedModel.input_cost_per_token
-                      ? formatCost(selectedModel.input_cost_per_token)
-                      : "Not specified"}
+                    {selectedModel.max_input_tokens?.toLocaleString() || t("modelCenter.details.notSpecified")}
                   </Text>
                 </div>
                 <div>
-                  <Text className="font-medium">Output Cost per 1M Tokens:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.maxOutput")}</Text>
+                  <Text>
+                    {selectedModel.max_output_tokens?.toLocaleString() || t("modelCenter.details.notSpecified")}
+                  </Text>
+                </div>
+                <div>
+                  <Text className="font-medium">{t("modelCenter.details.inputCost")}</Text>
+                  <Text>
+                    {selectedModel.input_cost_per_token
+                      ? formatCost(selectedModel.input_cost_per_token)
+                      : t("modelCenter.details.notSpecified")}
+                  </Text>
+                </div>
+                <div>
+                  <Text className="font-medium">{t("modelCenter.details.outputCost")}</Text>
                   <Text>
                     {selectedModel.output_cost_per_token
                       ? formatCost(selectedModel.output_cost_per_token)
-                      : "Not specified"}
+                      : t("modelCenter.details.notSpecified")}
                   </Text>
                 </div>
               </div>
@@ -631,14 +643,14 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
 
             {/* Capabilities */}
             <div>
-              <Text className="text-lg font-semibold mb-4">Capabilities</Text>
+              <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.capabilities")}</Text>
               <div className="flex flex-wrap gap-2">
                 {(() => {
                   const capabilities = getModelCapabilities(selectedModel);
                   const colors = ["green", "blue", "purple", "orange", "red", "yellow"];
 
                   if (capabilities.length === 0) {
-                    return <Text className="text-gray-500">No special capabilities listed</Text>;
+                    return <Text className="text-gray-500">{t("modelCenter.details.noCapabilities")}</Text>;
                   }
 
                   return capabilities.map((capability, index) => (
@@ -653,17 +665,17 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
             {/* Rate Limits */}
             {(selectedModel.tpm || selectedModel.rpm) && (
               <div>
-                <Text className="text-lg font-semibold mb-4">Rate Limits</Text>
+                <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.rateLimits")}</Text>
                 <div className="grid grid-cols-2 gap-4">
                   {selectedModel.tpm && (
                     <div>
-                      <Text className="font-medium">Tokens per Minute:</Text>
+                      <Text className="font-medium">{t("modelCenter.details.tpm")}</Text>
                       <Text>{selectedModel.tpm.toLocaleString()}</Text>
                     </div>
                   )}
                   {selectedModel.rpm && (
                     <div>
-                      <Text className="font-medium">Requests per Minute:</Text>
+                      <Text className="font-medium">{t("modelCenter.details.rpm")}</Text>
                       <Text>{selectedModel.rpm.toLocaleString()}</Text>
                     </div>
                   )}
@@ -674,7 +686,7 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
             {/* Supported OpenAI Parameters */}
             {selectedModel.supported_openai_params && (
               <div>
-                <Text className="text-lg font-semibold mb-4">Supported OpenAI Parameters</Text>
+                <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.parameters")}</Text>
                 <div className="flex flex-wrap gap-2">
                   {selectedModel.supported_openai_params.map((param) => (
                     <Badge key={param} color="green">
@@ -687,7 +699,7 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({ accessToken, publicPage, 
 
             {/* Usage Example */}
             <div>
-              <Text className="text-lg font-semibold mb-4">Usage Example</Text>
+              <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.usageExample")}</Text>
               <SyntaxHighlighter language="python" className="text-sm">
                 {`import openai
 
@@ -726,22 +738,22 @@ print(response.choices[0].message.content)`}
           <div className="space-y-6">
             {/* Agent Overview */}
             <div>
-              <Text className="text-lg font-semibold mb-4">Agent Overview</Text>
+              <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.agentOverview")}</Text>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <Text className="font-medium">Name:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.name")}</Text>
                   <Text>{selectedAgent.name}</Text>
                 </div>
                 <div>
-                  <Text className="font-medium">Version:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.version")}</Text>
                   <Badge color="blue">v{selectedAgent.version}</Badge>
                 </div>
                 <div>
-                  <Text className="font-medium">Protocol Version:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.protocolVersion")}</Text>
                   <Text>{selectedAgent.protocolVersion}</Text>
                 </div>
                 <div>
-                  <Text className="font-medium">URL:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.url")}</Text>
                   <div className="flex items-center space-x-2">
                     <Text className="truncate">{selectedAgent.url}</Text>
                     <CopyOutlined
@@ -752,7 +764,7 @@ print(response.choices[0].message.content)`}
                 </div>
               </div>
               <div>
-                <Text className="font-medium">Description:</Text>
+                <Text className="font-medium">{t("modelCenter.details.description")}</Text>
                 <Text className="mt-1">{selectedAgent.description}</Text>
               </div>
             </div>
@@ -760,7 +772,7 @@ print(response.choices[0].message.content)`}
             {/* Capabilities */}
             {selectedAgent.capabilities && Object.keys(selectedAgent.capabilities).length > 0 && (
               <div>
-                <Text className="text-lg font-semibold mb-4">Capabilities</Text>
+                <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.capabilities")}</Text>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(selectedAgent.capabilities)
                     .filter(([_, value]) => value === true)
@@ -775,26 +787,26 @@ print(response.choices[0].message.content)`}
 
             {/* Input/Output Modes */}
             <div>
-              <Text className="text-lg font-semibold mb-4">Input/Output Modes</Text>
+              <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.ioModes")}</Text>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Text className="font-medium">Input Modes:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.inputModes")}</Text>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {selectedAgent.defaultInputModes?.map((mode) => (
                       <Badge key={mode} color="blue">
                         {mode}
                       </Badge>
-                    )) || <Text>Not specified</Text>}
+                    )) || <Text>{t("modelCenter.details.notSpecified")}</Text>}
                   </div>
                 </div>
                 <div>
-                  <Text className="font-medium">Output Modes:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.outputModes")}</Text>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {selectedAgent.defaultOutputModes?.map((mode) => (
                       <Badge key={mode} color="purple">
                         {mode}
                       </Badge>
-                    )) || <Text>Not specified</Text>}
+                    )) || <Text>{t("modelCenter.details.notSpecified")}</Text>}
                   </div>
                 </div>
               </div>
@@ -803,7 +815,7 @@ print(response.choices[0].message.content)`}
             {/* Skills */}
             {selectedAgent.skills && selectedAgent.skills.length > 0 && (
               <div>
-                <Text className="text-lg font-semibold mb-4">Skills</Text>
+                <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.skills")}</Text>
                 <div className="space-y-4">
                   {selectedAgent.skills.map((skill) => (
                     <div key={skill.id} className="border border-gray-200 rounded-sm p-4">
@@ -825,7 +837,7 @@ print(response.choices[0].message.content)`}
                       <Text className="text-sm mb-2">{skill.description}</Text>
                       {skill.examples && skill.examples.length > 0 && (
                         <div>
-                          <Text className="text-xs font-medium text-gray-700">Examples:</Text>
+                          <Text className="text-xs font-medium text-gray-700">{t("modelCenter.details.examples")}</Text>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {skill.examples.map((example, idx) => (
                               <Badge key={idx} color="gray" size="xs">
@@ -844,8 +856,8 @@ print(response.choices[0].message.content)`}
             {/* Additional Properties */}
             {selectedAgent.supportsAuthenticatedExtendedCard && (
               <div>
-                <Text className="text-lg font-semibold mb-4">Additional Features</Text>
-                <Badge color="green">Supports Authenticated Extended Card</Badge>
+                <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.additionalFeatures")}</Text>
+                <Badge color="green">{t("modelCenter.details.authenticatedCard")}</Badge>
               </div>
             )}
           </div>
@@ -865,14 +877,14 @@ print(response.choices[0].message.content)`}
           <div className="space-y-6">
             {/* Server Overview */}
             <div>
-              <Text className="text-lg font-semibold mb-4">Server Overview</Text>
+              <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.serverOverview")}</Text>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <Text className="font-medium">Server Name:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.serverName")}</Text>
                   <Text>{selectedMcpServer.server_name}</Text>
                 </div>
                 <div>
-                  <Text className="font-medium">Server ID:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.serverId")}</Text>
                   <div className="flex items-center space-x-2">
                     <Text className="text-xs truncate">{selectedMcpServer.server_id}</Text>
                     <CopyOutlined
@@ -883,22 +895,22 @@ print(response.choices[0].message.content)`}
                 </div>
                 {selectedMcpServer.alias && (
                   <div>
-                    <Text className="font-medium">Alias:</Text>
+                    <Text className="font-medium">{t("modelCenter.details.alias")}</Text>
                     <Text>{selectedMcpServer.alias}</Text>
                   </div>
                 )}
                 <div>
-                  <Text className="font-medium">Transport:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.transport")}</Text>
                   <Badge color="blue">{selectedMcpServer.transport}</Badge>
                 </div>
                 <div>
-                  <Text className="font-medium">Auth Type:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.authType")}</Text>
                   <Badge color={selectedMcpServer.auth_type === "none" ? "gray" : "green"}>
                     {selectedMcpServer.auth_type}
                   </Badge>
                 </div>
                 <div>
-                  <Text className="font-medium">Status:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.status")}</Text>
                   <Badge
                     color={
                       selectedMcpServer.status === "active" || selectedMcpServer.status === "healthy"
@@ -914,7 +926,7 @@ print(response.choices[0].message.content)`}
               </div>
               {selectedMcpServer.description && (
                 <div className="mt-2">
-                  <Text className="font-medium">Description:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.description")}</Text>
                   <Text className="mt-1">{selectedMcpServer.description}</Text>
                 </div>
               )}
@@ -922,11 +934,11 @@ print(response.choices[0].message.content)`}
 
             {/* Connection Details */}
             <div>
-              <Text className="text-lg font-semibold mb-4">Connection Details</Text>
+              <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.connection")}</Text>
               <div className="space-y-2">
                 {selectedMcpServer.command && (
                   <div>
-                    <Text className="font-medium">Command:</Text>
+                    <Text className="font-medium">{t("modelCenter.details.command")}</Text>
                     <Text className="text-sm bg-gray-100 p-2 rounded-sm mt-1 font-mono">
                       {selectedMcpServer.command}
                     </Text>
@@ -938,7 +950,7 @@ print(response.choices[0].message.content)`}
             {/* Tools */}
             {selectedMcpServer.allowed_tools && selectedMcpServer.allowed_tools.length > 0 && (
               <div>
-                <Text className="text-lg font-semibold mb-4">Allowed Tools</Text>
+                <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.allowedTools")}</Text>
                 <div className="flex flex-wrap gap-2">
                   {selectedMcpServer.allowed_tools.map((tool, idx) => (
                     <Badge key={idx} color="purple">
@@ -952,7 +964,7 @@ print(response.choices[0].message.content)`}
             {/* Teams */}
             {selectedMcpServer.teams && selectedMcpServer.teams.length > 0 && (
               <div>
-                <Text className="text-lg font-semibold mb-4">Teams</Text>
+                <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.teams")}</Text>
                 <div className="flex flex-wrap gap-2">
                   {selectedMcpServer.teams.map((team, idx) => (
                     <Badge key={idx} color="blue">
@@ -966,7 +978,7 @@ print(response.choices[0].message.content)`}
             {/* Access Groups */}
             {selectedMcpServer.mcp_access_groups && selectedMcpServer.mcp_access_groups.length > 0 && (
               <div>
-                <Text className="text-lg font-semibold mb-4">Access Groups</Text>
+                <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.accessGroups")}</Text>
                 <div className="flex flex-wrap gap-2">
                   {selectedMcpServer.mcp_access_groups.map((group, idx) => (
                     <Badge key={idx} color="green">
@@ -979,34 +991,34 @@ print(response.choices[0].message.content)`}
 
             {/* Metadata */}
             <div>
-              <Text className="text-lg font-semibold mb-4">Metadata</Text>
+              <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.metadata")}</Text>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Text className="font-medium">Created By:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.createdBy")}</Text>
                   <Text>{selectedMcpServer.created_by}</Text>
                 </div>
                 <div>
-                  <Text className="font-medium">Updated By:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.updatedBy")}</Text>
                   <Text>{selectedMcpServer.updated_by}</Text>
                 </div>
                 <div>
-                  <Text className="font-medium">Created At:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.createdAt")}</Text>
                   <Text className="text-sm">{new Date(selectedMcpServer.created_at).toLocaleString()}</Text>
                 </div>
                 <div>
-                  <Text className="font-medium">Updated At:</Text>
+                  <Text className="font-medium">{t("modelCenter.details.updatedAt")}</Text>
                   <Text className="text-sm">{new Date(selectedMcpServer.updated_at).toLocaleString()}</Text>
                 </div>
                 {selectedMcpServer.last_health_check && (
                   <div>
-                    <Text className="font-medium">Last Health Check:</Text>
+                    <Text className="font-medium">{t("modelCenter.details.lastHealthCheck")}</Text>
                     <Text className="text-sm">{new Date(selectedMcpServer.last_health_check).toLocaleString()}</Text>
                   </div>
                 )}
               </div>
               {selectedMcpServer.health_check_error && (
                 <div className="mt-2 p-2 bg-red-50 rounded-sm">
-                  <Text className="font-medium text-red-700">Health Check Error:</Text>
+                  <Text className="font-medium text-red-700">{t("modelCenter.details.healthError")}</Text>
                   <Text className="text-sm text-red-600 mt-1">{selectedMcpServer.health_check_error}</Text>
                 </div>
               )}
@@ -1014,7 +1026,7 @@ print(response.choices[0].message.content)`}
 
             {/* Usage Example */}
             <div>
-              <Text className="text-lg font-semibold mb-4">Usage Example</Text>
+              <Text className="text-lg font-semibold mb-4">{t("modelCenter.details.usageExample")}</Text>
               <SyntaxHighlighter language="python" className="text-sm">
                 {`from fastmcp import Client
 import asyncio

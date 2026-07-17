@@ -20,6 +20,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ScrollArea } from "@/components/ui/scroll-area";
 import dayjs from "dayjs";
 import { Conversation } from "./types";
+import { useTranslation } from "react-i18next";
+import { formatDate } from "@/i18n/format";
 
 interface Props {
   conversations: Conversation[];
@@ -29,18 +31,18 @@ interface Props {
   onRename: (id: string, newTitle: string) => void;
 }
 
-type DateGroup = "Recents" | "Yesterday" | "Last 7 Days" | "Older";
+type DateGroup = "recent" | "yesterday" | "lastSevenDays" | "older";
 
 const getDateGroup = (timestamp: number): DateGroup => {
   const now = dayjs();
   const date = dayjs(timestamp);
-  if (date.isSame(now, "day")) return "Recents";
-  if (date.isSame(now.subtract(1, "day"), "day")) return "Yesterday";
-  if (date.isAfter(now.subtract(7, "day"))) return "Last 7 Days";
-  return "Older";
+  if (date.isSame(now, "day")) return "recent";
+  if (date.isSame(now.subtract(1, "day"), "day")) return "yesterday";
+  if (date.isAfter(now.subtract(7, "day"))) return "lastSevenDays";
+  return "older";
 };
 
-const DATE_GROUP_ORDER: DateGroup[] = ["Recents", "Yesterday", "Last 7 Days", "Older"];
+const DATE_GROUP_ORDER: DateGroup[] = ["recent", "yesterday", "lastSevenDays", "older"];
 
 interface GroupedConversations {
   group: DateGroup;
@@ -72,6 +74,7 @@ const ConversationRow: React.FC<ConversationRowProps> = ({ conv, isActive, onSel
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(conv.title);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -151,7 +154,7 @@ const ConversationRow: React.FC<ConversationRowProps> = ({ conv, isActive, onSel
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  <p>Rename</p>
+                  <p>{t("chatShell.history.rename")}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -167,22 +170,22 @@ const ConversationRow: React.FC<ConversationRowProps> = ({ conv, isActive, onSel
                     </AlertDialogTrigger>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    <p>Delete</p>
+                    <p>{t("chatShell.history.delete")}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete this conversation?</AlertDialogTitle>
-                  <AlertDialogDescription>This action cannot be undone</AlertDialogDescription>
+                  <AlertDialogTitle>{t("chatShell.history.deleteTitle")}</AlertDialogTitle>
+                  <AlertDialogDescription>{t("chatShell.history.deleteDescription")}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => onDelete(conv.id)}
                     className="bg-destructive text-white hover:bg-destructive/90"
                   >
-                    Delete
+                    {t("common.delete")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -204,6 +207,7 @@ interface SearchModalProps {
 const SearchModal: React.FC<SearchModalProps> = ({ open, conversations, onSelect, onClose }) => {
   const [query, setQuery] = useState("");
   const [wasOpen, setWasOpen] = useState(open);
+  const { t, i18n } = useTranslation();
 
   if (open !== wasOpen) {
     setWasOpen(open);
@@ -226,7 +230,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ open, conversations, onSelect
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             autoFocus
-            placeholder="Search conversations\u2026"
+            placeholder={t("chatShell.history.searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pl-9"
@@ -235,7 +239,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ open, conversations, onSelect
 
         <ScrollArea className="max-h-[320px]">
           {filtered.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground text-sm">No conversations found</div>
+            <div className="text-center py-6 text-muted-foreground text-sm">
+              {t("chatShell.history.noSearchResults")}
+            </div>
           ) : (
             filtered.map((conv) => {
               const truncated = conv.title.length > 55 ? conv.title.slice(0, 55) + "\u2026" : conv.title;
@@ -248,7 +254,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ open, conversations, onSelect
                   <MessageSquare className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span className="text-[13px] flex-1 truncate">{truncated}</span>
                   <span className="text-[11px] text-muted-foreground shrink-0 ml-auto">
-                    {dayjs(conv.updatedAt).format("MMM D")}
+                    {formatDate(conv.updatedAt, i18n.resolvedLanguage, { month: "short", day: "numeric" })}
                   </span>
                 </div>
               );
@@ -262,6 +268,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ open, conversations, onSelect
 
 const ConversationList: React.FC<Props> = ({ conversations, activeConversationId, onSelect, onDelete, onRename }) => {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleGlobalKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -283,15 +290,15 @@ const ConversationList: React.FC<Props> = ({ conversations, activeConversationId
         <ScrollArea className="flex-1 h-0 px-1.5 pt-2">
           {grouped.length === 0 ? (
             <div className="text-center text-muted-foreground/60 text-xs mt-8 px-3">
-              No conversations yet
+              {t("chatShell.history.empty")}
               <br />
-              Start a new chat above
+              {t("chatShell.history.emptyAction")}
             </div>
           ) : (
             grouped.map(({ group, items }) => (
               <div key={group} className="mb-2">
                 <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 pt-2 pb-1">
-                  {group}
+                  {t(`chatShell.history.${group}`)}
                 </div>
                 {items.map((conv) => (
                   <ConversationRow

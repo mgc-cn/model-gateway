@@ -2,6 +2,9 @@ import { render, screen, fireEvent, act, waitFor } from "@testing-library/react"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import MakeMCPPublicForm from "./MakeMCPPublicForm";
 import { MCPServerData } from "../../mcp_hub_table_columns";
+import i18n from "@/i18n/i18n";
+import { en } from "@/i18n/resources/en";
+import { zhCN } from "@/i18n/resources/zh-CN";
 
 // Mock the networking function
 vi.mock("../../networking", () => ({
@@ -144,12 +147,45 @@ describe("MakeMCPPublicForm", () => {
     onSuccess: vi.fn(),
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.resetAllMocks();
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
+  });
+
+  it("keeps MCP publishing resources aligned", () => {
+    expect(Object.keys(zhCN.modelCenter.mcpPublish)).toEqual(Object.keys(en.modelCenter.mcpPublish));
+    expect(Object.keys(zhCN.modelCenter.mcpPublish.status)).toEqual(Object.keys(en.modelCenter.mcpPublish.status));
+  });
+
+  it("localizes the complete MCP publishing flow", async () => {
+    await act(async () => {
+      await i18n.changeLanguage("zh-CN");
+    });
+
+    render(<MakeMCPPublicForm {...mockProps} />);
+
+    expect(screen.getByText("公开 MCP 服务")).toBeInTheDocument();
+    expect(screen.getByText("选择要公开的 MCP 服务")).toBeInTheDocument();
+    expect(screen.getByLabelText("全选 (2)")).toBeInTheDocument();
+    expect(screen.getByText("已公开")).toBeInTheDocument();
+    expect(screen.getByText("未激活")).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    });
+
+    expect(screen.getByText("确认公开 MCP 服务")).toBeInTheDocument();
+    expect(screen.getByText("将公开的 MCP 服务：")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "公开" })).toBeInTheDocument();
   });
 
   it("should render the component", () => {

@@ -1,6 +1,7 @@
 import { Button, Select, Tooltip } from "antd";
 import { ArrowDown, Plus, X } from "lucide-react";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface FallbackEntry {
   id: string;
@@ -34,6 +35,7 @@ const dictToEntries = (dict: Record<string, string[]>): FallbackEntry[] => {
 };
 
 export function BudgetFallbacksEditor({ value, onChange, availableModels }: BudgetFallbacksEditorProps) {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<FallbackEntry[]>(() => dictToEntries(value));
 
   const emitChange = (updated: FallbackEntry[]) => {
@@ -58,11 +60,9 @@ export function BudgetFallbacksEditor({ value, onChange, availableModels }: Budg
   if (entries.length === 0) {
     return (
       <div>
-        <div className="text-xs text-gray-500 mb-2">
-          When a model exceeds its per-model budget, requests automatically reroute to fallback models
-        </div>
+        <div className="text-xs text-gray-500 mb-2">{t("virtualKeys.create.budgetFallback.description")}</div>
         <Button size="small" onClick={addEntry} icon={<Plus className="w-3 h-3" />}>
-          Add Budget Fallback
+          {t("virtualKeys.create.budgetFallback.add")}
         </Button>
       </div>
     );
@@ -70,9 +70,7 @@ export function BudgetFallbacksEditor({ value, onChange, availableModels }: Budg
 
   return (
     <div className="space-y-4">
-      <div className="text-xs text-gray-500">
-        When a model exceeds its per-model budget, requests automatically reroute to fallback models
-      </div>
+      <div className="text-xs text-gray-500">{t("virtualKeys.create.budgetFallback.description")}</div>
       {entries.map((entry) => {
         const availablePrimaryOptions = availableModels.filter(
           (m) => m === entry.primaryModel || !usedPrimaryModels.has(m),
@@ -90,10 +88,12 @@ export function BudgetFallbacksEditor({ value, onChange, availableModels }: Budg
             </button>
 
             <div className="mb-3">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Primary Model</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                {t("virtualKeys.create.budgetFallback.primary")}
+              </label>
               <Select
                 className="w-full"
-                placeholder="Select model"
+                placeholder={t("virtualKeys.create.budgetFallback.selectModel")}
                 value={entry.primaryModel}
                 onChange={(v) => {
                   const newFallbacks = entry.fallbackModels.filter((m) => m !== v);
@@ -109,16 +109,22 @@ export function BudgetFallbacksEditor({ value, onChange, availableModels }: Budg
             <div className="flex items-center justify-center -my-1 mb-2">
               <div className="bg-amber-50 text-amber-600 px-3 py-0.5 rounded-full text-[10px] font-bold border border-amber-100 flex items-center gap-1">
                 <ArrowDown className="w-3 h-3" />
-                IF BUDGET EXCEEDED, TRY
+                {t("virtualKeys.create.budgetFallback.exceeded")}
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Fallback Models</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                {t("virtualKeys.create.budgetFallback.fallback")}
+              </label>
               <Select
                 mode="multiple"
                 className="w-full"
-                placeholder={entry.primaryModel ? "Select fallback models" : "Select a primary model first"}
+                placeholder={
+                  entry.primaryModel
+                    ? t("virtualKeys.create.budgetFallback.selectFallbacks")
+                    : t("virtualKeys.create.budgetFallback.selectPrimary")
+                }
                 value={entry.fallbackModels}
                 onChange={(values) => updateEntry(entry.id, { fallbackModels: values })}
                 disabled={!entry.primaryModel}
@@ -132,13 +138,13 @@ export function BudgetFallbacksEditor({ value, onChange, availableModels }: Budg
                     styles={{ root: { pointerEvents: "none" } }}
                     title={omittedValues.map(({ value: v }) => v).join(", ")}
                   >
-                    <span>+{omittedValues.length} more</span>
+                    <span>{t("virtualKeys.create.budgetFallback.more", { count: omittedValues.length })}</span>
                   </Tooltip>
                 )}
               />
               {entry.fallbackModels.length > 1 && (
                 <div className="text-[10px] text-gray-400 mt-1 ml-1">
-                  Tried in order; first model still within its own budget is used
+                  {t("virtualKeys.create.budgetFallback.orderHelp")}
                 </div>
               )}
             </div>
@@ -146,7 +152,7 @@ export function BudgetFallbacksEditor({ value, onChange, availableModels }: Budg
         );
       })}
       <Button size="small" onClick={addEntry} icon={<Plus className="w-3 h-3" />}>
-        Add Budget Fallback
+        {t("virtualKeys.create.budgetFallback.add")}
       </Button>
     </div>
   );

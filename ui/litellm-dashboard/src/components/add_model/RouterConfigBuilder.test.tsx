@@ -1,7 +1,8 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import RouterConfigBuilder from "./RouterConfigBuilder";
+import i18n from "@/i18n/i18n";
 
 const MOCK_MODEL_INFO = [
   { model_group: "gpt-4", mode: "chat" },
@@ -10,6 +11,10 @@ const MOCK_MODEL_INFO = [
 ];
 
 describe("RouterConfigBuilder", () => {
+  afterEach(async () => {
+    await i18n.changeLanguage("en");
+  });
+
   it("should render", () => {
     render(<RouterConfigBuilder modelInfo={MOCK_MODEL_INFO} />);
 
@@ -285,5 +290,27 @@ describe("RouterConfigBuilder", () => {
     await waitFor(() => {
       expect(screen.getByText(/no routes configured/i)).toBeInTheDocument();
     });
+  });
+
+  it("localizes route editing and JSON preview in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+    const user = userEvent.setup();
+    const { container } = render(<RouterConfigBuilder modelInfo={MOCK_MODEL_INFO} />);
+
+    expect(screen.getByText("路由配置")).toBeInTheDocument();
+    expect(screen.getByText("尚未配置路由。请选择“添加路由”开始配置。")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /添加路由/ }));
+
+    expect(screen.getByText("路由 1：未命名")).toBeInTheDocument();
+    expect(screen.getByText("模型")).toBeInTheDocument();
+    expect(screen.getByText("说明")).toBeInTheDocument();
+    expect(screen.getByText("相似度阈值")).toBeInTheDocument();
+    expect(screen.getByText("示例语句")).toBeInTheDocument();
+    expect(screen.getByText("JSON 预览")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "显示" }));
+    expect(screen.getByRole("button", { name: "隐藏" })).toBeInTheDocument();
+    expect(container.querySelector("pre")).toBeInTheDocument();
   });
 });

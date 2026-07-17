@@ -1,7 +1,8 @@
 import "@testing-library/jest-dom";
 import { cleanup } from "@testing-library/react";
 import React from "react";
-import { afterEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
+import i18n from "@/i18n/i18n";
 
 const ensureTestLocalStorage = () => {
   if (typeof window === "undefined" || typeof window.Storage === "undefined") {
@@ -87,6 +88,12 @@ const ensureTestLocalStorage = () => {
 };
 
 ensureTestLocalStorage();
+
+beforeEach(async () => {
+  document.cookie = "litellm_locale=; Path=/; Max-Age=0";
+  document.documentElement.lang = "en";
+  await i18n.changeLanguage("en");
+});
 
 // Global mock for NotificationManager to prevent React rendering issues in tests
 // This avoids "window is not defined" errors when notifications try to render

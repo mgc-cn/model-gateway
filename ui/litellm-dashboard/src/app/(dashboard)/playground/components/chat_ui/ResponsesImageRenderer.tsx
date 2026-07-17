@@ -2,6 +2,7 @@ import React from "react";
 import { MessageType } from "@/components/chat_ui/types";
 import { shouldShowAttachedImage } from "./ResponsesImageUtils";
 import { FilePdfOutlined } from "@ant-design/icons";
+import i18n from "@/i18n/i18n";
 
 interface ResponsesImageRendererProps {
   message: MessageType;
@@ -23,7 +24,7 @@ const ResponsesImageRenderer: React.FC<ResponsesImageRendererProps> = ({ message
       ) : (
         <img
           src={message.imagePreviewUrl}
-          alt="User uploaded image"
+          alt={i18n.t("playground.media.userImage")}
           className="max-w-64 rounded-md border border-gray-200 shadow-xs"
           style={{ maxHeight: "200px" }}
         />

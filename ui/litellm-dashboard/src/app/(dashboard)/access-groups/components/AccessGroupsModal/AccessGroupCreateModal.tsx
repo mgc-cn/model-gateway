@@ -6,6 +6,7 @@ import {
   useCreateAccessGroup,
   AccessGroupCreateParams,
 } from "@/app/(dashboard)/hooks/accessGroups/useCreateAccessGroup";
+import { useTranslation } from "react-i18next";
 
 interface AccessGroupCreateModalProps {
   visible: boolean;
@@ -14,6 +15,7 @@ interface AccessGroupCreateModalProps {
 }
 
 export function AccessGroupCreateModal({ visible, onCancel, onSuccess }: AccessGroupCreateModalProps) {
+  const { t } = useTranslation();
   const [form] = Form.useForm<AccessGroupFormValues>();
   const createMutation = useCreateAccessGroup();
 
@@ -31,7 +33,7 @@ export function AccessGroupCreateModal({ visible, onCancel, onSuccess }: AccessG
 
         createMutation.mutate(params, {
           onSuccess: () => {
-            MessageManager.success("Access group created successfully");
+            MessageManager.success(t("accessGroupManagement.notifications.created"));
             form.resetFields();
             onSuccess?.();
             onCancel();
@@ -43,15 +45,15 @@ export function AccessGroupCreateModal({ visible, onCancel, onSuccess }: AccessG
 
   return (
     <Modal
-      title="Create Access Group"
+      title={t("accessGroupManagement.create")}
       open={visible}
       onOk={handleOk}
       onCancel={onCancel}
       width={700}
-      okText="Create Group"
-      cancelText="Cancel"
+      okText={t("accessGroupManagement.actions.create")}
+      cancelText={t("common.cancel")}
       confirmLoading={createMutation.isPending}
-      destroyOnClose
+      destroyOnHidden
     >
       <AccessGroupBaseForm form={form} />
     </Modal>

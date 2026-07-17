@@ -18,6 +18,7 @@ import {
   selectionsFromUpstreamCard,
   skillId,
 } from "./agent_discovery_utils";
+import { useTranslation } from "react-i18next";
 
 const { Text, Paragraph } = Typography;
 const { Panel } = Collapse;
@@ -61,6 +62,7 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
   discoveryRequest,
   savedAgentCard,
 }) => {
+  const { t } = useTranslation();
   // When the parent drives discovery, ``manualUrl`` is unused — the URL
   // comes from ``discoveryRequest.url`` directly. When the parent hasn't
   // supplied a plan, the admin types into this field manually.
@@ -115,14 +117,16 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
 
   const handleDiscover = useCallback(async () => {
     if (!accessToken) {
-      setError("No access token available");
+      setError(t("agentManagement.discovery.errors.noAccessToken"));
       onApplyRef.current(null);
       return;
     }
     const trimmed = effectiveUrl.trim();
     if (!trimmed) {
       setError(
-        isParentDriven ? "Fill in the agent's connection details above first" : "Enter the agent's base URL first",
+        isParentDriven
+          ? t("agentManagement.discovery.errors.parentMissing")
+          : t("agentManagement.discovery.errors.manualMissing"),
       );
       setCard(null);
       onApplyRef.current(null);
@@ -150,7 +154,7 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
       resetSelections(response.agent_card);
     } catch (e: any) {
       if (requestId !== discoverRequestIdRef.current) return;
-      setError(e?.message ? String(e.message) : "Failed to discover agent card");
+      setError(e?.message ? String(e.message) : t("agentManagement.discovery.errors.failed"));
       setCard(null);
       lastSyncedSelectionRef.current = null;
       onApplyRef.current(null);
@@ -239,19 +243,19 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
     <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-4">
       <div className="flex items-center gap-2 mb-2">
         <LinkOutlined className="text-indigo-600" />
-        <Text strong>Discover from agent URL</Text>
-        <Tooltip title="LiteLLM will fetch /.well-known/agent-card.json from this URL and let you pick which skills and capabilities to expose through the proxy.">
+        <Text strong>{t("agentManagement.discovery.title")}</Text>
+        <Tooltip title={t("agentManagement.discovery.tooltip")}>
           <InfoCircleOutlined className="text-gray-400" />
         </Tooltip>
       </div>
       {isParentDriven ? (
         <>
           <Paragraph className="text-xs text-gray-500 mb-2">
-            Using the connection details you entered above. We&apos;ll fetch:
+            {t("agentManagement.discovery.parentDescription")}
           </Paragraph>
           <div className="bg-white border border-gray-200 rounded-sm px-3 py-2 mb-3 font-mono text-xs text-gray-700 break-all">
             {discoveryRequest!.display_url || effectiveUrl || (
-              <span className="text-gray-400 italic">Fill in the fields above first</span>
+              <span className="text-gray-400 italic">{t("agentManagement.discovery.fillFieldsFirst")}</span>
             )}
           </div>
           <div className="flex justify-end">
@@ -262,20 +266,19 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
               onClick={handleDiscover}
               disabled={!effectiveUrl.trim()}
             >
-              {card ? "Re-discover" : "Discover"}
+              {card ? t("agentManagement.discovery.rediscover") : t("agentManagement.discovery.discover")}
             </Button>
           </div>
         </>
       ) : (
         <>
           <Paragraph className="text-xs text-gray-500 mb-3">
-            Paste the upstream agent&apos;s base URL. We&apos;ll try <code>/.well-known/agent-card.json</code>,{" "}
-            <code>/.well-known/agent.json</code>, and <code>/agent.json</code> in order.
+            {t("agentManagement.discovery.manualDescription")}
           </Paragraph>
 
           <Space.Compact style={{ width: "100%" }}>
             <Input
-              placeholder="https://upstream-agent.example.com"
+              placeholder={t("agentManagement.discovery.urlPlaceholder")}
               value={manualUrl}
               onChange={(e) => setManualUrl(e.target.value)}
               onPressEnter={handleDiscover}
@@ -288,7 +291,7 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
               loading={loading}
               onClick={handleDiscover}
             >
-              {card ? "Re-discover" : "Discover"}
+              {card ? t("agentManagement.discovery.rediscover") : t("agentManagement.discovery.discover")}
             </Button>
           </Space.Compact>
         </>
@@ -298,7 +301,7 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
         <Alert
           className="mt-3"
           type="error"
-          message="Discovery failed"
+          message={t("agentManagement.discovery.failed")}
           description={error}
           showIcon
           closable
@@ -317,7 +320,7 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
           <div className="flex items-center justify-between mb-3">
             <Space>
               <CheckCircleTwoTone twoToneColor="#52c41a" />
-              <Text strong>Upstream card loaded</Text>
+              <Text strong>{t("agentManagement.discovery.loaded")}</Text>
               {card.version && <Tag color="blue">v{card.version}</Tag>}
               {card.provider?.organization && <Tag color="purple">{card.provider.organization}</Tag>}
             </Space>
@@ -325,16 +328,24 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">Name (shown to API clients)</label>
-              <Input value={editedName} onChange={(e) => setEditedName(e.target.value)} placeholder="Agent name" />
+              <label className="text-xs font-medium text-gray-600 block mb-1">
+                {t("agentManagement.discovery.nameLabel")}
+              </label>
+              <Input
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                placeholder={t("agentManagement.discovery.namePlaceholder")}
+              />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">Description</label>
+              <label className="text-xs font-medium text-gray-600 block mb-1">
+                {t("agentManagement.discovery.descriptionLabel")}
+              </label>
               <Input.TextArea
                 value={editedDescription}
                 onChange={(e) => setEditedDescription(e.target.value)}
                 rows={2}
-                placeholder="What this agent does"
+                placeholder={t("agentManagement.discovery.descriptionPlaceholder")}
               />
             </div>
           </div>
@@ -344,15 +355,15 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
               key="skills"
               header={
                 <Space>
-                  <Text strong>Skills</Text>
+                  <Text strong>{t("agentManagement.discovery.skills")}</Text>
                   <Tag>
-                    {selectedSkillCount} / {skillCount} selected
+                    {t("agentManagement.discovery.selectedCount", { selected: selectedSkillCount, total: skillCount })}
                   </Tag>
                 </Space>
               }
             >
               {skillCount === 0 ? (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Upstream card has no skills" />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("agentManagement.discovery.noSkills")} />
               ) : (
                 <div className="space-y-2">
                   {(card.skills ?? []).map((skill, idx) => {
@@ -379,7 +390,7 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
                           {skill.description && (
                             <Paragraph
                               className="text-xs text-gray-500 mt-1 mb-0"
-                              ellipsis={{ rows: 2, expandable: true, symbol: "more" }}
+                              ellipsis={{ rows: 2, expandable: true, symbol: t("agentManagement.discovery.more") }}
                             >
                               {skill.description}
                             </Paragraph>
@@ -396,8 +407,8 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
               key="capabilities"
               header={
                 <Space>
-                  <Text strong>Capabilities</Text>
-                  <Tooltip title="Only capabilities LiteLLM can faithfully proxy today are listed. Others (push notifications, extensions) are coming soon.">
+                  <Text strong>{t("agentManagement.discovery.capabilities")}</Text>
+                  <Tooltip title={t("agentManagement.discovery.capabilitiesTooltip")}>
                     <InfoCircleOutlined className="text-gray-400" />
                   </Tooltip>
                 </Space>
@@ -417,7 +428,7 @@ const AgentCardDiscovery: React.FC<AgentCardDiscoveryProps> = ({
                         </Text>
                         {!upstreamHas && (
                           <Tag className="ml-2" color="default">
-                            not advertised upstream
+                            {t("agentManagement.discovery.notAdvertised")}
                           </Tag>
                         )}
                       </div>

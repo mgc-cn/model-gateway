@@ -2,6 +2,7 @@ import { Tag } from "antd";
 import { ColumnsType } from "antd/es/table";
 import TableIconActionButton from "@/components/common_components/IconActionButton/TableIconActionButtons/TableIconActionButton";
 import { SearchTool } from "./types";
+import i18n from "@/i18n/i18n";
 
 export const searchToolColumns = (
   onView: (searchToolId: string) => void,
@@ -10,7 +11,7 @@ export const searchToolColumns = (
   availableProviders: Array<{ provider_name: string; ui_friendly_name: string }>,
 ): ColumnsType<SearchTool> => [
   {
-    title: "Search Tool ID",
+    title: i18n.t("toolManagement.search.toolId"),
     dataIndex: "search_tool_id",
     key: "search_tool_id",
     render: (_, tool) => {
@@ -31,13 +32,13 @@ export const searchToolColumns = (
     },
   },
   {
-    title: "Name",
+    title: i18n.t("toolManagement.common.name"),
     dataIndex: "search_tool_name",
     key: "search_tool_name",
     render: (name: string) => <span className="font-medium">{name}</span>,
   },
   {
-    title: "Provider",
+    title: i18n.t("toolManagement.common.provider"),
     key: "provider",
     render: (_, tool) => {
       const provider = tool.litellm_params.search_provider;
@@ -48,32 +49,44 @@ export const searchToolColumns = (
     },
   },
   {
-    title: "Created At",
+    title: i18n.t("toolManagement.common.createdAt"),
     dataIndex: "created_at",
     key: "created_at",
     render: (_, tool) => {
-      return <span className="text-xs">{tool.created_at ? new Date(tool.created_at).toLocaleDateString() : "-"}</span>;
+      return (
+        <span className="text-xs">
+          {tool.created_at ? new Date(tool.created_at).toLocaleDateString(i18n.language) : "-"}
+        </span>
+      );
     },
   },
   {
-    title: "Updated At",
+    title: i18n.t("toolManagement.common.updatedAt"),
     dataIndex: "updated_at",
     key: "updated_at",
     render: (_, tool) => {
-      return <span className="text-xs">{tool.updated_at ? new Date(tool.updated_at).toLocaleDateString() : "-"}</span>;
+      return (
+        <span className="text-xs">
+          {tool.updated_at ? new Date(tool.updated_at).toLocaleDateString(i18n.language) : "-"}
+        </span>
+      );
     },
   },
   {
-    title: "Source",
+    title: i18n.t("toolManagement.search.source"),
     key: "source",
     render: (_, tool) => {
       const isFromConfig = tool.is_from_config ?? false;
 
-      return <Tag color={isFromConfig ? "default" : "blue"}>{isFromConfig ? "Config" : "DB"}</Tag>;
+      return (
+        <Tag color={isFromConfig ? "default" : "blue"}>
+          {isFromConfig ? i18n.t("toolManagement.search.config") : i18n.t("toolManagement.search.database")}
+        </Tag>
+      );
     },
   },
   {
-    title: "Actions",
+    title: i18n.t("toolManagement.common.actions"),
     key: "actions",
     render: (_, tool) => {
       const toolId = tool.search_tool_id;
@@ -83,9 +96,9 @@ export const searchToolColumns = (
         <div className="flex items-center gap-2">
           <TableIconActionButton
             variant="Edit"
-            tooltipText="Edit search tool"
+            tooltipText={i18n.t("toolManagement.search.editAction")}
             disabled={isFromConfig}
-            disabledTooltipText="Config search tool cannot be edited on the dashboard. Please edit it from the config file."
+            disabledTooltipText={i18n.t("toolManagement.search.configEditHelp")}
             onClick={() => {
               if (toolId && !isFromConfig) {
                 onEdit(toolId);
@@ -94,9 +107,9 @@ export const searchToolColumns = (
           />
           <TableIconActionButton
             variant="Delete"
-            tooltipText="Delete search tool"
+            tooltipText={i18n.t("toolManagement.search.deleteAction")}
             disabled={isFromConfig}
-            disabledTooltipText="Config search tool cannot be deleted on the dashboard. Please delete it from the config file."
+            disabledTooltipText={i18n.t("toolManagement.search.configDeleteHelp")}
             onClick={() => {
               if (toolId && !isFromConfig) {
                 onDelete(toolId);

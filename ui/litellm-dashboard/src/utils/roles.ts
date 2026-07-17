@@ -1,4 +1,15 @@
 import { Member, Team } from "@/components/networking";
+import type { TFunction } from "i18next";
+
+type PossibleUIRoles = Record<string, Record<string, string>> | null | undefined;
+
+export const getLocalizedUserRole = (role: string, possibleUIRoles: PossibleUIRoles, t: TFunction) => {
+  const roleConfig = possibleUIRoles?.[role];
+  return {
+    label: t(`userManagement.roles.${role}.label`, { defaultValue: roleConfig?.ui_label || role }),
+    description: t(`userManagement.roles.${role}.description`, { defaultValue: roleConfig?.description || "" }),
+  };
+};
 
 // Define admin roles and permissions
 export const old_admin_roles = ["Admin", "Admin Viewer"];

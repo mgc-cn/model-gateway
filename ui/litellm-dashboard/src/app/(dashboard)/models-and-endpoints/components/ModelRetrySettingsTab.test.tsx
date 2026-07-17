@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ModelRetrySettingsTab from "./ModelRetrySettingsTab";
+import i18n from "@/i18n/i18n";
 
 // TabPanel requires a parent Tabs context in Tremor. We stub it to render children
 // directly so the component can be tested in isolation.
@@ -42,6 +43,14 @@ const buildProps = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe("ModelRetrySettingsTab", () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should render the 'Global Retry Policy' heading when selectedModelGroup is 'global'", () => {
     render(<ModelRetrySettingsTab {...buildProps()} />);
 
@@ -254,5 +263,27 @@ describe("ModelRetrySettingsTab", () => {
     // Calling the updater returns the merged model-group policy
     const result = updater({ "gpt-4": { BadRequestErrorRetries: 0 } });
     expect(result["gpt-4"]).toMatchObject({ BadRequestErrorRetries: 2 });
+  });
+
+  it("localizes global and model-specific retry settings in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+    const { rerender } = render(<ModelRetrySettingsTab {...buildProps()} />);
+
+    expect(screen.getByText("重试策略范围：")).toBeInTheDocument();
+    expect(screen.getByText("全局重试策略")).toBeInTheDocument();
+    expect(screen.getByText("应用于全部模型组的默认重试设置，模型组可单独覆盖")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "保存" })).toBeInTheDocument();
+
+    rerender(
+      <ModelRetrySettingsTab
+        {...buildProps({
+          selectedModelGroup: "gpt-4",
+          globalRetryPolicy: { BadRequestErrorRetries: 2 },
+        })}
+      />,
+    );
+
+    expect(screen.getByText("gpt-4 的重试策略")).toBeInTheDocument();
+    expect(screen.getByText("(全局：2)")).toBeInTheDocument();
   });
 });

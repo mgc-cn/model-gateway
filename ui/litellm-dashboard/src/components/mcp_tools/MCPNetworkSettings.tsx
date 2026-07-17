@@ -7,6 +7,7 @@ import {
   deleteConfigFieldSetting,
   fetchMCPClientIp,
 } from "../networking";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -24,6 +25,7 @@ function ipToSlash24(ip: string): string {
 }
 
 const MCPNetworkSettings: React.FC<MCPNetworkSettingsProps> = ({ accessToken }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [privateRanges, setPrivateRanges] = useState<string[]>([]);
@@ -94,22 +96,19 @@ const MCPNetworkSettings: React.FC<MCPNetworkSettingsProps> = ({ accessToken }) 
   return (
     <div className="space-y-6 p-4">
       <div>
-        <Text className="text-lg font-semibold">Private IP Ranges</Text>
-        <p className="text-sm text-gray-500 mt-1">
-          Define which IP ranges are part of your private network. Callers from these IPs can see all MCP servers.
-          Callers from any other IP can only see servers marked &quot;Available on Public Internet&quot;.
-        </p>
+        <Text className="text-lg font-semibold">{t("mcpManagement.network.title")}</Text>
+        <p className="text-sm text-gray-500 mt-1">{t("mcpManagement.network.description")}</p>
       </div>
 
       <Card>
         {currentIp && (
           <div className="mb-4 p-3 bg-blue-50 rounded-lg">
             <Text className="text-sm text-blue-700">
-              Your current IP: <span className="font-mono font-medium">{currentIp}</span>
+              {t("mcpManagement.network.currentIp")} <span className="font-mono font-medium">{currentIp}</span>
             </Text>
             {suggestedRange && !privateRanges.includes(suggestedRange) && (
               <div className="mt-1">
-                <Text className="text-sm text-blue-600">Suggested range: </Text>
+                <Text className="text-sm text-blue-600">{t("mcpManagement.network.suggested")} </Text>
                 <Tag
                   className="cursor-pointer font-mono"
                   color="blue"
@@ -124,26 +123,24 @@ const MCPNetworkSettings: React.FC<MCPNetworkSettingsProps> = ({ accessToken }) 
         )}
 
         <div className="flex items-center mb-2">
-          <Text className="font-medium">Your Private Network Ranges</Text>
+          <Text className="font-medium">{t("mcpManagement.network.ranges")}</Text>
         </div>
         <Select
           mode="tags"
           value={privateRanges}
           onChange={setPrivateRanges}
-          placeholder="Leave empty to use defaults: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8"
+          placeholder={t("mcpManagement.network.placeholder")}
           tokenSeparators={[","]}
           className="w-full"
           size="large"
           allowClear
         />
-        <p className="text-xs text-gray-400 mt-2">
-          Enter CIDR ranges (e.g., 10.0.0.0/8). When empty, standard private IP ranges are used.
-        </p>
+        <p className="text-xs text-gray-400 mt-2">{t("mcpManagement.network.help")}</p>
       </Card>
 
       <div className="flex justify-end">
         <Button type="primary" icon={<SaveOutlined />} onClick={handleSave} loading={saving}>
-          Save
+          {t("mcpManagement.actions.save")}
         </Button>
       </div>
     </div>

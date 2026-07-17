@@ -25,6 +25,8 @@ import {
   modelOptionsToSelectorOptions,
   agentOptionsToSelectorOptions,
 } from "./endpoint_config";
+import i18n from "@/i18n/i18n";
+import { useTranslation } from "react-i18next";
 export interface ComparisonInstance {
   id: string;
   model: string;
@@ -45,14 +47,19 @@ interface CompareUIProps {
   accessToken: string | null;
   disabledPersonalKeyCreation: boolean;
 }
-const GENERIC_FOLLOW_UPS = [
-  "Can you summarize the key points?",
-  "What assumptions did you make?",
-  "What are the next steps?",
+const genericFollowUps = () => [
+  i18n.t("playground.compare.followUps.summary"),
+  i18n.t("playground.compare.followUps.assumptions"),
+  i18n.t("playground.compare.followUps.nextSteps"),
 ];
-const SUGGESTED_PROMPTS = ["Write me a poem", "Explain quantum computing", "Draft a polite email requesting a meeting"];
+const suggestedPrompts = () => [
+  i18n.t("playground.compare.suggestions.poem"),
+  i18n.t("playground.compare.suggestions.quantum"),
+  i18n.t("playground.compare.suggestions.email"),
+];
 const DEFAULT_ENDPOINT = EndpointId.CHAT_COMPLETIONS;
 export default function CompareUI({ accessToken, disabledPersonalKeyCreation }: CompareUIProps) {
+  useTranslation();
   const [comparisons, setComparisons] = useState<ComparisonInstance[]>([
     {
       id: "1",
@@ -693,7 +700,7 @@ export default function CompareUI({ accessToken, disabledPersonalKeyCreation }: 
         <div className="border-b px-4 py-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-600">Virtual Key Source</span>
+              <span className="text-sm font-medium text-gray-600">{i18n.t("playground.compare.keySource")}</span>
               <Select
                 value={apiKeySource}
                 onChange={(value) => setApiKeySource(value as "session" | "custom")}
@@ -701,21 +708,21 @@ export default function CompareUI({ accessToken, disabledPersonalKeyCreation }: 
                 className="w-48"
               >
                 <Select.Option value="session" disabled={!canUseSessionKey}>
-                  Current UI Session
+                  {i18n.t("playground.compare.currentSession")}
                 </Select.Option>
-                <Select.Option value="custom">Virtual Key</Select.Option>
+                <Select.Option value="custom">{i18n.t("playground.compare.virtualKey")}</Select.Option>
               </Select>
               {apiKeySource === "custom" && (
                 <Input.Password
                   value={customApiKey}
                   onChange={(event) => setCustomApiKey(event.target.value)}
-                  placeholder="Enter Virtual Key"
+                  placeholder={i18n.t("playground.compare.virtualKeyPlaceholder")}
                   className="w-56"
                 />
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-600">Endpoint</span>
+              <span className="text-sm font-medium text-gray-600">{i18n.t("playground.compare.endpoint")}</span>
               <Select
                 value={selectedEndpoint}
                 onChange={(value) => setSelectedEndpoint(value as EndpointIdType)}
@@ -730,15 +737,17 @@ export default function CompareUI({ accessToken, disabledPersonalKeyCreation }: 
             </div>
             <div className="flex items-center gap-3">
               <Button onClick={clearAllChats} disabled={!hasMessages} icon={<ClearOutlined />}>
-                Clear All Chats
+                {i18n.t("playground.compare.clearAll")}
               </Button>
               <Tooltip
                 title={
-                  comparisons.length >= maxComparisons ? "Compare up to 3 models at a time" : "Add another comparison"
+                  comparisons.length >= maxComparisons
+                    ? i18n.t("playground.compare.maxComparisons")
+                    : i18n.t("playground.compare.addTooltip")
                 }
               >
                 <Button onClick={addComparison} disabled={comparisons.length >= maxComparisons} icon={<PlusOutlined />}>
-                  Add Comparison
+                  {i18n.t("playground.compare.add")}
                 </Button>
               </Tooltip>
             </div>
@@ -770,10 +779,10 @@ export default function CompareUI({ accessToken, disabledPersonalKeyCreation }: 
             <div className="border border-gray-200 shadow-lg rounded-xl bg-white p-4">
               <div className="flex items-center justify-between gap-4 mb-3 min-h-8">
                 {hasAttachment ? (
-                  <span className="text-sm text-gray-500">Attachment ready to send</span>
+                  <span className="text-sm text-gray-500">{i18n.t("playground.compare.attachmentReady")}</span>
                 ) : showSuggestedPrompts ? (
                   <div className="flex items-center gap-2 overflow-x-auto">
-                    {SUGGESTED_PROMPTS.map((prompt) => (
+                    {suggestedPrompts().map((prompt) => (
                       <button
                         key={prompt}
                         type="button"
@@ -786,7 +795,7 @@ export default function CompareUI({ accessToken, disabledPersonalKeyCreation }: 
                   </div>
                 ) : haveAllResponses && !hasAttachment ? (
                   <div className="flex items-center gap-2 overflow-x-auto">
-                    {GENERIC_FOLLOW_UPS.map((question) => (
+                    {genericFollowUps().map((question) => (
                       <button
                         key={question}
                         type="button"
@@ -817,7 +826,7 @@ export default function CompareUI({ accessToken, disabledPersonalKeyCreation }: 
                       ) : (
                         <img
                           src={uploadedFilePreviewUrl || ""}
-                          alt="Upload preview"
+                          alt={i18n.t("playground.media.uploadPreview")}
                           className="w-10 h-10 rounded-md border border-gray-200 object-cover"
                         />
                       )}

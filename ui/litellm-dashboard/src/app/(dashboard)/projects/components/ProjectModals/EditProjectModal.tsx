@@ -6,6 +6,8 @@ import { ProjectResponse } from "@/app/(dashboard)/hooks/projects/useProjects";
 import { useUpdateProject, ProjectUpdateParams } from "@/app/(dashboard)/hooks/projects/useUpdateProject";
 import { ProjectBaseForm, ProjectFormValues } from "./ProjectBaseForm";
 import { buildProjectApiParams } from "./projectFormUtils";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n/i18n";
 
 interface EditProjectModalProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface EditProjectModalProps {
 }
 
 export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditProjectModalProps) {
+  const { t } = useTranslation();
   const [form] = Form.useForm<ProjectFormValues>();
   const updateMutation = useUpdateProject();
 
@@ -72,12 +75,12 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
         { projectId: project.project_id, params },
         {
           onSuccess: () => {
-            MessageManager.success("Project updated successfully");
+            MessageManager.success(i18n.t("projectManagement.notifications.updated"));
             onSuccess?.();
             onClose();
           },
           onError: (error) => {
-            MessageManager.error(error.message || "Failed to update project");
+            MessageManager.error(error.message || i18n.t("projectManagement.notifications.updateFailed"));
           },
         },
       );
@@ -90,7 +93,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
     <Modal
       title={
         <Typography.Text strong style={{ fontSize: 18 }}>
-          Edit Project
+          {t("projectManagement.edit")}
         </Typography.Text>
       }
       open={isOpen}
@@ -99,7 +102,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
       destroyOnHidden
       footer={[
         <Button key="cancel" onClick={onClose}>
-          Cancel
+          {t("common.cancel")}
         </Button>,
         <Button
           key="submit"
@@ -108,7 +111,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
           loading={updateMutation.isPending}
           onClick={handleSubmit}
         >
-          Save Changes
+          {t("projectManagement.form.saveChanges")}
         </Button>,
       ]}
     >

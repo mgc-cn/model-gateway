@@ -7,6 +7,7 @@ import { uiSpendLogsCall } from "@/components/networking";
 import { LogDetailsDrawer } from "@/components/view_logs/LogDetailsDrawer";
 import type { LogEntry as ViewLogsLogEntry } from "@/components/view_logs/columns";
 import type { LogEntry } from "./mockData";
+import { useTranslation } from "react-i18next";
 
 const actionConfig: Record<
   "blocked" | "passed" | "flagged",
@@ -56,6 +57,7 @@ export function LogViewer({
   startDate = "",
   endDate = "",
 }: LogViewerProps) {
+  const { t, i18n } = useTranslation();
   const [sampleSize, setSampleSize] = useState(10);
   const [activeFilter, setActiveFilter] = useState<string>(filterAction);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
@@ -109,14 +111,19 @@ export function LogViewer({
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h3 className="text-base font-semibold text-gray-900">
-              {guardrailName ? `Logs — ${guardrailName}` : "Request Logs"}
+              {guardrailName
+                ? t("observability.guardrailsMonitor.logViewer.title", { name: guardrailName })
+                : t("observability.guardrailsMonitor.logViewer.requestLogs")}
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
               {logsLoading
-                ? "Loading…"
+                ? t("observability.guardrailsMonitor.logViewer.loading")
                 : logs.length > 0
-                  ? `Showing ${displayLogs.length} of ${total} entries`
-                  : "No logs for this period. Select a guardrail and date range."}
+                  ? t("observability.guardrailsMonitor.logViewer.showing", {
+                      shown: displayLogs.length,
+                      total,
+                    })
+                  : t("observability.guardrailsMonitor.logViewer.noPeriodLogs")}
             </p>
           </div>
           {logs.length > 0 && (
@@ -129,13 +136,15 @@ export function LogViewer({
                     size="small"
                     onClick={() => setActiveFilter(f)}
                   >
-                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                    {t(`observability.guardrailsMonitor.logViewer.${f}`)}
                   </Button>
                 ))}
               </div>
               <div className="h-4 w-px bg-gray-200" />
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-500 mr-1">Sample:</span>
+                <span className="text-xs text-gray-500 mr-1">
+                  {t("observability.guardrailsMonitor.logViewer.sample")}
+                </span>
                 {sampleSizes.map((size) => (
                   <Button
                     key={size}
@@ -158,7 +167,9 @@ export function LogViewer({
         </div>
       )}
       {!logsLoading && displayLogs.length === 0 && (
-        <div className="py-12 text-center text-sm text-gray-500">No logs to display. Adjust filters or date range.</div>
+        <div className="py-12 text-center text-sm text-gray-500">
+          {t("observability.guardrailsMonitor.logViewer.empty")}
+        </div>
       )}
       {!logsLoading && displayLogs.length > 0 && (
         <div className="divide-y divide-gray-100">
@@ -178,9 +189,11 @@ export function LogViewer({
                     <span
                       className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-sm border ${config.bg} ${config.color} ${config.border}`}
                     >
-                      {config.label}
+                      {t(`observability.guardrailsMonitor.logViewer.${log.action}`)}
                     </span>
-                    <span className="text-xs text-gray-400">{log.timestamp}</span>
+                    <span className="text-xs text-gray-400">
+                      {new Date(log.timestamp).toLocaleString(i18n.language)}
+                    </span>
                     <span className="text-xs text-gray-400">·</span>
                     {log.model && <span className="text-xs text-gray-500">{log.model}</span>}
                   </div>

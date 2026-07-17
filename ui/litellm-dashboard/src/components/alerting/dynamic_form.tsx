@@ -2,6 +2,7 @@ import React from "react";
 import { Form, Input, InputNumber, Button as Button2 } from "antd";
 import { TrashIcon, CheckCircleIcon } from "@heroicons/react/outline";
 import { Button, Badge, Icon, Text, TableRow, TableCell, Switch } from "@tremor/react";
+import { useTranslation } from "react-i18next";
 interface AlertingSetting {
   field_name: string;
   field_description: string;
@@ -26,6 +27,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   handleSubmit,
   premiumUser,
 }) => {
+  const { t, i18n } = useTranslation();
+  const isChinese = (i18n.resolvedLanguage || i18n.language).startsWith("zh");
   const [form] = Form.useForm();
 
   const onFinish = () => {
@@ -47,7 +50,14 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       {alertingSettings.map((value, index) => (
         <TableRow key={index}>
           <TableCell align="center">
-            <Text>{value.field_name}</Text>
+            <Text>
+              {isChinese
+                ? t(`loggingAndAlerts.alertSettings.fields.${value.field_name}.label`, {
+                    defaultValue: value.field_name,
+                  })
+                : value.field_name}
+            </Text>
+            {isChinese && <code className="mt-1 block text-xs text-gray-500">{value.field_name}</code>}
             <p
               style={{
                 fontSize: "0.65rem",
@@ -56,7 +66,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               }}
               className="mt-1"
             >
-              {value.field_description}
+              {isChinese
+                ? t(`loggingAndAlerts.alertSettings.fields.${value.field_name}.description`, {
+                    defaultValue: value.field_description,
+                  })
+                : value.field_description}
             </p>
           </TableCell>
           {value.premium_field ? (
@@ -83,7 +97,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               <TableCell>
                 <Button className="flex items-center justify-center">
                   <a href="https://forms.gle/W3U4PZpJGFHWtHyA9" target="_blank">
-                    ✨ Enterprise Feature
+                    ✨ {t("loggingAndAlerts.alertSettings.enterpriseFeature")}
                   </a>
                 </Button>
               </TableCell>
@@ -119,23 +133,27 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           <TableCell>
             {value.stored_in_db == true ? (
               <Badge icon={CheckCircleIcon} className="text-white">
-                In DB
+                {t("loggingAndAlerts.alertSettings.status.inDatabase")}
               </Badge>
             ) : value.stored_in_db == false ? (
-              <Badge className="text-gray bg-white outline-solid">In Config</Badge>
+              <Badge className="text-gray bg-white outline-solid">
+                {t("loggingAndAlerts.alertSettings.status.inConfig")}
+              </Badge>
             ) : (
-              <Badge className="text-gray bg-white outline-solid">Not Set</Badge>
+              <Badge className="text-gray bg-white outline-solid">
+                {t("loggingAndAlerts.alertSettings.status.notSet")}
+              </Badge>
             )}
           </TableCell>
           <TableCell>
             <Icon icon={TrashIcon} color="red" onClick={() => handleResetField(value.field_name, index)}>
-              Reset
+              {t("loggingAndAlerts.alertSettings.reset")}
             </Icon>
           </TableCell>
         </TableRow>
       ))}
       <div>
-        <Button2 htmlType="submit">Update Settings</Button2>
+        <Button2 htmlType="submit">{t("loggingAndAlerts.alertSettings.update")}</Button2>
       </div>
     </Form>
   );

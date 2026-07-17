@@ -17,6 +17,7 @@ import {
 import { resolveLogoSrc } from "@/lib/assetPaths";
 import NotificationsManager from "../molecules/notifications_manager";
 import S3VectorsConfig from "./S3VectorsConfig";
+import { useTranslation } from "react-i18next";
 
 const { Dragger } = Upload;
 
@@ -26,6 +27,7 @@ interface CreateVectorStoreProps {
 }
 
 const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSuccess }) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [documents, setDocuments] = useState<DocumentUpload[]>([]);
   const [isCreating, setIsCreating] = useState(false);
@@ -49,13 +51,13 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
       ].includes(file.type);
 
       if (!isValidType) {
-        MessageManager.error(`${file.name} is not a supported file type. Please upload PDF, TXT, DOCX, or MD files.`);
+        MessageManager.error(t("toolManagement.vectors.unsupportedFile", { name: file.name }));
         return Upload.LIST_IGNORE;
       }
 
       const isLt50M = file.size / 1024 / 1024 < 50;
       if (!isLt50M) {
-        MessageManager.error(`${file.name} must be smaller than 50MB!`);
+        MessageManager.error(t("toolManagement.vectors.fileTooLarge", { name: file.name }));
         return Upload.LIST_IGNORE;
       }
 
@@ -89,12 +91,12 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
 
   const handleCreateVectorStore = async () => {
     if (documents.length === 0) {
-      MessageManager.warning("Please upload at least one document");
+      MessageManager.warning(t("toolManagement.vectors.noDocuments"));
       return;
     }
 
     if (!selectedProvider) {
-      MessageManager.warning("Please select a provider");
+      MessageManager.warning(t("toolManagement.vectors.providerRequired"));
       return;
     }
 
@@ -102,7 +104,7 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
     const requiredFields = getProviderSpecificFields(selectedProvider).filter((field) => field.required);
     for (const field of requiredFields) {
       if (!providerParams[field.name]) {
-        MessageManager.warning(`Please provide ${field.label}`);
+        MessageManager.warning(t("toolManagement.vectors.fieldRequired", { field: field.label }));
         return;
       }
     }
@@ -110,17 +112,17 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
     // S3 Vectors specific validation
     if (selectedProvider === "s3_vectors") {
       if (providerParams.vector_bucket_name && providerParams.vector_bucket_name.length < 3) {
-        MessageManager.warning("Vector bucket name must be at least 3 characters");
+        MessageManager.warning(t("toolManagement.vectors.bucketNameLength"));
         return;
       }
       if (providerParams.index_name && providerParams.index_name.length > 0 && providerParams.index_name.length < 3) {
-        MessageManager.warning("Index name must be at least 3 characters if provided");
+        MessageManager.warning(t("toolManagement.vectors.indexNameLength"));
         return;
       }
     }
 
     if (!accessToken) {
-      MessageManager.error("No access token available");
+      MessageManager.error(t("toolManagement.vectors.noAccessToken"));
       return;
     }
 
@@ -166,7 +168,7 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
 
       setIngestResults(results);
       NotificationsManager.success(
-        `Successfully created vector store with ${results.length} document(s). Vector Store ID: ${vectorStoreId}`,
+        t("toolManagement.vectors.createSuccess", { count: results.length, id: vectorStoreId }),
       );
 
       if (onSuccess && vectorStoreId) {
@@ -180,7 +182,7 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
       }, 3000);
     } catch (error) {
       console.error("Error creating vector store:", error);
-      NotificationsManager.fromBackend(`Failed to create vector store: ${error}`);
+      NotificationsManager.fromBackend(t("toolManagement.vectors.createFailed", { error: String(error) }));
     } finally {
       setIsCreating(false);
     }
@@ -189,26 +191,22 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
   return (
     <div className="space-y-6">
       <div>
-        <Title>Create Vector Store</Title>
-        <Text className="text-gray-500">
-          Upload documents and select a provider to create a new vector store with embedded content.
-        </Text>
+        <Title>{t("toolManagement.vectors.createTitle")}</Title>
+        <Text className="text-gray-500">{t("toolManagement.vectors.createDescription")}</Text>
       </div>
 
       {/* Upload Area */}
       <Card>
         <div className="mb-4">
-          <Text className="font-medium">Step 1: Upload Documents</Text>
-          <Text className="text-sm text-gray-500 block mt-1">
-            Upload one or more documents (PDF, TXT, DOCX, MD). Maximum file size: 50MB per file.
-          </Text>
+          <Text className="font-medium">{t("toolManagement.vectors.stepUpload")}</Text>
+          <Text className="text-sm text-gray-500 block mt-1">{t("toolManagement.vectors.uploadDescription")}</Text>
         </div>
         <Dragger {...uploadProps}>
           <p className="ant-upload-drag-icon">
             <InboxOutlined style={{ fontSize: "48px", color: "#1890ff" }} />
           </p>
-          <p className="ant-upload-text">Click or drag files to this area to upload</p>
-          <p className="ant-upload-hint">Support for single or bulk upload. Supported formats: PDF, TXT, DOCX, MD</p>
+          <p className="ant-upload-text">{t("toolManagement.vectors.upload")}</p>
+          <p className="ant-upload-hint">{t("toolManagement.vectors.uploadHelp")}</p>
         </Dragger>
       </Card>
 
@@ -216,7 +214,9 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
       {documents.length > 0 && (
         <Card>
           <div className="mb-4">
-            <Text className="font-medium">Uploaded Documents ({documents.length})</Text>
+            <Text className="font-medium">
+              {t("toolManagement.vectors.uploadedDocuments", { count: documents.length })}
+            </Text>
           </div>
           <DocumentsTable documents={documents} onRemove={handleRemoveDocument} />
         </Card>
@@ -226,18 +226,16 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
       <Card>
         <div className="space-y-4">
           <div>
-            <Text className="font-medium">Step 2: Configure Vector Store</Text>
-            <Text className="text-sm text-gray-500 block mt-1">
-              Choose the provider and optionally provide a name and description for your vector store.
-            </Text>
+            <Text className="font-medium">{t("toolManagement.vectors.stepConfigure")}</Text>
+            <Text className="text-sm text-gray-500 block mt-1">{t("toolManagement.vectors.configureDescription")}</Text>
           </div>
 
           <Form form={form} layout="vertical">
             <Form.Item
               label={
                 <span>
-                  Vector Store Name{" "}
-                  <Tooltip title="Optional: Give your vector store a meaningful name">
+                  {t("toolManagement.vectors.name")}{" "}
+                  <Tooltip title={t("toolManagement.vectors.nameHelp")}>
                     <InfoCircleOutlined style={{ marginLeft: "4px" }} />
                   </Tooltip>
                 </span>
@@ -246,7 +244,7 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
               <Input
                 value={vectorStoreName}
                 onChange={(e) => setVectorStoreName(e.target.value)}
-                placeholder="e.g., Product Documentation, Customer Support KB"
+                placeholder={t("toolManagement.vectors.namePlaceholder")}
                 size="large"
                 className="rounded-md"
               />
@@ -255,8 +253,8 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
             <Form.Item
               label={
                 <span>
-                  Description{" "}
-                  <Tooltip title="Optional: Describe what this vector store contains">
+                  {t("toolManagement.common.description")}{" "}
+                  <Tooltip title={t("toolManagement.vectors.descriptionHelp")}>
                     <InfoCircleOutlined style={{ marginLeft: "4px" }} />
                   </Tooltip>
                 </span>
@@ -265,7 +263,7 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
               <Input.TextArea
                 value={vectorStoreDescription}
                 onChange={(e) => setVectorStoreDescription(e.target.value)}
-                placeholder="e.g., Contains all product documentation and user guides"
+                placeholder={t("toolManagement.vectors.descriptionPlaceholder")}
                 rows={2}
                 size="large"
                 className="rounded-md"
@@ -275,8 +273,8 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
             <Form.Item
               label={
                 <span>
-                  Provider{" "}
-                  <Tooltip title="Select the provider for embedding and vector store operations">
+                  {t("toolManagement.common.provider")}{" "}
+                  <Tooltip title={t("toolManagement.vectors.providerHelp")}>
                     <InfoCircleOutlined style={{ marginLeft: "4px" }} />
                   </Tooltip>
                 </span>
@@ -286,7 +284,7 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
               <Select
                 value={selectedProvider}
                 onChange={setSelectedProvider}
-                placeholder="Select a provider"
+                placeholder={t("toolManagement.vectors.providerPlaceholder")}
                 size="large"
                 style={{ width: "100%" }}
               >
@@ -392,7 +390,7 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
               loading={isCreating}
               disabled={documents.length === 0 || !selectedProvider}
             >
-              {isCreating ? "Creating Vector Store..." : "Create Vector Store"}
+              {isCreating ? t("toolManagement.vectors.creating") : t("toolManagement.vectors.create")}
             </Button>
           </div>
         </div>
@@ -401,14 +399,14 @@ const CreateVectorStore: React.FC<CreateVectorStoreProps> = ({ accessToken, onSu
       {/* Success Message */}
       {ingestResults.length > 0 && (
         <Alert
-          message="Vector Store Created Successfully"
+          message={t("toolManagement.vectors.created")}
           description={
             <div>
               <p>
-                <strong>Vector Store ID:</strong> {ingestResults[0]?.vector_store_id}
+                <strong>{t("toolManagement.vectors.vectorId")}:</strong> {ingestResults[0]?.vector_store_id}
               </p>
               <p>
-                <strong>Documents Ingested:</strong> {ingestResults.length}
+                <strong>{t("toolManagement.vectors.documents")}</strong> {ingestResults.length}
               </p>
             </div>
           }

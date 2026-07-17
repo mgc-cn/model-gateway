@@ -9,6 +9,8 @@ import BudgetDurationDropdown, {
 import { getModelDisplayName } from "@/components/key_team_helpers/fetch_available_models_team_key";
 import { formatNumberWithCommas } from "@/utils/dataUtils";
 import NotificationManager from "@/components/molecules/notifications_manager";
+import { useTranslation } from "react-i18next";
+import { getLocalizedUserRole } from "@/utils/roles";
 
 interface DefaultUserSettingsProps {
   accessToken: string | null;
@@ -29,6 +31,7 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
   userID,
   userRole,
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(true);
   const [settings, setSettings] = useState<any>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -64,14 +67,14 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
         }
       } catch (error) {
         console.error("Error fetching SSO settings:", error);
-        NotificationManager.fromBackend("Failed to fetch SSO settings");
+        NotificationManager.fromBackend(t("userManagement.defaultSettings.fetchFailed"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchSSOSettings();
-  }, [accessToken]);
+  }, [accessToken, t, userID, userRole]);
 
   const handleSaveSettings = async () => {
     if (!accessToken) return;
@@ -92,7 +95,7 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating SSO settings:", error);
-      NotificationManager.fromBackend("Failed to update settings: " + error);
+      NotificationManager.fromBackend(t("userManagement.defaultSettings.updateFailed", { error: String(error) }));
     } finally {
       setSaving(false);
     }
@@ -160,29 +163,31 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
         {normalizedTeams.map((team, index) => (
           <div key={index} className="border rounded-lg p-4 bg-gray-50">
             <div className="flex items-center justify-between mb-3">
-              <Text className="font-medium">Team {index + 1}</Text>
+              <Text className="font-medium">
+                {t("userManagement.defaultSettings.teamNumber", { number: index + 1 })}
+              </Text>
               <Button size="small" danger icon={<DeleteOutlined />} onClick={() => removeTeam(index)}>
-                Remove
+                {t("userManagement.defaultSettings.remove")}
               </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <Text className="text-sm font-medium mb-1">Team ID</Text>
+                <Text className="text-sm font-medium mb-1">{t("userManagement.defaultSettings.teamId")}</Text>
                 <TextInput
                   value={team.team_id}
                   onChange={(e) => updateTeam(index, "team_id", e.target.value)}
-                  placeholder="Enter team ID"
+                  placeholder={t("userManagement.defaultSettings.teamIdPlaceholder")}
                 />
               </div>
 
               <div>
-                <Text className="text-sm font-medium mb-1">Max Budget in Team</Text>
+                <Text className="text-sm font-medium mb-1">{t("userManagement.defaultSettings.maxBudgetInTeam")}</Text>
                 <InputNumber
                   style={{ width: "100%" }}
                   value={team.max_budget_in_team}
                   onChange={(value) => updateTeam(index, "max_budget_in_team", value)}
-                  placeholder="Optional"
+                  placeholder={t("userManagement.defaultSettings.optional")}
                   min={0}
                   step={0.01}
                   precision={2}
@@ -190,14 +195,14 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
               </div>
 
               <div>
-                <Text className="text-sm font-medium mb-1">User Role</Text>
+                <Text className="text-sm font-medium mb-1">{t("userManagement.form.userRole")}</Text>
                 <Select
                   style={{ width: "100%" }}
                   value={team.user_role}
                   onChange={(value) => updateTeam(index, "user_role", value)}
                 >
-                  <Option value="user">User</Option>
-                  <Option value="admin">Admin</Option>
+                  <Option value="user">{t("userManagement.team.user")}</Option>
+                  <Option value="admin">{t("userManagement.team.admin")}</Option>
                 </Select>
               </div>
             </div>
@@ -205,7 +210,7 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
         ))}
 
         <Button icon={<PlusOutlined />} onClick={addTeam} className="w-full">
-          Add Team
+          {t("userManagement.team.add")}
         </Button>
       </div>
     );
@@ -226,14 +231,17 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
         >
           {Object.entries(possibleUIRoles)
             .filter(([role]) => role.includes("internal_user"))
-            .map(([role, { ui_label, description }]) => (
-              <Option key={role} value={role}>
-                <div className="flex items-center">
-                  <span>{ui_label}</span>
-                  <span className="ml-2 text-xs text-gray-500">{description}</span>
-                </div>
-              </Option>
-            ))}
+            .map(([role]) => {
+              const localizedRole = getLocalizedUserRole(role, possibleUIRoles, t);
+              return (
+                <Option key={role} value={role}>
+                  <div className="flex items-center">
+                    <span>{localizedRole.label}</span>
+                    <span className="ml-2 text-xs text-gray-500">{localizedRole.description}</span>
+                  </div>
+                </Option>
+              );
+            })}
         </Select>
       );
     } else if (key === "budget_duration") {
@@ -276,10 +284,10 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
           className="mt-2"
         >
           <Option key="no-default-models" value="no-default-models">
-            No Default Models
+            {t("userManagement.form.noDefaultModels")}
           </Option>
           <Option key="all-proxy-models" value="all-proxy-models">
-            All Proxy Models
+            {t("userManagement.form.allProxyModels")}
           </Option>
           {availableModels.map((model: string) => (
             <Option key={model} value={model}>
@@ -316,10 +324,12 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
   };
 
   const renderValue = (key: string, value: any): JSX.Element => {
-    if (value === null || value === undefined) return <span className="text-gray-400">Not set</span>;
+    if (value === null || value === undefined)
+      return <span className="text-gray-400">{t("userManagement.notSet")}</span>;
 
     if (key === "teams" && Array.isArray(value)) {
-      if (value.length === 0) return <span className="text-gray-400">No teams assigned</span>;
+      if (value.length === 0)
+        return <span className="text-gray-400">{t("userManagement.defaultSettings.noTeamsAssigned")}</span>;
 
       const normalizedTeams = normalizeTeams(value);
 
@@ -329,19 +339,19 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
             <div key={index} className="border rounded-lg p-3 bg-white">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                 <div>
-                  <span className="font-medium text-gray-600">Team ID:</span>
-                  <p className="text-gray-900">{team.team_id || "Not specified"}</p>
+                  <span className="font-medium text-gray-600">{t("userManagement.defaultSettings.teamId")}:</span>
+                  <p className="text-gray-900">{team.team_id || t("userManagement.defaultSettings.notSpecified")}</p>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-600">Max Budget:</span>
+                  <span className="font-medium text-gray-600">{t("userManagement.form.maxBudget")}:</span>
                   <p className="text-gray-900">
                     {team.max_budget_in_team !== undefined
                       ? `$${formatNumberWithCommas(team.max_budget_in_team, 4)}`
-                      : "No limit"}
+                      : t("userManagement.defaultSettings.noLimit")}
                   </p>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-600">Role:</span>
+                  <span className="font-medium text-gray-600">{t("userManagement.defaultSettings.role")}:</span>
                   <p className="text-gray-900 capitalize">{team.user_role}</p>
                 </div>
               </div>
@@ -352,11 +362,11 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
     }
 
     if (key === "user_role" && possibleUIRoles && possibleUIRoles[value]) {
-      const { ui_label, description } = possibleUIRoles[value];
+      const localizedRole = getLocalizedUserRole(value, possibleUIRoles, t);
       return (
         <div>
-          <span className="font-medium">{ui_label}</span>
-          {description && <p className="text-xs text-gray-500 mt-1">{description}</p>}
+          <span className="font-medium">{localizedRole.label}</span>
+          {localizedRole.description && <p className="text-xs text-gray-500 mt-1">{localizedRole.description}</p>}
         </div>
       );
     }
@@ -366,11 +376,15 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
     }
 
     if (typeof value === "boolean") {
-      return <span>{value ? "Enabled" : "Disabled"}</span>;
+      return (
+        <span>
+          {value ? t("userManagement.defaultSettings.enabled") : t("userManagement.defaultSettings.disabled")}
+        </span>
+      );
     }
 
     if (key === "models" && Array.isArray(value)) {
-      if (value.length === 0) return <span className="text-gray-400">None</span>;
+      if (value.length === 0) return <span className="text-gray-400">{t("userManagement.defaultSettings.none")}</span>;
 
       return (
         <div className="flex flex-wrap gap-2 mt-1">
@@ -385,7 +399,8 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
 
     if (typeof value === "object") {
       if (Array.isArray(value)) {
-        if (value.length === 0) return <span className="text-gray-400">None</span>;
+        if (value.length === 0)
+          return <span className="text-gray-400">{t("userManagement.defaultSettings.none")}</span>;
 
         return (
           <div className="flex flex-wrap gap-2 mt-1">
@@ -417,7 +432,7 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
   if (!settings) {
     return (
       <Card>
-        <Text>No settings available or you do not have permission to view them.</Text>
+        <Text>{t("userManagement.defaultSettings.unavailable")}</Text>
       </Card>
     );
   }
@@ -427,18 +442,20 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
     const { values, field_schema } = settings;
 
     if (!field_schema || !field_schema.properties) {
-      return <Text>No schema information available</Text>;
+      return <Text>{t("userManagement.defaultSettings.noSchema")}</Text>;
     }
 
     return Object.entries(field_schema.properties).map(([key, property]: [string, any]) => {
       const value = values[key];
-      const displayName = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      const translatedName = t(`userManagement.defaultSettings.fields.${key}`, { defaultValue: "" });
+      const displayName = translatedName || key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      const translatedDescription = t(`userManagement.defaultSettings.descriptions.${key}`, { defaultValue: "" });
 
       return (
         <div key={key} className="mb-6 pb-6 border-b border-gray-200 last:border-0">
           <Text className="font-medium text-lg">{displayName}</Text>
           <Paragraph className="text-sm text-gray-500 mt-1">
-            {property.description || "No description available"}
+            {translatedDescription || property.description || t("userManagement.defaultSettings.noDescription")}
           </Paragraph>
 
           {isEditing ? (
@@ -454,7 +471,7 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
   return (
     <Card>
       <div className="flex justify-between items-center mb-4">
-        <Title>Default User Settings</Title>
+        <Title>{t("userManagement.tabs.defaultSettings")}</Title>
         {!loading &&
           settings &&
           (isEditing ? (
@@ -466,21 +483,21 @@ const DefaultUserSettings: React.FC<DefaultUserSettingsProps> = ({
                 }}
                 disabled={saving}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button type="primary" onClick={handleSaveSettings} loading={saving}>
-                Save Changes
+                {t("userManagement.actions.saveChanges")}
               </Button>
             </div>
           ) : (
             <Button type="primary" onClick={() => setIsEditing(true)}>
-              Edit Settings
+              {t("userManagement.actions.editSettings")}
             </Button>
           ))}
       </div>
 
       {settings?.field_schema?.description && (
-        <Paragraph className="mb-4">{settings.field_schema.description}</Paragraph>
+        <Paragraph className="mb-4">{t("userManagement.defaultSettings.description")}</Paragraph>
       )}
       <Divider />
 

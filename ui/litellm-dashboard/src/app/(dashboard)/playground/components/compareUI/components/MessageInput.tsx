@@ -1,6 +1,7 @@
 import React from "react";
 import { Input, Button } from "antd";
 import { ArrowUpOutlined } from "@ant-design/icons";
+import i18n from "@/i18n/i18n";
 
 const { TextArea } = Input;
 
@@ -33,7 +34,7 @@ export function MessageInput({ value, onChange, onSend, disabled, hasAttachment,
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type your message... (Shift+Enter for new line)"
+          placeholder={i18n.t("playground.compare.messagePlaceholder")}
           disabled={disabled}
           className="flex-1"
           autoSize={{ minRows: 1, maxRows: 4 }}

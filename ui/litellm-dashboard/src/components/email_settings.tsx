@@ -4,6 +4,7 @@ import { Typography } from "antd";
 import NotificationManager from "./molecules/notifications_manager";
 import { serviceHealthCheck, setCallbacksCall } from "./networking";
 import { EmailEventSettings } from "./email_events";
+import { useTranslation } from "react-i18next";
 
 const { Title } = Typography;
 
@@ -14,6 +15,17 @@ interface EmailSettingsProps {
 }
 
 const EmailSettings: React.FC<EmailSettingsProps> = ({ accessToken, premiumUser, alerts }) => {
+  const { t, i18n } = useTranslation();
+  const isChinese = (i18n.resolvedLanguage || i18n.language).startsWith("zh");
+  const requiredFields = new Set([
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_USERNAME",
+    "SMTP_PASSWORD",
+    "SMTP_SENDER_EMAIL",
+    "TEST_EMAIL_ADDRESS",
+  ]);
+
   const handleSaveEmailSettings = async () => {
     if (!accessToken) {
       return;
@@ -42,7 +54,7 @@ const EmailSettings: React.FC<EmailSettingsProps> = ({ accessToken, premiumUser,
     };
     try {
       await setCallbacksCall(accessToken, payload);
-      NotificationManager.success("Email settings updated successfully");
+      NotificationManager.success(t("loggingAndAlerts.email.notifications.settingsUpdated"));
     } catch (error) {
       NotificationManager.fromBackend(error);
     }
@@ -54,11 +66,11 @@ const EmailSettings: React.FC<EmailSettingsProps> = ({ accessToken, premiumUser,
         <EmailEventSettings accessToken={accessToken} />
       </div>
       <Card>
-        <Title level={4}>Email Server Settings</Title>
+        <Title level={4}>{t("loggingAndAlerts.email.serverTitle")}</Title>
         <Text>
           <a href="https://docs.litellm.ai/docs/proxy/email" target="_blank" style={{ color: "blue" }}>
             {" "}
-            LiteLLM Docs: email alerts
+            {t("loggingAndAlerts.email.docs")}
           </a>{" "}
           <br />
         </Text>
@@ -75,7 +87,12 @@ const EmailSettings: React.FC<EmailSettingsProps> = ({ accessToken, premiumUser,
                         {premiumUser != true && (key === "EMAIL_LOGO_URL" || key === "EMAIL_SUPPORT_CONTACT") ? (
                           <div>
                             <a href="https://forms.gle/W3U4PZpJGFHWtHyA9" target="_blank">
-                              <Text className="mt-2"> ✨ {key}</Text>
+                              <Text className="mt-2">
+                                ✨{" "}
+                                {isChinese
+                                  ? t(`loggingAndAlerts.email.fields.${key}.label`, { defaultValue: key })
+                                  : key}
+                              </Text>
                             </a>
                             <TextInput
                               name={key}
@@ -87,7 +104,10 @@ const EmailSettings: React.FC<EmailSettingsProps> = ({ accessToken, premiumUser,
                           </div>
                         ) : (
                           <div>
-                            <Text className="mt-2">{key}</Text>
+                            <Text className="mt-2">
+                              {isChinese ? t(`loggingAndAlerts.email.fields.${key}.label`, { defaultValue: key }) : key}
+                            </Text>
+                            {isChinese && <code className="block text-xs text-gray-500">{key}</code>}
                             <TextInput
                               name={key}
                               defaultValue={value as string}
@@ -97,56 +117,12 @@ const EmailSettings: React.FC<EmailSettingsProps> = ({ accessToken, premiumUser,
                           </div>
                         )}
 
-                        {/* Added descriptions for input fields */}
-                        <p style={{ fontSize: "small", fontStyle: "italic" }}>
-                          {key === "SMTP_HOST" && (
-                            <div style={{ color: "gray" }}>
-                              Enter the SMTP host address, e.g. `smtp.resend.com`
-                              <span style={{ color: "red" }}> Required * </span>
-                            </div>
+                        <div style={{ fontSize: "small", fontStyle: "italic", color: "gray" }}>
+                          {t(`loggingAndAlerts.email.fields.${key}.description`, { defaultValue: "" })}
+                          {requiredFields.has(key) && (
+                            <span style={{ color: "red" }}> {t("loggingAndAlerts.email.required")} </span>
                           )}
-
-                          {key === "SMTP_PORT" && (
-                            <div style={{ color: "gray" }}>
-                              Enter the SMTP port number, e.g. `587`
-                              <span style={{ color: "red" }}> Required * </span>
-                            </div>
-                          )}
-
-                          {key === "SMTP_USERNAME" && (
-                            <div style={{ color: "gray" }}>
-                              Enter the SMTP username, e.g. `username`
-                              <span style={{ color: "red" }}> Required * </span>
-                            </div>
-                          )}
-
-                          {key === "SMTP_PASSWORD" && <span style={{ color: "red" }}> Required * </span>}
-
-                          {key === "SMTP_SENDER_EMAIL" && (
-                            <div style={{ color: "gray" }}>
-                              Enter the sender email address, e.g. `sender@berri.ai`
-                              <span style={{ color: "red" }}> Required * </span>
-                            </div>
-                          )}
-
-                          {key === "TEST_EMAIL_ADDRESS" && (
-                            <div style={{ color: "gray" }}>
-                              Email Address to send `Test Email Alert` to. example: `info@berri.ai`
-                              <span style={{ color: "red" }}> Required * </span>
-                            </div>
-                          )}
-                          {key === "EMAIL_LOGO_URL" && (
-                            <div style={{ color: "gray" }}>
-                              (Optional) Customize the Logo that appears in the email, pass a url to your logo
-                            </div>
-                          )}
-                          {key === "EMAIL_SUPPORT_CONTACT" && (
-                            <div style={{ color: "gray" }}>
-                              (Optional) Customize the support email address that appears in the email. Default is
-                              support@berri.ai
-                            </div>
-                          )}
-                        </p>
+                        </div>
                       </li>
                     ))}
                   </Grid>
@@ -156,21 +132,21 @@ const EmailSettings: React.FC<EmailSettingsProps> = ({ accessToken, premiumUser,
         </div>
 
         <Button className="mt-2" onClick={() => handleSaveEmailSettings()}>
-          Save Changes
+          {t("loggingAndAlerts.email.saveChanges")}
         </Button>
         <Button
           onClick={async () => {
             if (!accessToken) return;
             try {
               await serviceHealthCheck(accessToken, "email");
-              NotificationManager.success("Email test triggered. Check your configured email inbox/logs.");
+              NotificationManager.success(t("loggingAndAlerts.email.notifications.testTriggered"));
             } catch (error) {
               NotificationManager.fromBackend(error);
             }
           }}
           className="mx-2"
         >
-          Test Email Alerts
+          {t("loggingAndAlerts.email.testAlerts")}
         </Button>
       </Card>
     </>

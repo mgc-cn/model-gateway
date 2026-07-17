@@ -18,6 +18,15 @@ export interface MemberTableProps {
   extraColumns?: ColumnsType<Member>;
   showDeleteForMember?: (member: Member) => boolean;
   emptyText?: string;
+  userEmailColumnTitle?: React.ReactNode;
+  userIdColumnTitle?: React.ReactNode;
+  defaultProxyAdminLabel?: React.ReactNode;
+  actionsColumnTitle?: React.ReactNode;
+  editMemberTooltip?: string;
+  deleteMemberTooltip?: string;
+  memberCountLabel?: (count: number) => React.ReactNode;
+  addMemberLabel?: React.ReactNode;
+  renderRole?: (role: string) => React.ReactNode;
 }
 
 export default function MemberTable({
@@ -31,20 +40,29 @@ export default function MemberTable({
   extraColumns = [],
   showDeleteForMember,
   emptyText,
+  userEmailColumnTitle = "User Email",
+  userIdColumnTitle = "User ID",
+  defaultProxyAdminLabel = "Default Proxy Admin",
+  actionsColumnTitle = "Actions",
+  editMemberTooltip = "Edit member",
+  deleteMemberTooltip = "Delete member",
+  memberCountLabel = (count) => `${count} Member${count !== 1 ? "s" : ""}`,
+  addMemberLabel = "Add Member",
+  renderRole,
 }: MemberTableProps) {
   const baseColumns: ColumnsType<Member> = [
     {
-      title: "User Email",
+      title: userEmailColumnTitle,
       dataIndex: "user_email",
       key: "user_email",
       render: (email: string | null) => <Text>{email || "-"}</Text>,
     },
     {
-      title: "User ID",
+      title: userIdColumnTitle,
       dataIndex: "user_id",
       key: "user_id",
       render: (userId: string | null) =>
-        userId === "default_user_id" ? <Tag color="blue">Default Proxy Admin</Tag> : <Text>{userId || "-"}</Text>,
+        userId === "default_user_id" ? <Tag color="blue">{defaultProxyAdminLabel}</Tag> : <Text>{userId || "-"}</Text>,
     },
     {
       title: roleTooltip ? (
@@ -66,13 +84,15 @@ export default function MemberTable({
           ) : (
             <UserOutlined />
           )}
-          <Text style={{ textTransform: "capitalize" }}>{role || "-"}</Text>
+          <Text style={{ textTransform: renderRole ? undefined : "capitalize" }}>
+            {role ? renderRole?.(role) ?? role : "-"}
+          </Text>
         </Space>
       ),
     },
     ...extraColumns,
     {
-      title: "Actions",
+      title: actionsColumnTitle,
       key: "actions",
       fixed: "right" as const,
       width: 120,
@@ -81,14 +101,14 @@ export default function MemberTable({
           <Space>
             <TableIconActionButton
               variant="Edit"
-              tooltipText="Edit member"
+              tooltipText={editMemberTooltip}
               dataTestId="edit-member"
               onClick={() => onEdit(record)}
             />
             {(!showDeleteForMember || showDeleteForMember(record)) && (
               <TableIconActionButton
                 variant="Delete"
-                tooltipText="Delete member"
+                tooltipText={deleteMemberTooltip}
                 dataTestId="delete-member"
                 onClick={() => onDelete(record)}
               />
@@ -100,9 +120,7 @@ export default function MemberTable({
 
   return (
     <Space direction="vertical" style={{ width: "100%" }}>
-      <span className="inline-flex text-sm text-gray-700">
-        {members.length} Member{members.length !== 1 ? "s" : ""}
-      </span>
+      <span className="inline-flex text-sm text-gray-700">{memberCountLabel(members.length)}</span>
       <Table
         columns={baseColumns}
         dataSource={members}
@@ -114,7 +132,7 @@ export default function MemberTable({
       />
       {onAddMember && canEdit && (
         <Button icon={<UserAddOutlined />} type="primary" onClick={onAddMember}>
-          Add Member
+          {addMemberLabel}
         </Button>
       )}
     </Space>

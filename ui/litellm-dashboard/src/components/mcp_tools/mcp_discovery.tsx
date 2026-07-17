@@ -4,6 +4,7 @@ import { fetchDiscoverableMCPServers } from "../networking";
 import { DiscoverableMCPServer, DiscoverMCPServersResponse } from "./types";
 import { mcpLogoImg } from "./create_mcp_server";
 import { resolveLogoSrc } from "@/lib/assetPaths";
+import { useTranslation } from "react-i18next";
 
 const { Search } = Input;
 const { Text } = Typography;
@@ -31,6 +32,7 @@ const MCPDiscovery: React.FC<MCPDiscoveryProps> = ({
   onCustomServer,
   accessToken,
 }) => {
+  const { t } = useTranslation();
   const [servers, setServers] = useState<DiscoverableMCPServer[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,13 +50,13 @@ const MCPDiscovery: React.FC<MCPDiscoveryProps> = ({
           setCategories(data.categories || []);
         })
         .catch((err: Error) => {
-          setError(err.message || "Failed to load MCP servers");
+          setError(err.message || "");
         })
         .finally(() => {
           setLoading(false);
         });
     }
-  }, [isVisible, accessToken]);
+  }, [isVisible, accessToken, t]);
 
   useEffect(() => {
     if (isVisible) {
@@ -97,7 +99,7 @@ const MCPDiscovery: React.FC<MCPDiscoveryProps> = ({
           <div className="flex items-center space-x-3">
             <img
               src={resolveLogoSrc(mcpLogoImg)}
-              alt="MCP Logo"
+              alt={t("mcpManagement.discovery.logoAlt")}
               className="w-8 h-8 object-contain"
               style={{
                 height: "20px",
@@ -106,13 +108,13 @@ const MCPDiscovery: React.FC<MCPDiscoveryProps> = ({
                 objectFit: "contain",
               }}
             />
-            <h2 className="text-xl font-semibold text-gray-900">Add MCP Server</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t("mcpManagement.discovery.title")}</h2>
           </div>
           <button
             onClick={onCustomServer}
             className="text-sm text-blue-600 hover:text-blue-800 cursor-pointer bg-transparent border-none font-medium"
           >
-            + Custom Server
+            {t("mcpManagement.discovery.custom")}
           </button>
         </div>
       }
@@ -146,7 +148,7 @@ const MCPDiscovery: React.FC<MCPDiscoveryProps> = ({
                 lineHeight: "20px",
               }}
             >
-              {cat}
+              {cat === "All" ? t("mcpManagement.discovery.all") : cat}
             </button>
           );
         })}
@@ -154,7 +156,7 @@ const MCPDiscovery: React.FC<MCPDiscoveryProps> = ({
 
       {/* Search */}
       <Search
-        placeholder="Search servers..."
+        placeholder={t("mcpManagement.discovery.search")}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         style={{ marginBottom: 16 }}
@@ -179,16 +181,16 @@ const MCPDiscovery: React.FC<MCPDiscoveryProps> = ({
 
       {error && (
         <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af" }}>
-          <Text>Failed to load servers: {error}</Text>
+          <Text>{t("mcpManagement.discovery.loadFailed", { error })}</Text>
         </div>
       )}
 
       {!loading && !error && filteredServers.length === 0 && (
         <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af" }}>
           <Text>
-            No servers found.{" "}
+            {t("mcpManagement.discovery.noMatches")}{" "}
             <a onClick={onCustomServer} style={{ color: "#2563eb", cursor: "pointer" }}>
-              Add a custom server
+              {t("mcpManagement.discovery.addCustom")}
             </a>
           </Text>
         </div>

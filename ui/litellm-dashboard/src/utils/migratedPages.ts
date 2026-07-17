@@ -15,6 +15,8 @@ export const MIGRATED_PAGES: Record<string, string> = {
   // Legacy alias: older bookmarks used the hyphenated ?page=api-reference form.
   "api-reference": "api-reference",
   "llm-playground": "playground",
+  // Legacy links also emitted the route name directly.
+  playground: "playground",
   projects: "projects",
   chat: "chat",
   "access-groups": "access-groups",

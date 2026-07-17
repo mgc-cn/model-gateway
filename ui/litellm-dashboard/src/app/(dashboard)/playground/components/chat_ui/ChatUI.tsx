@@ -77,6 +77,7 @@ import { A2ATaskMetadata, MessageType } from "@/components/chat_ui/types";
 import { useCodeInterpreter } from "../../hooks/useCodeInterpreter";
 import { useChatHistory } from "../../hooks/useChatHistory";
 import { getSecureItem, setSecureItem } from "@/utils/secureStorage";
+import { useTranslation } from "react-i18next";
 
 const { TextArea } = Input;
 const { Dragger } = Upload;
@@ -109,6 +110,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
   simplified = false,
   fixedModel,
 }) => {
+  const { t } = useTranslation();
   const [mcpServers, setMCPServers] = useState<MCPServer[]>([]);
   const [mcpToolsets, setMCPToolsets] = useState<MCPToolset[]>([]);
   const [isToolsetsInfoModalVisible, setIsToolsetsInfoModalVisible] = useState(false);
@@ -487,7 +489,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
       setIsLoading(false);
-      NotificationsManager.info("Request cancelled");
+      NotificationsManager.info(t("playground.chat.notifications.requestCancelled"));
     }
   };
 
@@ -561,19 +563,19 @@ const ChatUI: React.FC<ChatUIProps> = ({
 
     // For image edits, require both image and prompt
     if (endpointType === EndpointType.IMAGE_EDITS && uploadedImages.length === 0) {
-      NotificationsManager.fromBackend("Please upload at least one image for editing");
+      NotificationsManager.fromBackend(t("playground.chat.notifications.imageRequired"));
       return;
     }
 
     // For audio transcriptions, require audio file
     if (endpointType === EndpointType.TRANSCRIPTION && !uploadedAudio) {
-      NotificationsManager.fromBackend("Please upload an audio file for transcription");
+      NotificationsManager.fromBackend(t("playground.chat.notifications.audioRequired"));
       return;
     }
 
     // For A2A agents, require agent selection
     if (endpointType === EndpointType.A2A_AGENTS && !selectedAgent) {
-      NotificationsManager.fromBackend("Please select an agent to send a message");
+      NotificationsManager.fromBackend(t("playground.chat.notifications.agentRequired"));
       return;
     }
 
@@ -583,13 +585,13 @@ const ChatUI: React.FC<ChatUIProps> = ({
       const rawSelected =
         selectedMCPServers.length === 1 && selectedMCPServers[0] !== "__all__" ? selectedMCPServers[0] : null;
       if (!rawSelected) {
-        NotificationsManager.fromBackend("Please select an MCP server to test");
+        NotificationsManager.fromBackend(t("playground.chat.notifications.mcpServerRequired"));
         return;
       }
       // Resolve the real server ID (toolsets use toolset: prefix)
       const mcpServerId = rawSelected.startsWith("toolset:") ? rawSelected : rawSelected;
       if (!selectedMCPDirectTool) {
-        NotificationsManager.fromBackend("Please select an MCP tool to call");
+        NotificationsManager.fromBackend(t("playground.chat.notifications.mcpToolRequired"));
         return;
       }
       // For toolsets, find the tool in the servers that back this toolset
@@ -607,13 +609,15 @@ const ChatUI: React.FC<ChatUIProps> = ({
       }
       const mcpTool = searchPool.find((t: any) => t.name === selectedMCPDirectTool);
       if (!mcpTool) {
-        NotificationsManager.fromBackend("Please wait for tool schema to load");
+        NotificationsManager.fromBackend(t("playground.chat.notifications.toolSchemaLoading"));
         return;
       }
       try {
         mcpToolArguments = (await mcpToolArgsFormRef.current?.getSubmitValues()) ?? {};
       } catch (err) {
-        NotificationsManager.fromBackend(err instanceof Error ? err.message : "Please fill in all required parameters");
+        NotificationsManager.fromBackend(
+          err instanceof Error ? err.message : t("playground.chat.notifications.requiredParameters"),
+        );
         return;
       }
     }
@@ -632,7 +636,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
     ];
 
     if (modelRequiredEndpoints.includes(endpointType as EndpointType) && !selectedModel) {
-      NotificationsManager.fromBackend("Please select a model before sending a request");
+      NotificationsManager.fromBackend(t("playground.chat.notifications.modelRequired"));
       return;
     }
 
@@ -643,7 +647,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
     const effectiveApiKey = simplified ? accessToken : apiKeySource === "session" ? accessToken : apiKey;
 
     if (!effectiveApiKey) {
-      NotificationsManager.fromBackend("Please provide a Virtual Key or select Current UI Session");
+      NotificationsManager.fromBackend(t("playground.chat.notifications.virtualKeyRequired"));
       return;
     }
 
@@ -659,7 +663,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
       try {
         newUserMessage = await createMultimodalMessage(inputMessage, responsesUploadedImage);
       } catch (error) {
-        NotificationsManager.fromBackend("Failed to process image. Please try again.");
+        NotificationsManager.fromBackend(t("playground.chat.notifications.imageProcessingFailed"));
         return;
       }
     }
@@ -668,7 +672,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
       try {
         newUserMessage = await createChatMultimodalMessage(inputMessage, chatUploadedImage);
       } catch (error) {
-        NotificationsManager.fromBackend("Failed to process image. Please try again.");
+        NotificationsManager.fromBackend(t("playground.chat.notifications.imageProcessingFailed"));
         return;
       }
     } else {
@@ -935,7 +939,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                   2,
                 )
               : JSON.stringify(result, null, 2);
-          updateTextUI("assistant", resultText || "Tool executed successfully.");
+          updateTextUI("assistant", resultText || t("playground.chat.toolExecutionSuccess"));
         }
       }
 
@@ -958,7 +962,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
       if (signal.aborted) {
       } else {
         console.error("Error fetching response", error);
-        updateTextUI("assistant", "Error fetching response:" + error);
+        updateTextUI("assistant", t("playground.chat.responseError", { error: String(error) }));
       }
     } finally {
       setIsLoading(false);
@@ -990,15 +994,15 @@ const ChatUI: React.FC<ChatUIProps> = ({
     handleRemoveResponsesImage();
     handleRemoveChatImage();
     handleRemoveAudio();
-    NotificationsManager.success("Chat history cleared.");
+    NotificationsManager.success(t("playground.chat.notifications.historyCleared"));
   };
 
   if (userRole && userRole === "Admin Viewer") {
     const { Title, Paragraph } = Typography;
     return (
       <div>
-        <Title level={1}>Access Denied</Title>
-        <Paragraph>Ask your proxy admin for access to test models</Paragraph>
+        <Title level={1}>{t("playground.chat.accessDenied.title")}</Title>
+        <Paragraph>{t("playground.chat.accessDenied.description")}</Paragraph>
       </div>
     );
   }
@@ -1031,11 +1035,11 @@ const ChatUI: React.FC<ChatUIProps> = ({
           {/* Left Sidebar with Controls - hidden in simplified mode */}
           {!simplified && (
             <div className="w-1/4 p-4 bg-gray-50 overflow-y-auto">
-              <Title className="text-xl font-semibold mb-6 mt-2">Configurations</Title>
+              <Title className="text-xl font-semibold mb-6 mt-2">{t("playground.chat.config.title")}</Title>
               <div className="space-y-4">
                 <div>
                   <Text className="font-medium block mb-2 text-gray-700 flex items-center">
-                    <KeyOutlined className="mr-2" /> Virtual Key Source
+                    <KeyOutlined className="mr-2" /> {t("playground.chat.config.virtualKeySource")}
                   </Text>
                   <Select
                     disabled={disabledPersonalKeyCreation}
@@ -1045,15 +1049,15 @@ const ChatUI: React.FC<ChatUIProps> = ({
                       setApiKeySource(value as "session" | "custom");
                     }}
                     options={[
-                      { value: "session", label: "Current UI Session" },
-                      { value: "custom", label: "Virtual Key" },
+                      { value: "session", label: t("playground.chat.config.currentUiSession") },
+                      { value: "custom", label: t("playground.chat.config.virtualKey") },
                     ]}
                     className="rounded-md"
                   />
                   {apiKeySource === "custom" && (
                     <TextInput
                       className="mt-2"
-                      placeholder="Enter custom Virtual Key"
+                      placeholder={t("playground.chat.config.virtualKeyPlaceholder")}
                       type="password"
                       onValueChange={setApiKey}
                       value={apiKey}
@@ -1065,7 +1069,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <Text className="font-medium block text-gray-700 flex items-center">
-                      <SettingOutlined className="mr-2" /> Custom Proxy Base URL
+                      <SettingOutlined className="mr-2" /> {t("playground.chat.config.customProxyBaseUrl")}
                     </Text>
                     {proxySettings?.LITELLM_UI_API_DOC_BASE_URL && !customProxyBaseUrl && (
                       <Button
@@ -1078,7 +1082,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                         }}
                         className="text-gray-500 hover:text-gray-700"
                       >
-                        Fill
+                        {t("playground.chat.config.fill")}
                       </Button>
                     )}
                     {customProxyBaseUrl && (
@@ -1092,12 +1096,12 @@ const ChatUI: React.FC<ChatUIProps> = ({
                         }}
                         className="text-gray-500 hover:text-gray-700"
                       >
-                        Clear
+                        {t("playground.chat.config.clear")}
                       </Button>
                     )}
                   </div>
                   <TextInput
-                    placeholder="Optional: Enter custom proxy URL (e.g., http://localhost:5000)"
+                    placeholder={t("playground.chat.config.customProxyPlaceholder")}
                     onValueChange={(value) => {
                       setCustomProxyBaseUrl(value);
                       sessionStorage.setItem("customProxyBaseUrl", value);
@@ -1106,13 +1110,15 @@ const ChatUI: React.FC<ChatUIProps> = ({
                     icon={ApiOutlined}
                   />
                   {customProxyBaseUrl && (
-                    <Text className="text-xs text-gray-500 mt-1">API calls will be sent to: {customProxyBaseUrl}</Text>
+                    <Text className="text-xs text-gray-500 mt-1">
+                      {t("playground.chat.config.apiCallsSentTo", { url: customProxyBaseUrl })}
+                    </Text>
                   )}
                 </div>
 
                 <div>
                   <Text className="font-medium block mb-2 text-gray-700 flex items-center">
-                    <ApiOutlined className="mr-2" /> Endpoint Type
+                    <ApiOutlined className="mr-2" /> {t("playground.chat.config.endpointType")}
                   </Text>
                   <EndpointSelector
                     endpointType={endpointType}
@@ -1140,7 +1146,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                     <div className="mb-4">
                       <Text className="font-medium block mb-2 text-gray-700 flex items-center">
                         <SoundOutlined className="mr-2" />
-                        Voice
+                        {t("playground.chat.config.voice")}
                       </Text>
                       <Select
                         value={selectedVoice}
@@ -1169,7 +1175,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                   <div>
                     <Text className="font-medium block mb-2 text-gray-700 flex items-center justify-between">
                       <span className="flex items-center">
-                        <RobotOutlined className="mr-2" /> Select Model
+                        <RobotOutlined className="mr-2" /> {t("playground.chat.config.selectModel")}
                       </span>
                       {isChatModel() ? (
                         <Popover
@@ -1185,7 +1191,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                               onMockTestFallbacksChange={setMockTestFallbacks}
                             />
                           }
-                          title="Model Settings"
+                          title={t("playground.chat.modelSettings.title")}
                           trigger="click"
                           placement="right"
                         >
@@ -1194,12 +1200,12 @@ const ChatUI: React.FC<ChatUIProps> = ({
                             size="small"
                             icon={<SettingOutlined />}
                             className="text-gray-500 hover:text-gray-700"
-                            aria-label="Model Settings"
+                            aria-label={t("playground.chat.modelSettings.title")}
                             data-testid="model-settings-button"
                           />
                         </Popover>
                       ) : (
-                        <Tooltip title="Advanced parameters are only supported for chat models currently">
+                        <Tooltip title={t("playground.chat.modelSettings.chatModelsOnly")}>
                           <Button
                             type="text"
                             size="small"
@@ -1212,10 +1218,10 @@ const ChatUI: React.FC<ChatUIProps> = ({
                     </Text>
                     <Select
                       value={selectedModel}
-                      placeholder="Select a Model"
+                      placeholder={t("playground.chat.config.selectModelPlaceholder")}
                       onChange={onModelChange}
                       options={[
-                        { value: "custom", label: "Enter custom model", key: "custom" },
+                        { value: "custom", label: t("playground.chat.config.customModelOption"), key: "custom" },
                         ...Array.from(
                           new Set(
                             modelInfo
@@ -1254,7 +1260,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                     {showCustomModelInput && (
                       <TextInput
                         className="mt-2"
-                        placeholder="Enter custom model name"
+                        placeholder={t("playground.chat.config.customModelPlaceholder")}
                         onValueChange={(value) => {
                           // Using setTimeout to create a simple debounce effect
                           if (customModelTimeout.current) {
@@ -1274,11 +1280,11 @@ const ChatUI: React.FC<ChatUIProps> = ({
                 {endpointType === EndpointType.A2A_AGENTS && (
                   <div>
                     <Text className="font-medium block mb-2 text-gray-700 flex items-center">
-                      <RobotOutlined className="mr-2" /> Select Agent
+                      <RobotOutlined className="mr-2" /> {t("playground.chat.config.selectAgent")}
                     </Text>
                     <Select
                       value={selectedAgent}
-                      placeholder="Select an Agent"
+                      placeholder={t("playground.chat.config.selectAgentPlaceholder")}
                       onChange={(value) => setSelectedAgent(value)}
                       options={agentInfo.map((agent) => ({
                         value: agent.agent_name,
@@ -1306,22 +1312,21 @@ const ChatUI: React.FC<ChatUIProps> = ({
                       ))}
                     </Select>
                     {agentInfo.length === 0 && (
-                      <Text className="text-xs text-gray-500 mt-2 block">
-                        No agents found. Create agents via /v1/agents endpoint.
-                      </Text>
+                      <Text className="text-xs text-gray-500 mt-2 block">{t("playground.chat.config.noAgents")}</Text>
                     )}
                   </div>
                 )}
 
                 <div>
                   <Text className="font-medium block mb-2 text-gray-700 flex items-center">
-                    <TagsOutlined className="mr-2" /> Tags
+                    <TagsOutlined className="mr-2" /> {t("playground.chat.config.tags")}
                   </Text>
                   <TagSelector
                     value={selectedTags}
                     onChange={setSelectedTags}
                     className="mb-4"
                     accessToken={accessToken || ""}
+                    placeholder={t("playground.chat.config.tagsPlaceholder")}
                   />
                 </div>
 
@@ -1329,13 +1334,15 @@ const ChatUI: React.FC<ChatUIProps> = ({
                 <div>
                   <Text className="font-medium block mb-2 text-gray-700 flex items-center">
                     <ToolOutlined className="mr-2" />
-                    {endpointType === EndpointType.MCP ? "MCP Server" : "MCP Servers"}
+                    {endpointType === EndpointType.MCP
+                      ? t("playground.chat.config.mcpServer")
+                      : t("playground.chat.config.mcpServers")}
                     <Tooltip
                       className="ml-1"
                       title={
                         endpointType === EndpointType.MCP
-                          ? "Select an MCP server or toolset to test tools directly."
-                          : "Select MCP servers or toolsets to use in your conversation."
+                          ? t("playground.chat.config.mcpDirectTooltip")
+                          : t("playground.chat.config.mcpConversationTooltip")
                       }
                     >
                       <InfoCircleOutlined
@@ -1347,7 +1354,11 @@ const ChatUI: React.FC<ChatUIProps> = ({
                   <Select
                     mode={endpointType === EndpointType.MCP ? undefined : "multiple"}
                     style={{ width: "100%" }}
-                    placeholder={endpointType === EndpointType.MCP ? "Select MCP server" : "Select MCP servers"}
+                    placeholder={
+                      endpointType === EndpointType.MCP
+                        ? t("playground.chat.config.selectMcpServer")
+                        : t("playground.chat.config.selectMcpServers")
+                    }
                     value={
                       endpointType === EndpointType.MCP
                         ? selectedMCPServers[0] !== "__all__" && selectedMCPServers.length === 1
@@ -1393,7 +1404,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                     maxTagCount={endpointType === EndpointType.MCP ? 1 : "responsive"}
                     filterOption={(input, option) => {
                       if (option?.value === "__all__") {
-                        return "All MCP Servers".toLowerCase().includes(input.toLowerCase());
+                        return t("playground.chat.config.allMcpServers").toLowerCase().includes(input.toLowerCase());
                       }
                       const val = option?.value as string | undefined;
                       if (val?.startsWith("toolset:")) {
@@ -1417,17 +1428,19 @@ const ChatUI: React.FC<ChatUIProps> = ({
                   >
                     {/* All MCP Servers option - hidden for MCP direct mode */}
                     {endpointType !== EndpointType.MCP && (
-                      <Select.Option key="__all__" value="__all__" label="All MCP Servers">
+                      <Select.Option key="__all__" value="__all__" label={t("playground.chat.config.allMcpServers")}>
                         <div className="flex flex-col py-1">
-                          <span className="font-medium">All MCP Servers</span>
-                          <span className="text-xs text-gray-500 mt-1">Use all available MCP servers</span>
+                          <span className="font-medium">{t("playground.chat.config.allMcpServers")}</span>
+                          <span className="text-xs text-gray-500 mt-1">
+                            {t("playground.chat.config.allMcpServersDescription")}
+                          </span>
                         </div>
                       </Select.Option>
                     )}
 
                     {/* Toolsets (purple badge) */}
                     {mcpToolsets.length > 0 && (
-                      <Select.OptGroup label="Toolsets">
+                      <Select.OptGroup label={t("playground.chat.config.toolsets")}>
                         {mcpToolsets.map((toolset) => (
                           <Select.Option
                             key={`toolset:${toolset.toolset_id}`}
@@ -1444,9 +1457,11 @@ const ChatUI: React.FC<ChatUIProps> = ({
                                   className="text-xs px-1 rounded-sm"
                                   style={{ background: "#ede9fe", color: "#7c3aed" }}
                                 >
-                                  Toolset
+                                  {t("playground.chat.config.toolset")}
                                 </span>
-                                <span className="text-xs text-gray-500">({toolset.tools.length} tools)</span>
+                                <span className="text-xs text-gray-500">
+                                  {t("playground.chat.config.toolCount", { count: toolset.tools.length })}
+                                </span>
                               </div>
                               {toolset.description && (
                                 <span className="text-xs text-gray-500 mt-1">{toolset.description}</span>
@@ -1459,7 +1474,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
 
                     {/* Individual servers */}
                     {mcpServers.length > 0 && (
-                      <Select.OptGroup label="Servers">
+                      <Select.OptGroup label={t("playground.chat.config.servers")}>
                         {mcpServers.map((server) => (
                           <Select.Option
                             key={server.server_id}
@@ -1508,10 +1523,12 @@ const ChatUI: React.FC<ChatUIProps> = ({
                       }
                       return (
                         <div className="mt-3">
-                          <Text className="text-xs text-gray-600 mb-1 block">Select Tool</Text>
+                          <Text className="text-xs text-gray-600 mb-1 block">
+                            {t("playground.chat.config.selectTool")}
+                          </Text>
                           <Select
                             style={{ width: "100%" }}
-                            placeholder="Select a tool to call"
+                            placeholder={t("playground.chat.config.selectToolPlaceholder")}
                             value={selectedMCPDirectTool}
                             onChange={(value) => setSelectedMCPDirectTool(value)}
                             options={toolOptions}
@@ -1536,13 +1553,15 @@ const ChatUI: React.FC<ChatUIProps> = ({
                           return (
                             <div key={serverId} className="border rounded-sm p-2">
                               <Text className="text-xs text-gray-600 mb-1">
-                                Limit tools for {server?.alias || server?.server_name || serverId}:
+                                {t("playground.chat.config.limitToolsFor", {
+                                  server: server?.alias || server?.server_name || serverId,
+                                })}
                               </Text>
                               <Select
                                 mode="multiple"
                                 size="small"
                                 style={{ width: "100%" }}
-                                placeholder="All tools (default)"
+                                placeholder={t("playground.chat.config.allToolsDefault")}
                                 value={mcpServerToolRestrictions[serverId] || []}
                                 onChange={(selectedTools) => {
                                   setMCPServerToolRestrictions((prev) => ({
@@ -1579,17 +1598,19 @@ const ChatUI: React.FC<ChatUIProps> = ({
                               key={serverId}
                               className="border border-blue-100 rounded-sm p-2 bg-blue-50 flex items-center justify-between"
                             >
-                              <Text className="text-xs text-blue-700">{serverName} requires your API key</Text>
+                              <Text className="text-xs text-blue-700">
+                                {t("playground.chat.config.serverRequiresApiKey", { server: serverName })}
+                              </Text>
                               {server.has_user_credential ? (
                                 <div className="flex items-center gap-2">
                                   <span className="text-green-600 text-xs font-medium flex items-center gap-1">
-                                    <KeyOutlined /> Connected
+                                    <KeyOutlined /> {t("playground.chat.config.connected")}
                                   </span>
                                   <button
                                     className="text-xs text-gray-400 hover:text-blue-500 underline"
                                     onClick={() => setByokModalServer(server)}
                                   >
-                                    Reconnect
+                                    {t("playground.chat.config.reconnect")}
                                   </button>
                                 </div>
                               ) : (
@@ -1597,7 +1618,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                                   className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg font-medium"
                                   onClick={() => setByokModalServer(server)}
                                 >
-                                  Connect
+                                  {t("playground.chat.config.connect")}
                                 </button>
                               )}
                             </div>
@@ -1609,14 +1630,14 @@ const ChatUI: React.FC<ChatUIProps> = ({
 
                 <div>
                   <Text className="font-medium block mb-2 text-gray-700 flex items-center">
-                    <DatabaseOutlined className="mr-2" /> Vector Store
+                    <DatabaseOutlined className="mr-2" /> {t("playground.chat.config.vectorStore")}
                     <Tooltip
                       className="ml-1"
                       title={
                         <span>
-                          Select vector store(s) to use for this LLM API call. You can set up your vector store{" "}
+                          {t("playground.chat.config.vectorStoreTooltip")}{" "}
                           <a href="?page=vector-stores" style={{ color: "#1890ff" }}>
-                            here
+                            {t("playground.chat.config.here")}
                           </a>
                           .
                         </span>
@@ -1630,19 +1651,20 @@ const ChatUI: React.FC<ChatUIProps> = ({
                     onChange={setSelectedVectorStores}
                     className="mb-4"
                     accessToken={accessToken || ""}
+                    placeholder={t("playground.chat.config.vectorStoresPlaceholder")}
                   />
                 </div>
 
                 <div>
                   <Text className="font-medium block mb-2 text-gray-700 flex items-center">
-                    <SafetyOutlined className="mr-2" /> Guardrails
+                    <SafetyOutlined className="mr-2" /> {t("playground.chat.config.guardrails")}
                     <Tooltip
                       className="ml-1"
                       title={
                         <span>
-                          Select guardrail(s) to use for this LLM API call. You can set up your guardrails{" "}
+                          {t("playground.chat.config.guardrailsTooltip")}{" "}
                           <a href="?page=guardrails" style={{ color: "#1890ff" }}>
-                            here
+                            {t("playground.chat.config.here")}
                           </a>
                           .
                         </span>
@@ -1656,20 +1678,21 @@ const ChatUI: React.FC<ChatUIProps> = ({
                     onChange={setSelectedGuardrails}
                     className="mb-4"
                     accessToken={accessToken || ""}
+                    placeholder={t("playground.chat.config.guardrailsPlaceholder")}
+                    disabledPlaceholder={t("playground.chat.config.guardrailsPremiumPlaceholder")}
                   />
                 </div>
 
                 <div>
                   <Text className="font-medium block mb-2 text-gray-700 flex items-center">
-                    <SafetyOutlined className="mr-2" /> Policies
+                    <SafetyOutlined className="mr-2" /> {t("playground.chat.config.policies")}
                     <Tooltip
                       className="ml-1"
                       title={
                         <span>
-                          Select policy/policies to apply to this LLM API call. Policies define which guardrails are
-                          applied based on conditions. You can set up your policies{" "}
+                          {t("playground.chat.config.policiesTooltip")}{" "}
                           <a href="?page=policies" style={{ color: "#1890ff" }}>
-                            here
+                            {t("playground.chat.config.here")}
                           </a>
                           .
                         </span>
@@ -1683,6 +1706,8 @@ const ChatUI: React.FC<ChatUIProps> = ({
                     onChange={setSelectedPolicies}
                     className="mb-4"
                     accessToken={accessToken || ""}
+                    placeholder={t("playground.chat.config.policiesPlaceholder")}
+                    disabledPlaceholder={t("playground.chat.config.policiesPremiumPlaceholder")}
                   />
                 </div>
 
@@ -1715,14 +1740,16 @@ const ChatUI: React.FC<ChatUIProps> = ({
             ) : (
               <>
                 <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                  <Title className="text-xl font-semibold mb-0">{simplified ? "Chat" : "Test Key"}</Title>
+                  <Title className="text-xl font-semibold mb-0">
+                    {simplified ? t("playground.chat.chat") : t("playground.chat.testKey")}
+                  </Title>
                   <div className="flex gap-2">
                     <TremorButton
                       onClick={clearChatHistory}
                       className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
                       icon={ClearOutlined}
                     >
-                      Clear Chat
+                      {t("playground.chat.clearChat")}
                     </TremorButton>
                     {!simplified && (
                       <TremorButton
@@ -1730,7 +1757,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                         className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
                         icon={CodeOutlined}
                       >
-                        Get Code
+                        {t("playground.chat.getCode")}
                       </TremorButton>
                     )}
                   </div>
@@ -1739,7 +1766,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                   {chatHistory.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400">
                       <RobotOutlined style={{ fontSize: "48px", marginBottom: "16px" }} />
-                      <Text>Start a conversation, generate an image, or handle audio</Text>
+                      <Text>{t("playground.chat.emptyState")}</Text>
                     </div>
                   )}
 
@@ -1780,7 +1807,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                             >
                               <RobotOutlined style={{ fontSize: "12px", color: "#4b5563" }} />
                             </div>
-                            <strong className="text-sm capitalize">Assistant</strong>
+                            <strong className="text-sm capitalize">{t("playground.chat.assistant")}</strong>
                           </div>
                           <MCPEventsDisplay events={mcpEvents} />
                         </div>
@@ -1804,9 +1831,9 @@ const ChatUI: React.FC<ChatUIProps> = ({
                           <p className="ant-upload-drag-icon">
                             <PictureOutlined style={{ fontSize: "24px", color: "#666" }} />
                           </p>
-                          <p className="ant-upload-text text-sm">Click or drag images to upload</p>
+                          <p className="ant-upload-text text-sm">{t("playground.chat.upload.images")}</p>
                           <p className="ant-upload-hint text-xs text-gray-500">
-                            Support for PNG, JPG, JPEG formats. Multiple images supported.
+                            {t("playground.chat.upload.imagesHint")}
                           </p>
                         </Dragger>
                       ) : (
@@ -1824,12 +1851,13 @@ const ChatUI: React.FC<ChatUIProps> = ({
                                     return "";
                                   }
                                 })()}
-                                alt={`Upload preview ${index + 1}`}
+                                alt={t("playground.chat.upload.previewAlt", { index: index + 1 })}
                                 className="max-w-32 max-h-32 rounded-md border border-gray-200 object-cover"
                               />
                               <button
                                 className="absolute top-1 right-1 bg-white shadow-xs border border-gray-200 rounded-sm px-1 py-1 text-red-500 hover:bg-red-50 text-xs"
                                 onClick={() => handleRemoveImage(index)}
+                                aria-label={t("playground.chat.upload.removeImage", { index: index + 1 })}
                               >
                                 <DeleteOutlined />
                               </button>
@@ -1842,7 +1870,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                           >
                             <div className="text-center">
                               <PictureOutlined style={{ fontSize: "24px", color: "#666" }} />
-                              <p className="text-xs text-gray-500 mt-1">Add more</p>
+                              <p className="text-xs text-gray-500 mt-1">{t("playground.chat.upload.addMore")}</p>
                             </div>
                             <input
                               id="additional-image-upload"
@@ -1873,9 +1901,9 @@ const ChatUI: React.FC<ChatUIProps> = ({
                           <p className="ant-upload-drag-icon">
                             <SoundOutlined style={{ fontSize: "24px", color: "#666" }} />
                           </p>
-                          <p className="ant-upload-text text-sm">Click or drag audio file to upload</p>
+                          <p className="ant-upload-text text-sm">{t("playground.chat.upload.audio")}</p>
                           <p className="ant-upload-hint text-xs text-gray-500">
-                            Support for MP3, MP4, MPEG, MPGA, M4A, WAV, WEBM formats. Max file size: 25 MB.
+                            {t("playground.chat.upload.audioHint")}
                           </p>
                         </Dragger>
                       ) : (
@@ -1891,7 +1919,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                             className="bg-white shadow-xs border border-gray-200 rounded-sm px-2 py-1 text-red-500 hover:bg-red-50 text-xs"
                             onClick={handleRemoveAudio}
                           >
-                            <DeleteOutlined /> Remove
+                            <DeleteOutlined /> {t("playground.chat.upload.remove")}
                           </button>
                         </div>
                       )}
@@ -1923,12 +1951,16 @@ const ChatUI: React.FC<ChatUIProps> = ({
                           {isLoading ? (
                             <>
                               <LoadingOutlined className="text-blue-500" spin />
-                              <span className="text-sm text-blue-700 font-medium">Running Python code...</span>
+                              <span className="text-sm text-blue-700 font-medium">
+                                {t("playground.chat.codeInterpreter.running")}
+                              </span>
                             </>
                           ) : (
                             <>
                               <CodeOutlined className="text-blue-500" />
-                              <span className="text-sm text-blue-700 font-medium">Code Interpreter Active</span>
+                              <span className="text-sm text-blue-700 font-medium">
+                                {t("playground.chat.codeInterpreter.active")}
+                              </span>
                             </>
                           )}
                         </div>
@@ -1936,16 +1968,16 @@ const ChatUI: React.FC<ChatUIProps> = ({
                           className="text-xs text-blue-500 hover:text-blue-700"
                           onClick={() => codeInterpreter.setEnabled(false)}
                         >
-                          Disable
+                          {t("playground.chat.codeInterpreter.disable")}
                         </button>
                       </div>
                       {/* Sample prompts - only show when not loading */}
                       {!isLoading && (
                         <div className="flex flex-wrap gap-2">
                           {[
-                            "Generate sample sales data CSV and create a chart",
-                            "Create a PNG bar chart comparing AI gateway providers including LiteLLM",
-                            "Generate a CSV of LLM pricing data and visualize it as a line chart",
+                            t("playground.chat.prompts.salesData"),
+                            t("playground.chat.prompts.gatewayChart"),
+                            t("playground.chat.prompts.pricingChart"),
                           ].map((prompt, idx) => (
                             <button
                               key={idx}
@@ -1964,8 +1996,16 @@ const ChatUI: React.FC<ChatUIProps> = ({
                   {chatHistory.length === 0 && !isLoading && endpointType !== EndpointType.MCP && (
                     <div className="flex items-center gap-2 mb-3 overflow-x-auto">
                       {(endpointType === EndpointType.A2A_AGENTS
-                        ? ["What can you help me with?", "Tell me about yourself", "What tasks can you perform?"]
-                        : ["Write me a poem", "Explain quantum computing", "Draft a polite email requesting a meeting"]
+                        ? [
+                            t("playground.chat.prompts.agentHelp"),
+                            t("playground.chat.prompts.agentIntroduction"),
+                            t("playground.chat.prompts.agentTasks"),
+                          ]
+                        : [
+                            t("playground.chat.prompts.poem"),
+                            t("playground.chat.prompts.quantumComputing"),
+                            t("playground.chat.prompts.meetingEmail"),
+                          ]
                       ).map((prompt) => (
                         <button
                           key={prompt}
@@ -2004,8 +2044,8 @@ const ChatUI: React.FC<ChatUIProps> = ({
                           <Tooltip
                             title={
                               codeInterpreter.enabled
-                                ? "Code Interpreter enabled (click to disable)"
-                                : "Enable Code Interpreter"
+                                ? t("playground.chat.codeInterpreter.enabledTooltip")
+                                : t("playground.chat.codeInterpreter.enableTooltip")
                             }
                           >
                             <button
@@ -2017,7 +2057,9 @@ const ChatUI: React.FC<ChatUIProps> = ({
                               onClick={() => {
                                 codeInterpreter.toggle();
                                 if (!codeInterpreter.enabled) {
-                                  NotificationsManager.success("Code Interpreter enabled!");
+                                  NotificationsManager.success(
+                                    t("playground.chat.notifications.codeInterpreterEnabled"),
+                                  );
                                 }
                               }}
                             >
@@ -2053,7 +2095,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                               <MCPToolArgumentsForm ref={mcpToolArgsFormRef} tool={mcpTool} className="space-y-2" />
                             ) : (
                               <div className="flex items-center justify-center h-10 text-sm text-gray-500">
-                                Loading tool schema...
+                                {t("playground.chat.config.loadingToolSchema")}
                               </div>
                             );
                           })()}
@@ -2069,16 +2111,16 @@ const ChatUI: React.FC<ChatUIProps> = ({
                             endpointType === EndpointType.RESPONSES ||
                             endpointType === EndpointType.ANTHROPIC_MESSAGES ||
                             endpointType === EndpointType.INTERACTIONS
-                              ? "Type your message... (Shift+Enter for new line)"
+                              ? t("playground.chat.input.message")
                               : endpointType === EndpointType.A2A_AGENTS
-                                ? "Send a message to the A2A agent..."
+                                ? t("playground.chat.input.agent")
                                 : endpointType === EndpointType.IMAGE_EDITS
-                                  ? "Describe how you want to edit the image..."
+                                  ? t("playground.chat.input.imageEdit")
                                   : endpointType === EndpointType.SPEECH
-                                    ? "Enter text to convert to speech..."
+                                    ? t("playground.chat.input.speech")
                                     : endpointType === EndpointType.TRANSCRIPTION
-                                      ? "Optional: Add context or prompt for transcription..."
-                                      : "Describe the image you want to generate..."
+                                      ? t("playground.chat.input.transcription")
+                                      : t("playground.chat.input.imageGeneration")
                           }
                           disabled={isLoading}
                           className="flex-1"
@@ -2111,6 +2153,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                               : !inputMessage.trim())
                         }
                         className="shrink-0 ml-2 w-8! h-8! min-w-8! p-0! rounded-full! bg-blue-600! hover:bg-blue-700! disabled:bg-gray-300! border-none! text-white! disabled:text-gray-500! flex! items-center! justify-center!"
+                        aria-label={t("playground.chat.send")}
                       >
                         <ArrowUpOutlined style={{ fontSize: "14px" }} />
                       </TremorButton>
@@ -2122,7 +2165,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
                         className="bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
                         icon={DeleteOutlined}
                       >
-                        Cancel
+                        {t("playground.chat.cancel")}
                       </TremorButton>
                     )}
                   </div>
@@ -2133,7 +2176,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
         </div>
       </Card>
       <Modal
-        title="Generated Code"
+        title={t("playground.chat.code.title")}
         open={isGetCodeModalVisible}
         onCancel={() => setIsGetCodeModalVisible(false)}
         footer={null}
@@ -2141,7 +2184,7 @@ const ChatUI: React.FC<ChatUIProps> = ({
       >
         <div className="flex justify-between items-end my-4">
           <div>
-            <Text className="font-medium block mb-1 text-gray-700">SDK Type</Text>
+            <Text className="font-medium block mb-1 text-gray-700">{t("playground.chat.code.sdkType")}</Text>
             <Select
               value={selectedSdk}
               onChange={(value) => setSelectedSdk(value as "openai" | "azure")}
@@ -2155,10 +2198,10 @@ const ChatUI: React.FC<ChatUIProps> = ({
           <Button
             onClick={() => {
               navigator.clipboard.writeText(generatedCode);
-              NotificationsManager.success("Copied to clipboard!");
+              NotificationsManager.success(t("playground.chat.notifications.copied"));
             }}
           >
-            Copy to Clipboard
+            {t("playground.chat.code.copy")}
           </Button>
         </div>
         <SyntaxHighlighter
@@ -2192,46 +2235,33 @@ const ChatUI: React.FC<ChatUIProps> = ({
 
       {/* Toolsets info modal */}
       <Modal
-        title="How Toolsets Work"
+        title={t("playground.chat.toolsetsModal.title")}
         open={isToolsetsInfoModalVisible}
         onCancel={() => setIsToolsetsInfoModalVisible(false)}
         footer={[
           <Button key="close" onClick={() => setIsToolsetsInfoModalVisible(false)}>
-            Close
+            {t("playground.chat.toolsetsModal.close")}
           </Button>,
         ]}
         width={600}
       >
         <div className="space-y-4 py-2">
-          <p className="text-gray-700">
-            <strong>Toolsets</strong> are named collections of specific tools from one or more MCP servers. Instead of
-            exposing all tools from a server, a toolset gives an agent exactly the tools it needs.
-          </p>
+          <p className="text-gray-700">{t("playground.chat.toolsetsModal.description")}</p>
           <div>
-            <h4 className="font-semibold text-gray-800 mb-2">How to use a toolset:</h4>
+            <h4 className="font-semibold text-gray-800 mb-2">{t("playground.chat.toolsetsModal.howToUse")}</h4>
             <ol className="list-decimal list-inside space-y-2 text-gray-700">
-              <li>
-                Select a <span style={{ color: "#7c3aed", fontWeight: 600 }}>Toolset</span> (purple badge) from the MCP
-                Servers dropdown.
-              </li>
-              <li>The tool picker will show only the tools included in that toolset.</li>
-              <li>Select a tool and fill in its parameters, then send.</li>
-              <li>The tool call is routed to the correct underlying MCP server automatically.</li>
+              <li>{t("playground.chat.toolsetsModal.stepSelect")}</li>
+              <li>{t("playground.chat.toolsetsModal.stepTools")}</li>
+              <li>{t("playground.chat.toolsetsModal.stepParameters")}</li>
+              <li>{t("playground.chat.toolsetsModal.stepRoute")}</li>
             </ol>
           </div>
           <div className="bg-purple-50 border border-purple-200 rounded-sm p-3">
-            <p className="text-sm text-purple-800">
-              <strong>Example:</strong> A &quot;GitHub Read-only&quot; toolset might include only{" "}
-              <code>list_repos</code> and <code>get_file</code> from a GitHub MCP server — preventing agents from making
-              writes.
-            </p>
+            <p className="text-sm text-purple-800">{t("playground.chat.toolsetsModal.example")}</p>
           </div>
           <div>
-            <h4 className="font-semibold text-gray-800 mb-1">Creating toolsets:</h4>
-            <p className="text-sm text-gray-600">
-              Admins can create and manage toolsets from the <strong>MCP</strong> page → <strong>Toolsets</strong> tab.
-              Toolsets can then be assigned to keys and teams to scope their tool access.
-            </p>
+            <h4 className="font-semibold text-gray-800 mb-1">{t("playground.chat.toolsetsModal.creating")}</h4>
+            <p className="text-sm text-gray-600">{t("playground.chat.toolsetsModal.creatingDescription")}</p>
           </div>
         </div>
       </Modal>

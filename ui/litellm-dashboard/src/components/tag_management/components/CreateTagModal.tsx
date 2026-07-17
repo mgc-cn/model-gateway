@@ -4,6 +4,7 @@ import { Form, Input, Modal, Select as Select2, Tooltip } from "antd";
 import React from "react";
 import BudgetDurationDropdown from "../../common_components/budget_duration_dropdown";
 import NumericalInput from "../../shared/numerical_input";
+import { useTranslation } from "react-i18next";
 
 interface ModelInfo {
   model_name: string;
@@ -23,6 +24,7 @@ interface CreateTagModalProps {
 }
 
 const CreateTagModal: React.FC<CreateTagModalProps> = ({ visible, onCancel, onSubmit, availableModels }) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
 
   const handleFinish = (values: any) => {
@@ -36,28 +38,32 @@ const CreateTagModal: React.FC<CreateTagModalProps> = ({ visible, onCancel, onSu
   };
 
   return (
-    <Modal title="Create New Tag" open={visible} width={800} footer={null} onCancel={handleCancel}>
+    <Modal title={t("tagManagement.form.createTitle")} open={visible} width={800} footer={null} onCancel={handleCancel}>
       <Form form={form} onFinish={handleFinish} labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} labelAlign="left">
-        <Form.Item label="Tag Name" name="tag_name" rules={[{ required: true, message: "Please input a tag name" }]}>
+        <Form.Item
+          label={t("tagManagement.form.tagName")}
+          name="tag_name"
+          rules={[{ required: true, message: t("tagManagement.form.tagNameRequired") }]}
+        >
           <TextInput />
         </Form.Item>
 
-        <Form.Item label="Description" name="description">
+        <Form.Item label={t("tagManagement.form.description")} name="description">
           <Input.TextArea rows={4} />
         </Form.Item>
 
         <Form.Item
           label={
             <span>
-              Allowed Models
-              <Tooltip title="Select which models are allowed to process requests from this tag">
+              {t("tagManagement.form.allowedModels")}
+              <Tooltip title={t("tagManagement.form.allowedModelsHelp")}>
                 <InfoCircleOutlined style={{ marginLeft: "4px" }} />
               </Tooltip>
             </span>
           }
           name="allowed_llms"
         >
-          <Select2 mode="multiple" placeholder="Select Models">
+          <Select2 mode="multiple" placeholder={t("tagManagement.form.selectModels")}>
             {availableModels.map((model) => (
               <Select2.Option key={model.model_info.id} value={model.model_info.id}>
                 <div>
@@ -71,15 +77,15 @@ const CreateTagModal: React.FC<CreateTagModalProps> = ({ visible, onCancel, onSu
 
         <Accordion className="mt-4 mb-4">
           <AccordionHeader>
-            <Title className="m-0">Budget & Rate Limits (Optional)</Title>
+            <Title className="m-0">{t("tagManagement.form.budgetOptional")}</Title>
           </AccordionHeader>
           <AccordionBody>
             <Form.Item
               className="mt-4"
               label={
                 <span>
-                  Max Budget (USD){" "}
-                  <Tooltip title="Maximum amount in USD this tag can spend. When reached, requests with this tag will be blocked">
+                  {t("tagManagement.form.maxBudget")}{" "}
+                  <Tooltip title={t("tagManagement.form.maxBudgetHelp")}>
                     <InfoCircleOutlined style={{ marginLeft: "4px" }} />
                   </Tooltip>
                 </span>
@@ -92,8 +98,8 @@ const CreateTagModal: React.FC<CreateTagModalProps> = ({ visible, onCancel, onSu
               className="mt-4"
               label={
                 <span>
-                  Reset Budget{" "}
-                  <Tooltip title="How often the budget should reset. For example, setting 'daily' will reset the budget every 24 hours">
+                  {t("tagManagement.form.resetBudget")}{" "}
+                  <Tooltip title={t("tagManagement.form.resetBudgetHelp")}>
                     <InfoCircleOutlined style={{ marginLeft: "4px" }} />
                   </Tooltip>
                 </span>
@@ -105,14 +111,14 @@ const CreateTagModal: React.FC<CreateTagModalProps> = ({ visible, onCancel, onSu
 
             <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
               <p className="text-sm text-gray-600">
-                TPM/RPM limits for tags are not currently supported. If you need this feature, please{" "}
+                {t("tagManagement.form.rateLimitsUnsupported")}{" "}
                 <a
                   href="https://github.com/BerriAI/litellm/issues/new"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800 underline"
                 >
-                  create a GitHub issue
+                  {t("tagManagement.form.createIssue")}
                 </a>
                 .
               </p>
@@ -121,7 +127,7 @@ const CreateTagModal: React.FC<CreateTagModalProps> = ({ visible, onCancel, onSu
         </Accordion>
 
         <div style={{ textAlign: "right", marginTop: "10px" }}>
-          <Button type="submit">Create Tag</Button>
+          <Button type="submit">{t("tagManagement.form.create")}</Button>
         </div>
       </Form>
     </Modal>

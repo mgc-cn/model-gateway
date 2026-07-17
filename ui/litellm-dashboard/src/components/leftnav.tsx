@@ -45,6 +45,7 @@ import NewBadge from "./common_components/NewBadge";
 import type { Organization } from "./networking";
 import UsageIndicator from "./UsageIndicator";
 import { MIGRATED_PAGES, migratedHref, legacyPageHref } from "@/utils/migratedPages";
+import { useTranslation } from "react-i18next";
 const { Sider } = Layout;
 
 // Define the props type
@@ -74,6 +75,7 @@ interface MenuItem {
 
 // Group configuration
 interface MenuGroup {
+  translationKey: "gateway" | "observability" | "accessControl" | "developerTools" | "settings";
   groupLabel: string;
   items: MenuItem[];
   roles?: string[];
@@ -82,6 +84,7 @@ interface MenuGroup {
 // Menu groups organized by category - defined outside component for export
 const menuGroups: MenuGroup[] = [
   {
+    translationKey: "gateway",
     groupLabel: "AI GATEWAY",
     items: [
       {
@@ -200,6 +203,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
+    translationKey: "observability",
     groupLabel: "OBSERVABILITY",
     items: [
       {
@@ -225,6 +229,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
+    translationKey: "accessControl",
     groupLabel: "ACCESS CONTROL",
     items: [
       {
@@ -275,6 +280,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
+    translationKey: "developerTools",
     groupLabel: "DEVELOPER TOOLS",
     items: [
       {
@@ -342,6 +348,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
+    translationKey: "settings",
     groupLabel: "SETTINGS",
     roles: all_admin_roles,
     items: [
@@ -419,6 +426,23 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { userId, accessToken, userRole } = useAuthorized();
   const { data: organizations } = useOrganizations();
   const { data: teams } = useTeams();
+  const { t } = useTranslation();
+
+  const localizeMenuLabel = (item: MenuItem): React.ReactNode => {
+    const fallback = typeof item.label === "string" ? item.label : item.key;
+    const label = t(`navigation.items.${item.key}`, { defaultValue: fallback });
+    if (["chat", "projects", "settings"].includes(item.key)) {
+      return (
+        <span className="flex items-center gap-2">
+          {label} <NewBadge />
+        </span>
+      );
+    }
+    if (item.key === "admin-panel") {
+      return <NewBadge dot>{label}</NewBadge>;
+    }
+    return label;
+  };
 
   // Check if user is an org_admin
   const isOrgAdmin = useMemo(() => {
@@ -569,17 +593,17 @@ const Sidebar: React.FC<SidebarProps> = ({
               marginBottom: "2px",
             }}
           >
-            {group.groupLabel}
+            {t(`navigation.groups.${group.translationKey}`, { defaultValue: group.groupLabel })}
           </span>
         ),
         children: filteredItems.map((item) => ({
           key: item.key,
           icon: item.icon,
-          label: renderNavLink(item.label, item.page, item.external_url),
+          label: renderNavLink(localizeMenuLabel(item), item.page, item.external_url),
           children: item.children?.map((child) => ({
             key: child.key,
             icon: child.icon,
-            label: renderNavLink(child.label, child.page, child.external_url),
+            label: renderNavLink(localizeMenuLabel(child), child.page, child.external_url),
             onClick: () => {
               if (child.external_url) {
                 window.open(child.external_url, "_blank");

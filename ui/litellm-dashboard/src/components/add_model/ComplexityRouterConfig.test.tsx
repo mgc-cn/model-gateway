@@ -1,6 +1,7 @@
 import { renderWithProviders, screen } from "../../../tests/test-utils";
-import { vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import ComplexityRouterConfig from "./ComplexityRouterConfig";
+import i18n from "@/i18n/i18n";
 
 const mockModelInfo = [
   { model_group: "gpt-4" },
@@ -16,6 +17,10 @@ const defaultTiers = {
 };
 
 describe("ComplexityRouterConfig", () => {
+  afterEach(async () => {
+    await i18n.changeLanguage("en");
+  });
+
   it("should render", () => {
     renderWithProviders(<ComplexityRouterConfig modelInfo={mockModelInfo} value={defaultTiers} onChange={vi.fn()} />);
     expect(screen.getByText("Complexity Tier Configuration")).toBeInTheDocument();
@@ -48,5 +53,20 @@ describe("ComplexityRouterConfig", () => {
     expect(screen.getByText(/Score 0.15 - 0.35/)).toBeInTheDocument();
     expect(screen.getByText(/Score 0.35 - 0.60/)).toBeInTheDocument();
     expect(screen.getByText(/Score > 0.60/)).toBeInTheDocument();
+  });
+
+  it("localizes the complete complexity configuration in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+
+    renderWithProviders(<ComplexityRouterConfig modelInfo={mockModelInfo} value={defaultTiers} onChange={vi.fn()} />);
+
+    expect(screen.getByText("复杂度分层配置")).toBeInTheDocument();
+    expect(screen.getByText("简单 层级")).toBeInTheDocument();
+    expect(screen.getByText("中等 层级")).toBeInTheDocument();
+    expect(screen.getByText("复杂 层级")).toBeInTheDocument();
+    expect(screen.getByText("推理 层级")).toBeInTheDocument();
+    expect(screen.getByText("分类方式")).toBeInTheDocument();
+    expect(screen.getByText(/Token 数/)).toBeInTheDocument();
+    expect(screen.getByText(/评分 > 0.60/)).toBeInTheDocument();
   });
 });

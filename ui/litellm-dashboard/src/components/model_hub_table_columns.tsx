@@ -2,6 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button, Badge, Text } from "@tremor/react";
 import { Tooltip, Tag } from "antd";
 import { CopyOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import type { TFunction } from "i18next";
 
 interface ModelHubData {
   model_group: string;
@@ -52,10 +53,15 @@ export const modelHubColumns = (
   showModal: (model: ModelHubData) => void,
   copyToClipboard: (text: string) => void,
   publicPage: boolean = false,
+  t?: TFunction,
 ): ColumnDef<ModelHubData>[] => {
+  const translate = (key: string, fallback: string) => (t ? t(key, { defaultValue: fallback }) : fallback);
+  const capabilityLabel = (key: string) =>
+    translate(`modelCenter.features.${key.replace(/^supports_/, "")}`, formatCapabilityName(key));
+  const modeLabel = (mode: string) => translate(`modelCenter.modes.${mode.toLowerCase().replaceAll("-", "_")}`, mode);
   const allColumns: ColumnDef<ModelHubData>[] = [
     {
-      header: "Public Model Name",
+      header: translate("modelCenter.columns.model", "Public Model Name"),
       accessorKey: "model_group",
       enableSorting: true,
       sortingFn: "alphanumeric",
@@ -66,7 +72,7 @@ export const modelHubColumns = (
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <Text className="font-medium text-sm">{model.model_group}</Text>
-              <Tooltip title="Copy model name">
+              <Tooltip title={translate("modelCenter.columns.copyModel", "Copy model name")}>
                 <CopyOutlined
                   onClick={() => copyToClipboard(model.model_group)}
                   className="cursor-pointer text-gray-500 hover:text-blue-500 text-xs"
@@ -82,7 +88,7 @@ export const modelHubColumns = (
       },
     },
     {
-      header: "Provider",
+      header: translate("modelCenter.columns.provider", "Provider"),
       accessorKey: "providers",
       enableSorting: true,
       sortingFn: (rowA, rowB) => {
@@ -109,7 +115,7 @@ export const modelHubColumns = (
       },
     },
     {
-      header: "Mode",
+      header: translate("modelCenter.columns.mode", "Mode"),
       accessorKey: "mode",
       enableSorting: true,
       sortingFn: "alphanumeric",
@@ -118,7 +124,7 @@ export const modelHubColumns = (
 
         return model.mode ? (
           <Badge color="green" size="sm">
-            {model.mode}
+            {modeLabel(model.mode)}
           </Badge>
         ) : (
           <Text className="text-gray-500">-</Text>
@@ -129,7 +135,7 @@ export const modelHubColumns = (
       },
     },
     {
-      header: "Tokens",
+      header: translate("modelCenter.columns.tokens", "Tokens"),
       accessorKey: "max_input_tokens",
       enableSorting: true,
       sortingFn: (rowA, rowB) => {
@@ -154,7 +160,7 @@ export const modelHubColumns = (
       },
     },
     {
-      header: "Cost/1M",
+      header: translate("modelCenter.columns.cost", "Cost/1M"),
       accessorKey: "input_cost_per_token",
       enableSorting: true,
       sortingFn: (rowA, rowB) => {
@@ -176,7 +182,7 @@ export const modelHubColumns = (
       },
     },
     {
-      header: "Features",
+      header: translate("modelCenter.columns.features", "Features"),
       accessorKey: "capabilities",
       enableSorting: false,
       cell: ({ row }) => {
@@ -191,7 +197,7 @@ export const modelHubColumns = (
             ) : (
               capabilities.map((capability, index) => (
                 <Badge key={capability} color={colors[index % colors.length]} size="xs">
-                  {formatCapabilityName(capability)}
+                  {capabilityLabel(capability)}
                 </Badge>
               ))
             )}
@@ -200,7 +206,7 @@ export const modelHubColumns = (
       },
     },
     {
-      header: "Public",
+      header: translate("modelCenter.columns.public", "Public"),
       accessorKey: "is_public_model_group",
       enableSorting: true,
       sortingFn: (rowA, rowB) => {
@@ -213,11 +219,11 @@ export const modelHubColumns = (
 
         return model.is_public_model_group === true ? (
           <Badge color="green" size="xs">
-            Yes
+            {translate("modelCenter.values.yes", "Yes")}
           </Badge>
         ) : (
           <Badge color="gray" size="xs">
-            No
+            {translate("modelCenter.values.no", "No")}
           </Badge>
         );
       },
@@ -226,7 +232,7 @@ export const modelHubColumns = (
       },
     },
     {
-      header: "Details",
+      header: translate("modelCenter.columns.details", "Details"),
       id: "details",
       enableSorting: false,
       cell: ({ row }) => {
@@ -234,8 +240,8 @@ export const modelHubColumns = (
 
         return (
           <Button size="xs" variant="secondary" onClick={() => showModal(model)} icon={InfoCircleOutlined}>
-            <span className="hidden lg:inline">Details</span>
-            <span className="lg:hidden">Info</span>
+            <span className="hidden lg:inline">{translate("modelCenter.columns.details", "Details")}</span>
+            <span className="lg:hidden">{translate("modelCenter.columns.info", "Info")}</span>
           </Button>
         );
       },

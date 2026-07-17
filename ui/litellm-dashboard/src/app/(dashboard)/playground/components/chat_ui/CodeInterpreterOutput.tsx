@@ -10,6 +10,7 @@ import {
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { coy } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { getProxyBaseUrl, getGlobalLitellmHeaderName } from "@/components/networking";
+import i18n from "@/i18n/i18n";
 
 interface ContainerFileCitation {
   type: "container_file_citation";
@@ -144,7 +145,7 @@ const CodeInterpreterOutput: React.FC<CodeInterpreterOutputProps> = ({
               key: "code",
               label: (
                 <span className="flex items-center gap-2 text-sm text-gray-600">
-                  <CodeOutlined /> Python Code Executed
+                  <CodeOutlined /> {i18n.t("playground.code.executed")}
                 </span>
               ),
               children: (
@@ -173,7 +174,7 @@ const CodeInterpreterOutput: React.FC<CodeInterpreterOutputProps> = ({
           {loadingImages[annotation.file_id] ? (
             <div className="flex items-center justify-center p-8 bg-gray-50">
               <Spin indicator={<LoadingOutlined spin />} />
-              <span className="ml-2 text-sm text-gray-500">Loading image...</span>
+              <span className="ml-2 text-sm text-gray-500">{i18n.t("playground.code.loadingImage")}</span>
             </div>
           ) : imageUrls[annotation.file_id] ? (
             <div>
@@ -191,13 +192,13 @@ const CodeInterpreterOutput: React.FC<CodeInterpreterOutputProps> = ({
                   onClick={() => handleDownload(annotation)}
                   className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1"
                 >
-                  <DownloadOutlined /> Download
+                  <DownloadOutlined /> {i18n.t("playground.code.download")}
                 </button>
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-center p-4 bg-gray-50">
-              <span className="text-sm text-gray-400">Image not available</span>
+              <span className="text-sm text-gray-400">{i18n.t("playground.code.imageUnavailable")}</span>
             </div>
           )}
         </div>

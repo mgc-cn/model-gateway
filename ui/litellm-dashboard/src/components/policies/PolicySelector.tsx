@@ -39,6 +39,8 @@ interface PolicySelectorProps {
   className?: string;
   accessToken: string;
   disabled?: boolean;
+  placeholder?: string;
+  disabledPlaceholder?: string;
   /** Called after policies are loaded; use to build value→label map for display elsewhere. */
   onPoliciesLoaded?: (policies: Policy[]) => void;
 }
@@ -49,6 +51,8 @@ const PolicySelector: React.FC<PolicySelectorProps> = ({
   className,
   accessToken,
   disabled,
+  placeholder = "Select policies (production or published versions)",
+  disabledPlaceholder = "Setting policies is a premium feature.",
   onPoliciesLoaded,
 }) => {
   const [policies, setPolicies] = useState<Policy[]>([]);
@@ -84,9 +88,7 @@ const PolicySelector: React.FC<PolicySelectorProps> = ({
       <Select
         mode="multiple"
         disabled={disabled}
-        placeholder={
-          disabled ? "Setting policies is a premium feature." : "Select policies (production or published versions)"
-        }
+        placeholder={disabled ? disabledPlaceholder : placeholder}
         onChange={handlePolicyChange}
         value={value}
         loading={loading}

@@ -23,6 +23,7 @@ import { generateCodeSnippet } from "@/components/chat_ui/CodeSnippets";
 import { getEndpointType } from "@/components/chat_ui/mode_endpoint_mapping";
 import { MessageType } from "@/components/chat_ui/types";
 import { getProviderLogoAndName } from "./provider_info_helpers";
+import { useTranslation } from "react-i18next";
 
 const { TabPane } = Tabs;
 
@@ -163,6 +164,7 @@ export const publicMCPHubColumns = (showMcpModal: (server: MCPServerData) => voi
 ];
 
 const PublicModelHub: React.FC<PublicModelHubProps> = ({ accessToken, isEmbedded = false }) => {
+  const { t } = useTranslation();
   const [modelHubData, setModelHubData] = useState<ModelGroupInfo[] | null>(null);
   const [agentHubData, setAgentHubData] = useState<AgentCard[] | null>(null);
   const [mcpHubData, setMcpHubData] = useState<MCPServerData[] | null>(null);
@@ -1275,7 +1277,7 @@ const PublicModelHub: React.FC<PublicModelHubProps> = ({ accessToken, isEmbedded
               )}
 
               {/* Skill Hub Tab */}
-              <TabPane tab="Skill Hub" key="skills">
+              <TabPane tab={t("skills.hub.tab")} key="skills">
                 <SkillHubDashboard skills={skillHubData} isLoading={skillLoading} publicPage={true} />
               </TabPane>
             </Tabs>

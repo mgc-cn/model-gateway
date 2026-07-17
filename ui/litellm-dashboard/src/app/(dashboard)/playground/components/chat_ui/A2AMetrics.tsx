@@ -12,6 +12,7 @@ import {
   FileTextOutlined,
   RobotOutlined,
 } from "@ant-design/icons";
+import i18n from "@/i18n/i18n";
 
 export interface A2ATaskMetadata {
   taskId?: string;
@@ -92,7 +93,7 @@ const A2AMetrics: React.FC<A2AMetricsProps> = ({ a2aMetadata, timeToFirstToken, 
       {/* A2A Metadata Header */}
       <div className="flex items-center mb-2 text-gray-600">
         <RobotOutlined className="mr-1.5 text-blue-500" />
-        <span className="font-medium text-gray-700">A2A Metadata</span>
+        <span className="font-medium text-gray-700">{i18n.t("playground.a2a.metadata")}</span>
       </div>
 
       {/* Main metrics row */}
@@ -119,7 +120,7 @@ const A2AMetrics: React.FC<A2AMetricsProps> = ({ a2aMetadata, timeToFirstToken, 
 
         {/* Latency */}
         {totalLatency !== undefined && (
-          <Tooltip title="Total latency">
+          <Tooltip title={i18n.t("playground.a2a.totalLatency")}>
             <span className="flex items-center text-blue-600">
               <ClockCircleOutlined className="mr-1" />
               {(totalLatency / 1000).toFixed(2)}s
@@ -129,8 +130,10 @@ const A2AMetrics: React.FC<A2AMetricsProps> = ({ a2aMetadata, timeToFirstToken, 
 
         {/* Time to first token */}
         {timeToFirstToken !== undefined && (
-          <Tooltip title="Time to first token">
-            <span className="flex items-center text-green-600">TTFT: {(timeToFirstToken / 1000).toFixed(2)}s</span>
+          <Tooltip title={i18n.t("playground.a2a.timeToFirstToken")}>
+            <span className="flex items-center text-green-600">
+              {i18n.t("playground.a2a.ttft", { value: (timeToFirstToken / 1000).toFixed(2) })}
+            </span>
           </Tooltip>
         )}
       </div>
@@ -145,7 +148,7 @@ const A2AMetrics: React.FC<A2AMetricsProps> = ({ a2aMetadata, timeToFirstToken, 
               onClick={() => copyToClipboard(taskId)}
             >
               <FileTextOutlined className="mr-1" />
-              Task: {truncateId(taskId)}
+              {i18n.t("playground.a2a.task", { id: truncateId(taskId) })}
               <CopyOutlined className="ml-1 text-gray-400 hover:text-gray-600" />
             </span>
           </Tooltip>
@@ -159,7 +162,7 @@ const A2AMetrics: React.FC<A2AMetricsProps> = ({ a2aMetadata, timeToFirstToken, 
               onClick={() => copyToClipboard(contextId)}
             >
               <LinkOutlined className="mr-1" />
-              Session: {truncateId(contextId)}
+              {i18n.t("playground.a2a.session", { id: truncateId(contextId) })}
               <CopyOutlined className="ml-1 text-gray-400 hover:text-gray-600" />
             </span>
           </Tooltip>
@@ -174,7 +177,7 @@ const A2AMetrics: React.FC<A2AMetricsProps> = ({ a2aMetadata, timeToFirstToken, 
             onClick={() => setShowDetails(!showDetails)}
           >
             {showDetails ? <DownOutlined /> : <RightOutlined />}
-            <span className="ml-1">Details</span>
+            <span className="ml-1">{i18n.t("playground.a2a.details")}</span>
           </Button>
         )}
       </div>
@@ -185,7 +188,7 @@ const A2AMetrics: React.FC<A2AMetricsProps> = ({ a2aMetadata, timeToFirstToken, 
           {/* Status message */}
           {status?.message && (
             <div className="mb-2">
-              <span className="font-medium text-gray-700">Status Message:</span>
+              <span className="font-medium text-gray-700">{i18n.t("playground.a2a.statusMessage")}</span>
               <span className="ml-2">{status.message}</span>
             </div>
           )}
@@ -193,7 +196,7 @@ const A2AMetrics: React.FC<A2AMetricsProps> = ({ a2aMetadata, timeToFirstToken, 
           {/* Full IDs */}
           {taskId && (
             <div className="mb-1.5 flex items-center">
-              <span className="font-medium text-gray-700 w-24">Task ID:</span>
+              <span className="font-medium text-gray-700 w-24">{i18n.t("playground.a2a.taskId")}</span>
               <code className="ml-2 px-2 py-1 bg-white border border-gray-200 rounded-sm text-xs font-mono">
                 {taskId}
               </code>
@@ -206,7 +209,7 @@ const A2AMetrics: React.FC<A2AMetricsProps> = ({ a2aMetadata, timeToFirstToken, 
 
           {contextId && (
             <div className="mb-1.5 flex items-center">
-              <span className="font-medium text-gray-700 w-24">Session ID:</span>
+              <span className="font-medium text-gray-700 w-24">{i18n.t("playground.a2a.sessionId")}</span>
               <code className="ml-2 px-2 py-1 bg-white border border-gray-200 rounded-sm text-xs font-mono">
                 {contextId}
               </code>
@@ -220,7 +223,7 @@ const A2AMetrics: React.FC<A2AMetricsProps> = ({ a2aMetadata, timeToFirstToken, 
           {/* Metadata fields */}
           {metadata && Object.keys(metadata).length > 0 && (
             <div className="mt-3">
-              <span className="font-medium text-gray-700">Custom Metadata:</span>
+              <span className="font-medium text-gray-700">{i18n.t("playground.a2a.customMetadata")}</span>
               <pre className="mt-1.5 p-2 bg-white border border-gray-200 rounded-sm text-xs font-mono overflow-x-auto whitespace-pre-wrap">
                 {JSON.stringify(metadata, null, 2)}
               </pre>

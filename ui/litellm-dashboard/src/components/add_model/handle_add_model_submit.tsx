@@ -1,4 +1,5 @@
 import NotificationManager from "../molecules/notifications_manager";
+import i18n from "@/i18n/i18n";
 import { Model, modelCreateCall } from "../networking";
 import { provider_map } from "../provider_info_helpers";
 
@@ -127,8 +128,11 @@ export const prepareModelAddRequest = async (formValues: Record<string, any>, ac
                 delete litellmExtraParams.litellm_credential_name;
               }
             } catch (error) {
-              NotificationManager.fromBackend("Failed to parse LiteLLM Extra Params: " + error);
-              throw new Error("Failed to parse litellm_extra_params: " + error);
+              const message = i18n.t("modelsAndEndpoints.addModel.errors.parseExtraParams", {
+                error: String(error),
+              });
+              NotificationManager.fromBackend(message);
+              throw new Error(message);
             }
             for (const [key, value] of Object.entries(litellmExtraParams)) {
               litellmParamsObj[key] = value;
@@ -140,8 +144,11 @@ export const prepareModelAddRequest = async (formValues: Record<string, any>, ac
             try {
               modelInfoParams = JSON.parse(value);
             } catch (error) {
-              NotificationManager.fromBackend("Failed to parse LiteLLM Extra Params: " + error);
-              throw new Error("Failed to parse litellm_extra_params: " + error);
+              const message = i18n.t("modelsAndEndpoints.addModel.errors.parseModelInfo", {
+                error: String(error),
+              });
+              NotificationManager.fromBackend(message);
+              throw new Error(message);
             }
             for (const [key, value] of Object.entries(modelInfoParams)) {
               modelInfoObj[key] = value;
@@ -175,7 +182,7 @@ export const prepareModelAddRequest = async (formValues: Record<string, any>, ac
 
     return deployments;
   } catch (error) {
-    NotificationManager.fromBackend("Failed to create model: " + error);
+    NotificationManager.fromBackend(i18n.t("modelsAndEndpoints.addModel.errors.createModel", { error: String(error) }));
   }
 };
 
@@ -203,6 +210,6 @@ export const handleAddModelSubmit = async (values: any, accessToken: string, for
     callback && callback();
     form.resetFields();
   } catch (error) {
-    NotificationManager.fromBackend("Failed to add model: " + error);
+    NotificationManager.fromBackend(i18n.t("modelsAndEndpoints.addModel.errors.addModel", { error: String(error) }));
   }
 };

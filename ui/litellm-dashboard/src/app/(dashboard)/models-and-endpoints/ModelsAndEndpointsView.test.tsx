@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ModelsAndEndpointsView from "./ModelsAndEndpointsView";
+import i18n from "@/i18n/i18n";
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -33,6 +34,7 @@ vi.mock("@/components/networking", () => ({
   getUiSettings: vi.fn().mockResolvedValue({ values: {} }),
   latestHealthChecksCall: vi.fn().mockResolvedValue({ latest_health_checks: {} }),
   getModelCostMapReloadStatus: vi.fn().mockResolvedValue({}),
+  getModelCostMapSource: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@/app/(dashboard)/models-and-endpoints/components/ModelAnalyticsTab/ModelAnalyticsTab", () => ({
@@ -46,6 +48,14 @@ vi.mock("@/components/add_model/add_auto_router_tab", () => ({
 vi.mock("@/components/add_model/AddModelForm", () => ({
   default: () => null,
 }));
+
+vi.mock("@/app/(dashboard)/hooks/proxyConfig/useProxyConfig", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/app/(dashboard)/hooks/proxyConfig/useProxyConfig")>();
+  return {
+    ...actual,
+    useProxyConfig: () => ({ data: undefined, isLoading: false, refetch: vi.fn() }),
+  };
+});
 
 const mockHealthCheckComponent = vi.fn((_props: { all_models_on_proxy?: string[] }) => null);
 vi.mock("@/components/model_dashboard/HealthCheckComponent", () => ({
@@ -150,7 +160,7 @@ describe("ModelsAndEndpointsView", () => {
     expect(await findByText("Missing a provider?", {}, { timeout: 10000 })).toBeInTheDocument();
 
     // Find and click dismiss button (X button)
-    const dismissButton = container.querySelector('button[aria-label="Dismiss banner"]');
+    const dismissButton = container.querySelector('button[aria-label="Dismiss provider request banner"]');
     expect(dismissButton).not.toBeNull();
     fireEvent.click(dismissButton!);
 
@@ -181,6 +191,22 @@ describe("ModelsAndEndpointsView", () => {
     const requestProviderLinks = document.querySelectorAll('a[href="https://models.litellm.ai/?request=true"]');
     // There should be a compact button when banner is hidden
     expect(requestProviderLinks.length).toBeGreaterThan(0);
+  });
+
+  it("localizes the page shell and tab labels in Simplified Chinese", async () => {
+    await i18n.changeLanguage("zh-CN");
+    localStorageMock.clear();
+    const queryClient = createQueryClient();
+    const { findByText, getByRole } = render(
+      <QueryClientProvider client={queryClient}>
+        <ModelsAndEndpointsView premiumUser={false} teams={[]} />
+      </QueryClientProvider>,
+    );
+
+    expect(await findByText("模型管理", {}, { timeout: 10000 })).toBeInTheDocument();
+    expect(getByRole("tab", { name: "价格数据重载" })).toBeInTheDocument();
+    expect(getByRole("tab", { name: "模型凭证" })).toBeInTheDocument();
+    expect(await findByText("缺少所需的提供商？")).toBeInTheDocument();
   });
 
   it("should pass model IDs (not model names) to HealthCheckComponent as all_models_on_proxy", async () => {

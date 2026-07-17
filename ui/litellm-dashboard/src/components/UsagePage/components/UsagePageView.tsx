@@ -24,6 +24,7 @@ import {
 } from "@tremor/react";
 import { Alert, Button, Segmented, Select, Tooltip, Typography } from "antd";
 import React, { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useAgents } from "@/app/(dashboard)/hooks/agents/useAgents";
 import { useCustomers } from "@/app/(dashboard)/hooks/customers/useCustomers";
@@ -58,6 +59,7 @@ interface UsagePageProps {
 }
 
 const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
+  const { t, i18n } = useTranslation();
   const { accessToken, userRole, userId: userID, premiumUser } = useAuthorized();
   // Aggregated endpoint: try first, fall back to paginated if unavailable
   const [aggregatedData, setAggregatedData] = useState<{ results: DailyData[]; metadata: any } | null>(null);
@@ -460,16 +462,17 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                 <div className="flex items-center justify-between">
                   <span>
                     <LoadingOutlined spin className="mr-2" />
-                    Currently fetching spend data: fetched {paginatedResult.progress.currentPage} /{" "}
-                    {paginatedResult.progress.totalPages} pages. Charts will update periodically as data loads. Moving
-                    off of this page will stop and reset this. To continue using the UI in the meantime,{" "}
+                    {t("observability.usage.fetching", {
+                      current: paginatedResult.progress.currentPage,
+                      total: paginatedResult.progress.totalPages,
+                    })}{" "}
                     <a href={window.location.href} target="_blank" rel="noopener noreferrer">
-                      open a new tab <ExportOutlined />
+                      {t("observability.usage.openNewTab")} <ExportOutlined />
                     </a>
                     .
                   </span>
                   <Button type="primary" danger onClick={paginatedResult.cancel}>
-                    Stop
+                    {t("observability.usage.stop")}
                   </Button>
                 </div>
               }
@@ -482,8 +485,10 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
               className="mb-2"
               message={
                 <span>
-                  Showing partial data ({paginatedResult.progress.currentPage}/{paginatedResult.progress.totalPages}{" "}
-                  pages loaded)
+                  {t("observability.usage.partialData", {
+                    current: paginatedResult.progress.currentPage,
+                    total: paginatedResult.progress.totalPages,
+                  })}
                 </span>
               }
             />
@@ -493,12 +498,12 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
             <>
               {isAdmin && usageView === "global" && (
                 <div className="mb-4">
-                  <Text className="mb-2">Filter by user</Text>
+                  <Text className="mb-2">{t("observability.usage.filterByUser")}</Text>
                   <Select
                     showSearch
                     allowClear
                     style={{ width: "100%" }}
-                    placeholder="Select user to filter..."
+                    placeholder={t("observability.usage.selectUser")}
                     value={selectedUserId}
                     onChange={(value) => setSelectedUserId(value ?? null)}
                     filterOption={false}
@@ -506,7 +511,7 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                     searchValue={userSearchInput}
                     onPopupScroll={handleUserPopupScroll}
                     loading={isLoadingUsers}
-                    notFoundContent={isLoadingUsers ? <LoadingOutlined spin /> : "No users found"}
+                    notFoundContent={isLoadingUsers ? <LoadingOutlined spin /> : t("observability.usage.noUsers")}
                     options={userOptions}
                     popupRender={(menu) => (
                       <>
@@ -524,11 +529,11 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
               <TabGroup>
                 <div className="flex justify-between items-center">
                   <TabList variant="solid" className="mt-1">
-                    <Tab>Cost</Tab>
-                    <Tab>Model Activity</Tab>
-                    <Tab>Key Activity</Tab>
-                    <Tab>MCP Server Activity</Tab>
-                    <Tab>Endpoint Activity</Tab>
+                    <Tab>{t("observability.usage.tabs.cost")}</Tab>
+                    <Tab>{t("observability.usage.tabs.model")}</Tab>
+                    <Tab>{t("observability.usage.tabs.key")}</Tab>
+                    <Tab>{t("observability.usage.tabs.mcp")}</Tab>
+                    <Tab>{t("observability.usage.tabs.endpoint")}</Tab>
                   </TabList>
                   <div className="flex items-center gap-2">
                     <Button
@@ -539,7 +544,7 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                         </svg>
                       }
                     >
-                      Ask AI
+                      {t("observability.usage.askAi")}
                     </Button>
                     <Button
                       onClick={() => setIsGlobalExportModalOpen(true)}
@@ -554,7 +559,7 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                         </svg>
                       }
                     >
-                      Export Data
+                      {t("observability.usage.exportData")}
                     </Button>
                   </div>
                 </div>
@@ -566,17 +571,17 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                       <Col numColSpan={2}>
                         <div className="flex items-center gap-4 mt-2 mb-2">
                           <Text className="text-tremor-default text-tremor-content dark:text-dark-tremor-content text-lg">
-                            Project Spend{" "}
+                            {t("observability.usage.projectSpend")}{" "}
                             {dateValue.from && dateValue.to && (
                               <>
-                                {dateValue.from.toLocaleDateString("en-US", {
+                                {dateValue.from.toLocaleDateString(i18n.language, {
                                   month: "short",
                                   day: "numeric",
                                   year:
                                     dateValue.from.getFullYear() !== dateValue.to.getFullYear() ? "numeric" : undefined,
                                 })}
                                 {" - "}
-                                {dateValue.to.toLocaleDateString("en-US", {
+                                {dateValue.to.toLocaleDateString(i18n.language, {
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
@@ -595,24 +600,24 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
 
                       <Col numColSpan={2}>
                         <Card>
-                          <Title>Usage Metrics</Title>
+                          <Title>{t("observability.usage.metrics")}</Title>
                           <Grid numItems={5} className="gap-4 mt-4">
                             <Card>
-                              <Title>Total Requests</Title>
+                              <Title>{t("observability.usage.totalRequests")}</Title>
                               <Text className="text-2xl font-bold mt-2">
                                 {userSpendData.metadata?.total_api_requests?.toLocaleString() || 0}
                               </Text>
                             </Card>
                             <Card>
-                              <Title>Successful Requests</Title>
+                              <Title>{t("observability.usage.successfulRequests")}</Title>
                               <Text className="text-2xl font-bold mt-2 text-green-600">
                                 {userSpendData.metadata?.total_successful_requests?.toLocaleString() || 0}
                               </Text>
                             </Card>
                             <Card>
                               <div className="flex items-center gap-2">
-                                <Title>Failed Requests</Title>
-                                <Tooltip title="Includes requests that failed to route to a provider, tool usage failures, and other request errors where the provider cannot be determined.">
+                                <Title>{t("observability.usage.failedRequests")}</Title>
+                                <Tooltip title={t("observability.usage.failedRequestsHelp")}>
                                   <InfoCircleOutlined className="text-gray-400 hover:text-gray-600" />
                                 </Tooltip>
                               </div>
@@ -621,7 +626,7 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                               </Text>
                             </Card>
                             <Card>
-                              <Title>Average Cost per Request</Title>
+                              <Title>{t("observability.usage.averageCost")}</Title>
                               <Text className="text-2xl font-bold mt-2">
                                 $
                                 {formatNumberWithCommas(
@@ -635,7 +640,7 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                               onClick={() => setShowTokenBreakdown(!showTokenBreakdown)}
                             >
                               <div className="flex items-center gap-2">
-                                <Title>Total Tokens</Title>
+                                <Title>{t("observability.usage.totalTokens")}</Title>
                                 {showTokenBreakdown ? (
                                   <DownOutlined className="text-gray-400 text-xs" />
                                 ) : (
@@ -650,25 +655,25 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                           {showTokenBreakdown && (
                             <Grid numItems={4} className="gap-4 mt-4">
                               <Card>
-                                <Title>Input Tokens</Title>
+                                <Title>{t("observability.usage.inputTokens")}</Title>
                                 <Text className="text-2xl font-bold mt-2 text-blue-600">
                                   {(userSpendData.metadata?.total_prompt_tokens || 0).toLocaleString()}
                                 </Text>
                               </Card>
                               <Card>
-                                <Title>Output Tokens</Title>
+                                <Title>{t("observability.usage.outputTokens")}</Title>
                                 <Text className="text-2xl font-bold mt-2 text-cyan-600">
                                   {userSpendData.metadata?.total_completion_tokens?.toLocaleString() || 0}
                                 </Text>
                               </Card>
                               <Card>
-                                <Title>Cache Read Tokens</Title>
+                                <Title>{t("observability.usage.cacheReadTokens")}</Title>
                                 <Text className="text-2xl font-bold mt-2 text-green-600">
                                   {userSpendData.metadata?.total_cache_read_input_tokens?.toLocaleString() || 0}
                                 </Text>
                               </Card>
                               <Card>
-                                <Title>Cache Write Tokens</Title>
+                                <Title>{t("observability.usage.cacheWriteTokens")}</Title>
                                 <Text className="text-2xl font-bold mt-2 text-purple-600">
                                   {userSpendData.metadata?.total_cache_creation_input_tokens?.toLocaleString() || 0}
                                 </Text>
@@ -681,7 +686,7 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                       {/* Daily Spend Chart */}
                       <Col numColSpan={2}>
                         <Card>
-                          <Title>Daily Spend</Title>
+                          <Title>{t("observability.usage.dailySpend")}</Title>
                           {loading ? (
                             <ChartLoader isDateChanging={isDateChanging} />
                           ) : (
@@ -716,7 +721,7 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                       {/* Top API Keys */}
                       <Col numColSpan={1}>
                         <Card className="h-full">
-                          <Title>Top Virtual Keys</Title>
+                          <Title>{t("observability.usage.topKeys")}</Title>
                           <TopKeyView
                             topKeys={topKeys}
                             teams={null}
@@ -729,7 +734,11 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                       {/* Top Models */}
                       <Col numColSpan={1}>
                         <Card className="h-full">
-                          <Title>{modelViewType === "groups" ? "Top Public Model Names" : "Top Litellm Models"}</Title>
+                          <Title>
+                            {modelViewType === "groups"
+                              ? t("observability.usage.topPublicModels")
+                              : t("observability.usage.topLiteLLMModels")}
+                          </Title>
                           <div className="flex justify-between items-center mb-4">
                             <Segmented
                               options={[
@@ -903,11 +912,11 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
                 <Alert
                   banner
                   type="info"
-                  message="Reusable credentials are automatically tracked as tags"
+                  message={t("observability.usage.credentialTracking")}
                   description={
                     <Typography.Text>
                       When a reusable credential is used, it will appear as a tag prefixed with{" "}
-                      <Typography.Text code>Credential: </Typography.Text>
+                      <Typography.Text code>{t("observability.usage.credential")}</Typography.Text>
                       in this view.
                     </Typography.Text>
                   }
@@ -977,7 +986,7 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations }) => {
         }}
         dateRange={dateValue}
         selectedFilters={[]}
-        customTitle="Export Usage Data"
+        customTitle={t("observability.usage.exportTitle")}
       />
 
       {/* AI Chat Panel */}

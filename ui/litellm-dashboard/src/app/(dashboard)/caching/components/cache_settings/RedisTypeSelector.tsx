@@ -1,5 +1,6 @@
 import React from "react";
 import { Select, SelectItem } from "@tremor/react";
+import { useTranslation } from "react-i18next";
 
 interface RedisTypeSelectorProps {
   redisType: string;
@@ -8,17 +9,20 @@ interface RedisTypeSelectorProps {
 }
 
 const RedisTypeSelector: React.FC<RedisTypeSelectorProps> = ({ redisType, redisTypeDescriptions, onTypeChange }) => {
+  const { t } = useTranslation();
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-gray-700">Redis Type</label>
+      <label className="text-sm font-medium text-gray-700">{t("caching.settings.redisType")}</label>
       <Select value={redisType} onValueChange={onTypeChange}>
-        <SelectItem value="node">Node (Single Instance)</SelectItem>
-        <SelectItem value="cluster">Cluster</SelectItem>
-        <SelectItem value="sentinel">Sentinel</SelectItem>
-        <SelectItem value="semantic">Semantic</SelectItem>
+        <SelectItem value="node">{t("caching.settings.redisTypes.node.label")}</SelectItem>
+        <SelectItem value="cluster">{t("caching.settings.redisTypes.cluster.label")}</SelectItem>
+        <SelectItem value="sentinel">{t("caching.settings.redisTypes.sentinel.label")}</SelectItem>
+        <SelectItem value="semantic">{t("caching.settings.redisTypes.semantic.label")}</SelectItem>
       </Select>
       <p className="text-xs text-gray-500">
-        {redisTypeDescriptions[redisType] || "Select the type of Redis deployment you're using"}
+        {t(`caching.settings.redisTypes.${redisType}.description`, {
+          defaultValue: redisTypeDescriptions[redisType] || t("caching.settings.selectRedisType"),
+        })}
       </p>
     </div>
   );

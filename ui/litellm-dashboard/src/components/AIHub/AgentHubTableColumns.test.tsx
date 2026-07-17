@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { getAgentHubTableColumns, AgentHubData } from "./AgentHubTableColumns";
+import i18n from "@/i18n/i18n";
 
 const mockAgent: AgentHubData = {
   agent_id: "agent-1",
@@ -27,13 +28,15 @@ function TestTable({
   publicPage = false,
   showModal = vi.fn(),
   copyToClipboard = vi.fn(),
+  locale = "en",
 }: {
   data: AgentHubData[];
   publicPage?: boolean;
   showModal?: ReturnType<typeof vi.fn>;
   copyToClipboard?: ReturnType<typeof vi.fn>;
+  locale?: "en" | "zh-CN";
 }) {
-  const columns = getAgentHubTableColumns(showModal, copyToClipboard, publicPage);
+  const columns = getAgentHubTableColumns(showModal, copyToClipboard, i18n.getFixedT(locale), publicPage);
   const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel() });
 
   return (
@@ -61,6 +64,17 @@ function TestTable({
 }
 
 describe("AgentHubTableColumns", () => {
+  it("localizes the agent list columns and values", () => {
+    render(<TestTable data={[mockAgent]} locale="zh-CN" />);
+
+    expect(screen.getByText("智能体名称")).toBeInTheDocument();
+    expect(screen.getByText("描述")).toBeInTheDocument();
+    expect(screen.getByText("输入/输出模式")).toBeInTheDocument();
+    expect(screen.getByText("3 项技能")).toBeInTheDocument();
+    expect(screen.getByText("流式传输")).toBeInTheDocument();
+    expect(screen.getByText("是")).toBeInTheDocument();
+  });
+
   it("should render", () => {
     render(<TestTable data={[mockAgent]} />);
     expect(screen.getByText("Test Agent")).toBeInTheDocument();
@@ -96,7 +110,7 @@ describe("AgentHubTableColumns", () => {
 
   it("should show only true capabilities as badges", () => {
     render(<TestTable data={[mockAgent]} />);
-    expect(screen.getByText("streaming")).toBeInTheDocument();
+    expect(screen.getByText("Streaming")).toBeInTheDocument();
     expect(screen.queryByText("caching")).not.toBeInTheDocument();
   });
 

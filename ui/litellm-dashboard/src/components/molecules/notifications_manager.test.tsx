@@ -1,6 +1,7 @@
 import { notification } from "antd";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import NotificationManager, { COMMON_NOTIFICATION_PROPS } from "./notifications_manager";
+import i18n from "@/i18n/i18n";
 
 vi.mock("@/components/molecules/notifications_manager", async () => {
   const actual = await vi.importActual<typeof import("@/components/molecules/notifications_manager")>(
@@ -66,5 +67,11 @@ describe("NotificationManager", () => {
         );
       });
     });
+  });
+
+  it("localizes a classified backend notification title", async () => {
+    await i18n.changeLanguage("zh-CN");
+    NotificationManager.fromBackend({ message: "User already exists", code: "400" });
+    expect(notification.error).toHaveBeenCalledWith(expect.objectContaining({ message: "已存在" }));
   });
 });

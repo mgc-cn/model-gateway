@@ -13,6 +13,7 @@ import {
 import { resolveLogoSrc } from "@/lib/assetPaths";
 import { fetchAvailableModels, ModelGroup } from "@/components/llm_calls/fetch_models";
 import NotificationsManager from "../molecules/notifications_manager";
+import { useTranslation } from "react-i18next";
 
 interface VectorStoreFormProps {
   isVisible: boolean;
@@ -29,6 +30,7 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
   accessToken,
   credentials,
 }) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [metadataJson, setMetadataJson] = useState("{}");
   const [selectedProvider, setSelectedProvider] = useState("bedrock");
@@ -60,7 +62,7 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
       try {
         metadata = metadataJson.trim() ? JSON.parse(metadataJson) : {};
       } catch (e) {
-        NotificationsManager.fromBackend("Invalid JSON in metadata field");
+        NotificationsManager.fromBackend(t("toolManagement.vectors.invalidMetadata"));
         return;
       }
 
@@ -92,13 +94,13 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
       payload["litellm_params"] = litellmParams;
 
       await vectorStoreCreateCall(accessToken, payload);
-      NotificationsManager.success("Vector store created successfully");
+      NotificationsManager.success(t("toolManagement.vectors.form.created"));
       form.resetFields();
       setMetadataJson("{}");
       onSuccess();
     } catch (error) {
       console.error("Error creating vector store:", error);
-      NotificationsManager.fromBackend("Error creating vector store: " + error);
+      NotificationsManager.fromBackend(t("toolManagement.vectors.form.createFailed", { error: String(error) }));
     }
   };
 
@@ -110,19 +112,25 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
   };
 
   return (
-    <Modal title="Add New Vector Store" open={isVisible} width={1000} footer={null} onCancel={handleCancel}>
+    <Modal
+      title={t("toolManagement.vectors.form.addTitle")}
+      open={isVisible}
+      width={1000}
+      footer={null}
+      onCancel={handleCancel}
+    >
       <Form form={form} onFinish={handleCreate} labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} labelAlign="left">
         <Form.Item
           label={
             <span>
-              Provider{" "}
-              <Tooltip title="Select the provider for this vector store">
+              {t("toolManagement.common.provider")}{" "}
+              <Tooltip title={t("toolManagement.vectors.form.providerHelp")}>
                 <InfoCircleOutlined style={{ marginLeft: "4px" }} />
               </Tooltip>
             </span>
           }
           name="custom_llm_provider"
-          rules={[{ required: true, message: "Please select a provider" }]}
+          rules={[{ required: true, message: t("toolManagement.vectors.providerRequired") }]}
           initialValue="bedrock"
         >
           <Select onChange={(value) => setSelectedProvider(value)}>
@@ -158,20 +166,20 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
         {/* PG Vector Setup Instructions */}
         {selectedProvider === "pg_vector" && (
           <Alert
-            message="PG Vector Setup Required"
+            message={t("toolManagement.vectors.form.pgTitle")}
             description={
               <div>
-                <p>LiteLLM provides a server to connect to PG Vector. To use this provider:</p>
+                <p>{t("toolManagement.vectors.form.pgDescription")}</p>
                 <ol style={{ marginLeft: "16px", marginTop: "8px" }}>
                   <li>
-                    Deploy the litellm-pgvector server from:{" "}
+                    {t("toolManagement.vectors.form.pgDeploy")}{" "}
                     <a href="https://github.com/BerriAI/litellm-pgvector" target="_blank" rel="noopener noreferrer">
                       https://github.com/BerriAI/litellm-pgvector
                     </a>
                   </li>
-                  <li>Configure your PostgreSQL database with pgvector extension</li>
-                  <li>Start the server and note the API base URL and API key</li>
-                  <li>Enter those details in the fields below</li>
+                  <li>{t("toolManagement.vectors.form.pgDatabase")}</li>
+                  <li>{t("toolManagement.vectors.form.pgServer")}</li>
+                  <li>{t("toolManagement.vectors.form.pgFields")}</li>
                 </ol>
               </div>
             }
@@ -184,24 +192,24 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
         {/* Vertex RAG Engine Setup Instructions */}
         {selectedProvider === "vertex_rag_engine" && (
           <Alert
-            message="Vertex AI RAG Engine Setup"
+            message={t("toolManagement.vectors.form.ragTitle")}
             description={
               <div>
-                <p>To use Vertex AI RAG Engine:</p>
+                <p>{t("toolManagement.vectors.form.ragDescription")}</p>
                 <ol style={{ marginLeft: "16px", marginTop: "8px" }}>
                   <li>
-                    Set up your Vertex AI RAG Engine corpus following the guide:{" "}
+                    {t("toolManagement.vectors.form.ragGuide")}{" "}
                     <a
                       href="https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-overview"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Vertex AI RAG Engine Overview
+                      {t("toolManagement.vectors.form.ragDocs")}
                     </a>
                   </li>
-                  <li>Create a corpus in your Google Cloud project</li>
-                  <li>Note the corpus ID from the Vertex AI console</li>
-                  <li>Enter the corpus ID in the Vector Store ID field below</li>
+                  <li>{t("toolManagement.vectors.form.ragCorpus")}</li>
+                  <li>{t("toolManagement.vectors.form.ragId")}</li>
+                  <li>{t("toolManagement.vectors.form.ragField")}</li>
                 </ol>
               </div>
             }
@@ -214,34 +222,25 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
         {/* Vertex AI Search Setup Instructions */}
         {selectedProvider === "vertex_ai/search_api" && (
           <Alert
-            message="Vertex AI Search Setup"
+            message={t("toolManagement.vectors.form.searchTitle")}
             description={
               <div>
-                <p>To use Vertex AI Search (Discovery Engine):</p>
+                <p>{t("toolManagement.vectors.form.searchDescription")}</p>
                 <ol style={{ marginLeft: "16px", marginTop: "8px" }}>
                   <li>
-                    Enable the Discovery Engine API on your Google Cloud project and create a data store following the
-                    guide:{" "}
+                    {t("toolManagement.vectors.form.searchEnable")}{" "}
                     <a
                       href="https://cloud.google.com/generative-ai-app-builder/docs/create-data-store-es"
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ textDecoration: "underline" }}
                     >
-                      Create a Vertex AI Search data store
+                      {t("toolManagement.vectors.form.searchDocs")}
                     </a>
                   </li>
-                  <li>Pick a supported location: global, us, or eu</li>
-                  <li>
-                    For most data store types (Cloud Storage, BigQuery, Media): copy the data store ID and enter it in
-                    the Vector Store ID field below.
-                  </li>
-                  <li>
-                    For website, healthcare, and connector-based sources (Drive, Gmail, Slack, Jira, etc.): create a
-                    search app on top of the data store, then copy the <strong>Engine ID</strong> and enter it in the
-                    Engine ID field. The Vector Store ID is still required as the LiteLLM-side name for this record, but
-                    it isn't used in the GCP URL when Engine ID is set.
-                  </li>
+                  <li>{t("toolManagement.vectors.form.searchLocation")}</li>
+                  <li>{t("toolManagement.vectors.form.searchDataStore")}</li>
+                  <li>{t("toolManagement.vectors.form.searchEngine")}</li>
                 </ol>
               </div>
             }
@@ -254,14 +253,14 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
         <Form.Item
           label={
             <span>
-              Vector Store ID{" "}
-              <Tooltip title="Enter the vector store ID from your api provider">
+              {t("toolManagement.vectors.vectorId")}{" "}
+              <Tooltip title={t("toolManagement.vectors.form.idHelp")}>
                 <InfoCircleOutlined style={{ marginLeft: "4px" }} />
               </Tooltip>
             </span>
           }
           name="vector_store_id"
-          rules={[{ required: true, message: "Please input the vector store ID from your api provider" }]}
+          rules={[{ required: true, message: t("toolManagement.vectors.form.idProviderRequired") }]}
         >
           <TextInput
             placeholder={
@@ -269,9 +268,9 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
                 ? "6917529027641081856 (Get corpus ID from Vertex AI console)"
                 : selectedProvider === "vertex_ai/search_api"
                   ? vertexEngineId
-                    ? "Any identifier you'll use to reference this in LiteLLM"
+                    ? t("toolManagement.vectors.form.localIdPlaceholder")
                     : "my-datastore_1234567890 (Get data store ID from Vertex AI Search console)"
-                  : "Enter vector store ID from your provider"
+                  : t("toolManagement.vectors.form.idPlaceholder")
             }
           />
         </Form.Item>
@@ -302,7 +301,14 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
                 name={field.name}
                 initialValue={field.initialValue}
                 rules={
-                  field.required ? [{ required: true, message: `Please select the ${field.label.toLowerCase()}` }] : []
+                  field.required
+                    ? [
+                        {
+                          required: true,
+                          message: t("toolManagement.vectors.form.selectFieldRequired", { field: field.label }),
+                        },
+                      ]
+                    : []
                 }
               >
                 <Select
@@ -329,7 +335,14 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
               }
               name={field.name}
               rules={
-                field.required ? [{ required: true, message: `Please input the ${field.label.toLowerCase()}` }] : []
+                field.required
+                  ? [
+                      {
+                        required: true,
+                        message: t("toolManagement.vectors.form.inputFieldRequired", { field: field.label }),
+                      },
+                    ]
+                  : []
               }
             >
               <TextInput type={field.type || "text"} placeholder={field.placeholder} />
@@ -340,8 +353,8 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
         <Form.Item
           label={
             <span>
-              Vector Store Name{" "}
-              <Tooltip title="Custom name you want to give to the vector store, this name will be rendered on the LiteLLM UI">
+              {t("toolManagement.vectors.name")}{" "}
+              <Tooltip title={t("toolManagement.vectors.form.nameHelp")}>
                 <InfoCircleOutlined style={{ marginLeft: "4px" }} />
               </Tooltip>
             </span>
@@ -351,15 +364,15 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
           <TextInput />
         </Form.Item>
 
-        <Form.Item label="Description" name="vector_store_description">
+        <Form.Item label={t("toolManagement.common.description")} name="vector_store_description">
           <Input.TextArea rows={4} />
         </Form.Item>
 
         <Form.Item
           label={
             <span>
-              Existing Credentials{" "}
-              <Tooltip title="Optionally select API provider credentials for this vector store eg. Bedrock API KEY">
+              {t("toolManagement.vectors.existingCredentials")}{" "}
+              <Tooltip title={t("toolManagement.vectors.form.credentialsHelp")}>
                 <InfoCircleOutlined style={{ marginLeft: "4px" }} />
               </Tooltip>
             </span>
@@ -368,11 +381,11 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
         >
           <Select
             showSearch
-            placeholder="Select or search for existing credentials"
+            placeholder={t("toolManagement.vectors.credentialsPlaceholder")}
             optionFilterProp="children"
             filterOption={(input, option) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase())}
             options={[
-              { value: null, label: "None" },
+              { value: null, label: t("toolManagement.vectors.none") },
               ...credentials.map((credential) => ({
                 value: credential.credential_name,
                 label: credential.credential_name,
@@ -385,8 +398,8 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
         <Form.Item
           label={
             <span>
-              Metadata{" "}
-              <Tooltip title="JSON metadata for the vector store (optional)">
+              {t("toolManagement.vectors.metadata")}{" "}
+              <Tooltip title={t("toolManagement.vectors.form.metadataHelp")}>
                 <InfoCircleOutlined style={{ marginLeft: "4px" }} />
               </Tooltip>
             </span>
@@ -402,10 +415,10 @@ const VectorStoreForm: React.FC<VectorStoreFormProps> = ({
 
         <div className="flex justify-end space-x-3">
           <TremorButton onClick={handleCancel} variant="secondary">
-            Cancel
+            {t("common.cancel")}
           </TremorButton>
           <TremorButton variant="primary" type="submit">
-            Create
+            {t("toolManagement.vectors.form.create")}
           </TremorButton>
         </div>
       </Form>

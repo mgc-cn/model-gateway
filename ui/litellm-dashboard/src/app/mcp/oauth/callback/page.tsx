@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { getSecureItem, setSecureItem } from "@/utils/secureStorage";
+import RouteStatus from "@/components/common_components/RouteStatus";
+import { useTranslation } from "react-i18next";
 
 // Written to sessionStorage so the admin hook (useMcpOAuthFlow), the user hook
 // (useUserMcpOAuthFlow), and the tools re-auth hook (useToolsOAuthFlow) can each
@@ -27,8 +29,9 @@ const resolveDefaultRedirect = () => {
   return "/";
 };
 
-const McpOAuthCallbackContent = () => {
+export const McpOAuthCallbackContent = () => {
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   const payload = useMemo(() => {
     if (!searchParams) {
@@ -77,15 +80,22 @@ const McpOAuthCallbackContent = () => {
   }, [payload]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6" role="status" aria-live="polite">
       <div className="max-w-lg w-full rounded-lg bg-white shadow-md p-8 text-center space-y-4">
-        <h1 className="text-xl font-semibold text-slate-900">LiteLLM MCP OAuth</h1>
-        <p className="text-sm text-slate-700">
-          Authorization complete. You may close this window and return to the LiteLLM dashboard.
-        </p>
-        <p className="text-xs text-slate-500">
-          If the window does not close automatically, everything is still saved—you can close it manually.
-        </p>
+        <h1 className="text-xl font-semibold text-slate-900">{t("oauthCallback.title")}</h1>
+        {payload?.error ? (
+          <>
+            <p className="text-sm text-red-700">
+              {t("oauthCallback.error", { reason: payload.error_description || payload.error })}
+            </p>
+            <p className="text-xs text-slate-500">{t("oauthCallback.returning")}</p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-slate-700">{t("oauthCallback.complete")}</p>
+            <p className="text-xs text-slate-500">{t("oauthCallback.manualClose")}</p>
+          </>
+        )}
       </div>
     </div>
   );
@@ -93,7 +103,7 @@ const McpOAuthCallbackContent = () => {
 
 const McpOAuthCallbackPage = () => {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<RouteStatus kind="loading" />}>
       <McpOAuthCallbackContent />
     </Suspense>
   );
